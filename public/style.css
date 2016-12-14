@@ -3,6 +3,17 @@ html, body {
   margin: 0;
 }
 
+#header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+
+  /* display in front of #home */
+  z-index: 1;
+
+  background-color: white;
+}
+
 #home {
   background: url(home1.jpg) no-repeat center center fixed;
   -webkit-background-size: cover;
