@@ -1,27 +1,22 @@
 html, body {
   padding: 0;
   margin: 0;
+
+  height: 100%;
+
+  /*font-family: 'Abel', sans-serif;*/
+  /*font-family: 'Poiret One', cursive;*/
+  font-family: 'Comfortaa', cursive;
 }
 
 #header {
-  position: fixed;
-  top: 0;
-  width: 100%;
-
-  /* display in front of #home */
-  z-index: 1;
-
-  background-color: white;
+  text-align: center;
 }
 
 #home {
-  background: url(home1.jpg) no-repeat center center fixed;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  -o-background-size: cover;
-  background-size: cover;
+  background-color: white;
 
-  position: absolute;
-  height: 100%;
-  width: 100%;
+  font-size: 6rem;
+  text-align: center;
+  text-transform: lowercase;
 }
