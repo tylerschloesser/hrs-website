@@ -49,3 +49,12 @@ html, body {
 #home .photo img {
   max-height: 30rem;
 }
+
+#about {
+  font-size: 1.8rem;
+}
+
+#about .content {
+  margin: 0 auto;
+  width: 1024px;
+}
