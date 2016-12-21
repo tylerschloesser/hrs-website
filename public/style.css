@@ -72,3 +72,30 @@ html, body {
   font-size: 1.8rem;
   font-style: italic;
 }
+
+#contact form {
+  padding: 0 7.2rem;
+  padding-top: 3rem;
+}
+
+#contact form > div {
+  padding-bottom: .9rem;
+}
+
+#contact form input,
+#contact form textarea {
+  width: 100%;
+  padding: .5rem;
+  font-size: 1.8rem;
+  font-family: Arial;
+}
+
+#contact form textarea {
+  height: 18rem;
+}
+
+#contact form button {
+  padding: .5rem;
+  font-size: 1.8rem;
+  font-family: Arial;
+}
