@@ -51,14 +51,16 @@ html, body {
 }
 
 .section {
-  padding: 3rem 0;
+  padding: 3rem 1.8rem;
   margin: 0 auto;
-  width: 1024px;
+  max-width: 1024px;
 }
 
 .section .anchor {
   font-size: 3.6rem;
-  padding-bottom: 3rem;
+  margin-bottom: 3rem;
+
+  border-bottom: 1px solid #313131;
 }
 
 .section .content {
