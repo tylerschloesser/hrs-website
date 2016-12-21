@@ -50,11 +50,18 @@ html, body {
   max-height: 30rem;
 }
 
-#about {
-  font-size: 1.8rem;
-}
-
-#about .content {
+.section {
+  padding: 3rem 0;
   margin: 0 auto;
   width: 1024px;
+}
+
+.section .anchor {
+  font-size: 3.6rem;
+  padding-bottom: 3rem;
+}
+
+.section .content {
+  font-size: 1.8rem;
+  line-height: 160%;
 }
