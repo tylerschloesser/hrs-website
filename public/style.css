@@ -99,3 +99,15 @@ html, body {
   font-size: 1.8rem;
   font-family: Arial;
 }
+
+#footer {
+  height: 15rem;
+  line-height: 15rem;
+  vertical-align: middle;
+  background-color: #313131;
+  color: white;
+
+  text-align: center;
+
+  font-size: 1rem;
+}
