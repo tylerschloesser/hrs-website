@@ -4,6 +4,8 @@ $(document).ready(function() {
 
     $submit_button.click(function(e) {
         e.preventDefault();
-        $.post('ajax/contact', $('#contact-form').serialize());
+        $.post('ajax/contact', $('#contact-form').serialize(), function() {
+            alert('Message has been sent!');
+        });
     });
 });

@@ -19,4 +19,5 @@ post '/ajax/contact' do
   open('/var/hrs-website/contact.txt', 'a') do |f|
     f << "#{request.ip} @ #{now.inspect}: #{params.inspect}\n"
   end
+  200
 end
