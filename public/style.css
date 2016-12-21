@@ -105,6 +105,8 @@ html, body {
 }
 
 #footer {
+  margin-top: 3rem;
+
   height: 15rem;
   line-height: 15rem;
   vertical-align: middle;
