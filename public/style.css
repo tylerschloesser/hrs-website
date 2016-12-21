@@ -67,3 +67,8 @@ html, body {
   font-size: 1.8rem;
   line-height: 160%;
 }
+
+.section .todo {
+  font-size: 1.8rem;
+  font-style: italic;
+}
