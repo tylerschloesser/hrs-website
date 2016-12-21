@@ -16,10 +16,14 @@ html, body {
   padding: 1rem 0;
 
   border-bottom: 1px solid lightgrey;
+
 }
 
 #header a {
-  margin-right: 1.5rem;
+  margin-right: 4rem;
+
+  color: #313131;
+  text-decoration: none;
 }
 
 #header a:last-child {
