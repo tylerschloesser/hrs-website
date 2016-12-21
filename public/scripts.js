@@ -1,3 +1,9 @@
 $(document).ready(function() {
-    console.log('ready')
+    var $contact_form = $('#contact-form');
+    var $submit_button = $contact_form.find('button[type="submit"]');
+
+    $submit_button.click(function(e) {
+        e.preventDefault();
+        $.post('ajax/contact', $('#contact-form').serialize());
+    });
 });
