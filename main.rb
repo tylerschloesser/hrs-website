@@ -2,7 +2,7 @@ require 'sinatra'
 require 'aws-sdk'
 
 set :bind, '0.0.0.0'
-set :port, 80
+set :port, 8080
 
 Aws.config[:region] = 'us-west-2'
 
