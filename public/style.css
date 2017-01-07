@@ -117,3 +117,11 @@ html, body {
 
   font-size: 1rem;
 }
+
+#donate form {
+  display: inline-block;
+}
+
+#donate-button {
+  text-align: center;
+}
