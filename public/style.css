@@ -92,6 +92,7 @@ html, body {
   padding: .5rem;
   font-size: 1.8rem;
   font-family: Arial;
+  border: 1px solid lightgrey;
 }
 
 #contact form textarea {
@@ -99,7 +100,10 @@ html, body {
 }
 
 #contact form button {
-  padding: .5rem;
+  padding: 1rem;
+  background-color: #70ec8c;
+  border: none;
+
   font-size: 1.8rem;
   font-family: Arial;
 }
