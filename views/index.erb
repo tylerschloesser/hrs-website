@@ -1,33 +1,29 @@
 <link href='style.css' rel='stylesheet' type='text/css'>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.js" integrity="sha256-Z8zOlL7Qb7adkTfszqcKWybBdjBOZBY0r7DuFLZqMX8=" crossorigin="anonymous"></script>
+
 <script src='scripts.js'></script>
 
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.css" integrity="sha256-8CEI/ltDBxfGb0lev/b4YiRbQSPlllT89ukpFKC3Frg=" crossorigin="anonymous" />
 <link href="https://fonts.googleapis.com/css?family=Abel|Comfortaa|Poiret+One" rel="stylesheet">
 
-<div id=header>
   <%= erb :header %>
-</div>
 
-<div id=home>
+<div class="ui container">
   <%= erb :home %>
-</div>
 
-<div id=about>
   <%= erb :about %>
-</div>
-
-<div id=projects>
   <%= erb :projects %>
-</div>
-
-<div id=contact>
   <%= erb :contact %>
-</div>
 
-<div id=donate>
   <%= erb :donate %>
+
+  <%= erb :footer %>
 </div>
 
-<div id=footer>
-  <%= erb :footer %>
+<div class="ui inverted vertical footer segment">
+  <div class="ui container">
+    &copy; 2017
+  </div>
 </div>
