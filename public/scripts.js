@@ -1,6 +1,23 @@
-
-
 $(document).ready(function() {
+
+  $('#contact-submit-button').click(function(e) {
+    var $button = $(this);
+    e.preventDefault();
+    $button.addClass('loading');
+    var $form = $('#contact-submit-form');
+    $.post('ajax/contact', $form.serialize(), function() {
+      $form.find('.ui.positive.message').show();
+    }).fail(function() {
+      $form.find('.ui.negative.message').show();
+    }).always(function() {
+      $button.removeClass('loading');
+    });
+  });
+
+  $('.ui.message .close.icon').click(function() {
+    $(this).parent().hide();
+  });
+
     var $contact_form = $('#contact-form');
     var $submit_button = $contact_form.find('button[type="submit"]');
 
@@ -15,7 +32,7 @@ $(document).ready(function() {
       $(this).addClass('loading');
       $('#donate-form').submit();
     });
-    
+
     $('img[src="ev1.jpg"]').click(function() {
       $('#ev1-modal').modal('show');
     });
@@ -39,7 +56,7 @@ $(document).ready(function() {
       $('#gs3-modal').modal('show');
     });
     $('img[src="gs4.jpg"]').click(function() {
-      $('#gs4-modal').modal('show');
+      e('#gs4-modal').modal('show');
     });
     $('img[src="gs5.jpg"]').click(function() {
       $('#gs5-modal').modal('show');
