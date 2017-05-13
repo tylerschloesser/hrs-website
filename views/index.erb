@@ -1,29 +1,38 @@
-<link href='style.css' rel='stylesheet' type='text/css'>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta charset="utf-8">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.js" integrity="sha256-Z8zOlL7Qb7adkTfszqcKWybBdjBOZBY0r7DuFLZqMX8=" crossorigin="anonymous"></script>
+  <title>Haitain Relief Servies</title>
 
-<script src='scripts.js'></script>
+  <link rel='stylesheet' href='style.css' type='text/css'>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.css" integrity="sha256-8CEI/ltDBxfGb0lev/b4YiRbQSPlllT89ukpFKC3Frg=" crossorigin="anonymous" />
+</head>
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.css" integrity="sha256-8CEI/ltDBxfGb0lev/b4YiRbQSPlllT89ukpFKC3Frg=" crossorigin="anonymous" />
-<link href="https://fonts.googleapis.com/css?family=Abel|Comfortaa|Poiret+One" rel="stylesheet">
-
+<body>
   <%= erb :header %>
 
-<div class="ui container">
-  <%= erb :home %>
-
-  <%= erb :about %>
-  <%= erb :projects %>
-  <%= erb :contact %>
-
-  <%= erb :donate %>
-
-  <%= erb :footer %>
-</div>
-
-<div class="ui inverted vertical footer segment">
   <div class="ui container">
-    &copy; 2017
+    <%= erb :home %>
+
+    <%= erb :about %>
+    <%= erb :projects %>
+    <%= erb :contact %>
+
+    <%= erb :donate %>
+
+    <%= erb :footer %>
   </div>
-</div>
+
+  <div class="ui inverted vertical footer segment">
+    <div class="ui container">
+      &copy; 2017
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.js" integrity="sha256-Z8zOlL7Qb7adkTfszqcKWybBdjBOZBY0r7DuFLZqMX8=" crossorigin="anonymous"></script>
+
+  <script src='scripts.js'></script>
+</body>
