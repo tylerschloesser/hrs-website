@@ -51,6 +51,7 @@ post '/ajax/contact' do
   rescue => e
     print "Email not sent. Error message: "
     puts e
+    return 500
   end
 
   200
