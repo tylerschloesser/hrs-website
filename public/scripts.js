@@ -56,7 +56,7 @@ $(document).ready(function() {
       $('#gs3-modal').modal('show');
     });
     $('img[src="gs4.jpg"]').click(function() {
-      e('#gs4-modal').modal('show');
+      $('#gs4-modal').modal('show');
     });
     $('img[src="gs5.jpg"]').click(function() {
       $('#gs5-modal').modal('show');
