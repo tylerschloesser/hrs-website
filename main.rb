@@ -11,7 +11,7 @@ ses_client = Aws::SES::Client.new
 puts ses_client.inspect
 
 get '/' do
-  erb :index
+  send_file 'index.html'
 end
 
 post '/ajax/contact' do
