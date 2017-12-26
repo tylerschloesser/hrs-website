@@ -19,4 +19,5 @@ phases:
 artifacts:
   files:
     - build/index.html
+    - lambda.js
   discard-paths: yes
