@@ -14,7 +14,7 @@ phases:
       - echo Build started on `date`
       - mustache model.json index.mustache build/index.html
       - echo Zipping lambda.js
-      - zip lambda.zip build/lambda.js
+      - zip build/lambda.zip lambda.js
   post_build:
     commands:
       - echo Build completed on `date`
