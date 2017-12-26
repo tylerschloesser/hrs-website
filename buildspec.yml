@@ -3,10 +3,10 @@ version: 0.2
 phases:
   install:
     commands:
-			- echo Installing mustache
+      - echo Installing mustache
       - npm install -g mustache
-			- echo Creating build directory
-			- mkdir -p build
+      - echo Creating build directory
+      - mkdir -p build
   pre_build:
     commands:
   build:
