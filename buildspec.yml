@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+			- echo Installing mustache
+      - npm install -g mustache
+			- echo Creating build directory
+			- mkdir -p build
+  pre_build:
+    commands:
+  build:
+    commands:
+      - echo Build started on `date`
+      - mustache model.json index.mustache build/index.html
+  post_build:
+    commands:
+      - echo Build completed on `date`
+artifacts:
+  files:
+    - build/index.html
