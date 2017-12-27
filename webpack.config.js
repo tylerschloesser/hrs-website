@@ -8,7 +8,7 @@ module.exports = {
     filename: 'bundle.js'
   },
 	module: {
-		rules: [ 
+		rules: [
 			{
 				test: /\.mustache$/,
 				loader: 'mustache-loader'
@@ -20,4 +20,7 @@ module.exports = {
 		]
 	},
   plugins: [new HtmlWebpackPlugin()],
+  devServer: {
+    contentBase: path.resolve('public'),
+  },
 };
