@@ -128,13 +128,26 @@
 
       // submit contact form
       $('#contact-submit-button').click(function(e) {
-        var $button = $(this);
         e.preventDefault();
+        var $button = $(this);
         $button.addClass('loading');
+
         var $form = $('#contact-submit-form');
-        $.post('https://api.haitianrelief.org/email', $form.serialize(), function() {
+        var data = {}
+        $form.serializeArray().forEach(function(elem) {
+          data[elem.name] = elem.value;
+        });
+
+        var $deferred = $.post(
+          'https://api.haitianrelief.org/email',
+          JSON.stringify(data),
+          null,
+          'json')
+
+        $deferred.done(function() {
           $form.find('.ui.positive.message').removeClass('hidden');
-        }).fail(function() {
+        })
+        .fail(function() {
           $form.find('.ui.negative.message').removeClass('hidden');
         }).always(function() {
           $button.removeClass('loading');
