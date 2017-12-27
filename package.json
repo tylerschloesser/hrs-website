@@ -1,0 +1,23 @@
+{
+  "name": "hrs-website",
+  "version": "1.0.0",
+  "description": "## required libraries ``` sudo gem install sinatra ```",
+  "main": "dev.js",
+  "dependencies": {
+    "aws-sdk": "^2.175.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tylerschloesser/hrs-website.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tylerschloesser/hrs-website/issues"
+  },
+  "homepage": "https://github.com/tylerschloesser/hrs-website#readme"
+}
