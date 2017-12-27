@@ -72,7 +72,7 @@
 
       <div class="ui negative hidden message">
         <i class="close icon"></i>
-        <div class="header">{{contactSubmitFailureHeader}} test</div>
+        <div class="header">{{contactSubmitFailureHeader}}</div>
         <p>{{contactSubmitFailureMessage}}</p>
       </div>
 
@@ -132,7 +132,7 @@
         e.preventDefault();
         $button.addClass('loading');
         var $form = $('#contact-submit-form');
-        $.post('ajax/contact', $form.serialize(), function() {
+        $.post('https://api.haitianrelief.org/email', $form.serialize(), function() {
           $form.find('.ui.positive.message').removeClass('hidden');
         }).fail(function() {
           $form.find('.ui.negative.message').removeClass('hidden');
