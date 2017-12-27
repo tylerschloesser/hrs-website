@@ -1,9 +1,9 @@
+const template = require('./index.mustache')
+const model = require('./model.json')
+
 function component() {
-  var element = document.createElement('div');
-
-  // Lodash, currently included via a script, is required for this line to work
-  element.innerHTML = 'hello world'
-
+  const element = document.createElement('div');
+  element.innerHTML = template(model)
   return element;
 }
 

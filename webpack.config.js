@@ -7,5 +7,17 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'bundle.js'
   },
+	module: {
+		rules: [ 
+			{
+				test: /\.mustache$/,
+				loader: 'mustache-loader'
+			},
+      {
+        test: /\.json$/,
+        loader: 'json-loader'
+      },
+		]
+	},
   plugins: [new HtmlWebpackPlugin()],
 };
