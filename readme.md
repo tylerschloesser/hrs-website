@@ -1,8 +1,20 @@
 # steps to develop
 
-1. git clone repo
-1. npm -g i live-server
-1. run "live-server" in repo
+```
+brew install fswatch
+
+npm -g i live-server mustache yaml2json
+```
+
+watch yaml & mustache
+```
+./watch.sh
+```
+
+auto reload index.html
+```
+live-server --ignore=index.mustache,index.yaml,index.json .
+```
 
 # steps to update
 

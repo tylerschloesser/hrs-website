@@ -1,0 +1,132 @@
+---
+  header: 'Haitian Relief Services'
+  intro: 'Haitian Relief Services (HRS) is a small non-profit, registered in Minnesota as a 501(c)(3), and located in River Falls, Wisconsin. Its staff consists entirely of two volunteers, Capt. Pat O’Malley and Dr. Curt Larson. Capt. O’Malley is a retired American Airlines Pilot, who established HRS in 1997 and serves as its president. His relationship with American Airlines provides very inexpensive travel to and from Haiti. Dr. Larson is a Physics Professor Emeritus at the University of Wisconsin River Falls and serves as the financial officer of HRS. Since HRS has no salaried staff, all donations received go directly into programs in Haiti, making HRS rather unique among nonprofits.'
+  mission-statement-1: 'The mission of HRS centers on improving the quality of life for the Haitian people, beginning with the people in Ganthier, Haiti. Capt. O’Malley, through piloting American Airline flights into Haiti, and Dr. Larson, on a Food For the Poor mission trip to Haiti, both observed firsthand the conditions of extreme poverty endured by the Haitian people. Both, in their retirement, have worked as volunteers to do what they can toward accomplishing this mission. While the task is a daunting one, they are motivated by the spirit of mission expressed the “Starfish Story”:'
+  mission-statement-2: 'As a young child walked along a beach at dawn, he noticed an old man ahead of him picking up starfish and tossing them into the sea. Catching up with the man, the child asked why he was doing this. The old man explained that the stranded starfish would die if left in the morning sun. “But the beach goes on for miles and there are thousands of starfish,” exclaimed the child. “How can you alone make any difference?” The old man looked at the starfish in his hand and then tossed it safely into the waves. He turned to the child, smiled, and said, “I made a difference to that one.”'
+  mission-statement-3: 'This story sums up pretty well the attitude needed when confronting the seemingly hopeless and endless need among the poor. Our approach is to provide a link between people of material means in and around River Falls, Wisconsin, and people of great need in Haiti. This link, in the form of a donation path, serves as a blessing to those willing to share of their wealth and those in Haiti who materially benefit as recipients.'
+  project:
+    -
+      header: 'Ezekiel Village'
+      description: 'In 2002, Ezekiel Lutheran Church, working in cooperation with six additional River Falls, Wisconsin churches and the nonprofit, Food For the Poor, led a project to fund twenty five houses and the associated bathrooms in Ganthier, Haiti. The project was funded by donations and the houses were completed and dedicated as “Ezekiel Village” in 2004. Donations were collected locally and funds were transferred using the nonprofit status of Food For the Poor. All construction design, engineering and labor for Ezekiel Village was provided by local Haitian people. The well-constructed buildings were undamaged in the 2010 earthquake and the 2016 Hurricane Matthew.'
+      image:
+        -
+          header: 'A nearby power pole provides home wiring!'
+          src: 'ev1.jpg'
+        -
+          header: 'Beginning an addition to a home'
+          src: 'ev2.jpg'
+        -
+          header: 'Completed addition to a home'
+          src: 'ev3.jpg'
+        -
+          header: 'Ezekiel Village at the time of dedication'
+          src: 'ev4.jpg'
+    -
+      header: 'Ganthier School'
+      description: 'In 2006 the River Falls churches, again led by Ezekiel, began a project to build a 650 student elementary school - high school in Ganthier. The first floor was built processing all donations and fund transfers through the nonprofit Food For the Poor, and was completed and in 2008. The second floor was completed and the school was dedicated in 2010. All donations and fund transfers for the second floor were processed through the nonprofit status of HRS. All construction design, engineering and labor for the school was provided by local Haitian people. The well-constructed building was undamaged in the 2010 earthquake and the 2016 Hurricane Matthew.'
+      image:
+        -
+          header: 'A ninth grade class'
+          src: 'gs1.jpg'
+        -
+          header: 'A teacher provides her own daycare'
+          src: 'gs2.jpg'
+        -
+          header: 'Both wings of the school'
+          src: 'gs3.jpg'
+        -
+          header: 'Computer class'
+          src: 'gs4.jpg'
+        -
+          header: 'Elementary school students'
+          src: 'gs5.jpg'
+        -
+          header: 'Getting a drink at the school cistern'
+          src: 'gs6.jpg'
+        -
+          header: 'School viewed from the second floor'
+          src: 'gs7.jpg'
+        -
+          header: 'West wing of the school'
+          src: 'gs8.jpg'
+    -
+      header: 'Ezekiel Village Water Cistern'
+      description: 'A 12,000 gallon water cistern was constructed, in cooperation with the United Nations, for the people of Ezekiel Village in 2010. Drought conditions in Ganthier have made the availability of water problematic, but a project is underway to connect this cistern to a more reliable source of water.'
+      image:
+        -
+          header: 'Ezekiel Village Water Cistern'
+          src: 'ws1.jpg'
+        -
+          header: 'Ezekiel Village Cistern (constructed in cooperation with the United Nations)'
+          src: 'ws2.jpg'
+    -
+      header: 'Pillowcase Dress Project'
+      description: 'On our September, 2015 trip to Haiti, we brought along 300 lbs. of clothing to distribute at two schools, one in Ganthier and the other in Gressier. The clothing was sewn in the Pillowcase Dress and T-shirt Shorts project, led by women of Ezekiel Lutheran Church, with contributions from our community and four addition communities. In 2016 this project produced 400 lbs. of clothing that was distributed in December to the same two schools. This project is a good example of how our community has supported the work of HRS in Haiti. Fr. Emmanuel Sainteliat is the priest in the Gressier parish. He was the parish priest in Ganthier when we built the school there, so we know him well. The 2010 earthquake devastated the Gressier parish and he was moved to that parish to lead its rebuilding. While our first commitment is to Ganthier, we try to help the Gressier school when we have sufficient funds to do so.'
+      image:
+        -
+          header: 'Pillowcase Dress Project'
+          src: 'pc1.jpg'
+        -
+          header: 'Pillowcase Dress Project'
+          src: 'pc2.jpg'
+        -
+          header: 'Pillowcase Dress Project'
+          src: 'pc3.jpg'
+        -
+          header: 'Pillowcase Dress Project'
+          src: 'pc4.jpg'
+    -
+      header: 'Hurricane Matthew Relief'
+      description: 'The October 2016 Hurricane Matthew devastated the Gressier, Haiti parish. Because of our relationship with Fr. Emmanuel Sainteliat, we responded to the hurricane by raising and sending $15,350 to Gressier. These funds were used to purchase emergency food and home repair construction materials.'
+      image:
+        -
+          header: 'A home destroyed'
+          src: 'mr1.jpg'
+        -
+          header: 'Feeding those displaced from their homes'
+          src: 'mr2.jpg'
+        -
+          header: 'Another destroyed home'
+          src: 'mr3.jpg'
+        -
+          header: 'Rebuilding a home'
+          src: 'mr4.jpg'
+        -
+          header: 'Steel roofing for repair'
+          src: 'mr5.jpg'
+    -
+      header: 'Galette Chambon Orphanage'
+      description: 'The need for orphanages in Haiti was increased by the devastating earthquake of 2010. In 2018 Haitian Relief Services, with funding from the Servite Sisters (Servants of Mary of Ladysmith, Wisconsin), Ezekiel Lutheran Church and the River Falls community, funded the construction and furnishing of an orphanage in Galette Chambon, Haiti. The orphanage was completed in 2019. The facility has beds for 14 boys and 14 girls. The children attend the local school and receive an education.'
+      image:
+        -
+          header: 'A view of front entrance'
+          src: 'galette-chambon-orphanage-1.jpg'
+        -
+          header: 'Back view of Orphanage'
+          src: 'galette-chambon-orphanage-2.jpg'
+        -
+          header: 'Front entrance view of Orphanage'
+          src: 'galette-chambon-orphanage-3.jpg'
+        -
+          header: 'Front side showing hope for a second floor'
+          src: 'galette-chambon-orphanage-4.jpg'
+        -
+          header: 'Meal time in the kitchen'
+          src: 'galette-chambon-orphanage-5.jpg'
+        -
+          header: "The boy's bedroom"
+          src: 'galette-chambon-orphanage-6.jpg'
+        -
+          header: "The girls's bedroom"
+          src: 'galette-chambon-orphanage-7.jpg'
+        -
+          header: 'The Chapel'
+          src: 'galette-chambon-orphanage-8.jpg'
+        -
+          header: 'The first meeting with the children'
+          src: 'galette-chambon-orphanage-9.jpg'
+        -
+          header: 'The living-study room'
+          src: 'galette-chambon-orphanage-10.jpg'
+  cof-header: 'Clean Oil Farming'
+  cof-description: 'At this time, HRS energy is focused on fund raising in two areas, (1) financial support of the school constructed in Ganthier, Haiti and (2) the development of an economic base in the Ganthier area. A proposal for a clean-oil farming plan, “A GROWING Project to Develop the Economy of Ganthier, Haiti”, has been developed and is described in the “GROWING Proposal”. This farming plan, when funded, will have a very favorable, sustainable and long term impact on the economy in Haiti. The project will begin in the Ganthier area, but in the long term will produce resources that will enable its continued expansion outward from Ganthier. We envision this project to be developed in a farming cooperative model so that ownership resides with the local Haitian farmers. Donors of means, who are looking to “help the less fortunate” rather than “invest for personal gain” are invited to donate to get this project going.'

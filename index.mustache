@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-K4B3P5D');</script>
+  <!-- End Google Tag Manager -->
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta charset="utf-8">
+
+  <title>Haitian Relief Services</title>
+
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.css"
+    integrity="sha256-8CEI/ltDBxfGb0lev/b4YiRbQSPlllT89ukpFKC3Frg="
+    crossorigin="anonymous" />
+
+  <style>
+    [data-type="image-modal-trigger"] {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="ui inverted basic segment">
+    <div class="ui inverted secondary menu">
+      <div class="ui container">
+        <a class="item" href='#mission-statement'>Mission Statement</a>
+        <a class="item" href='#projects'>Projects</a>
+        <a class="item" href='#contact'>Contact</a>
+
+        <div class="right menu">
+          <div class="item">
+            <a class="ui primary button" href="https://charity.gofundme.com/o/en/donate-widget/22459" id="donate-button-menu">
+              Donate
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K4B3P5D"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <div class="ui container">
+    <h1 class="ui dividing blue header">{{ header }}</h1>
+    <p>{{intro}}</p>
+
+    <img class="ui fluid bordered image" src="pc2.jpg">
+    <h2 class="ui dividing blue header" id="mission-statement">Mission Statement</h2>
+    <p>{{mission-statement-1}}</p>
+    <p style="margin-left: 1em; margin-right: 1em;">
+    <em>{{ mission-statement-2 }}</em>
+    </p>
+    </p>{{ mission-statement-3 }}</p>
+
+    <h2 class="ui dividing blue header" id="projects">Projects</h2>
+
+    {{#project}}
+      <h3 class="ui orange header">{{ header }}</h3>
+      <p>{{ description }}</p>
+
+      <div class="ui small images">
+        {{ #image }}
+          <img class="ui image" src="{{ src }}" data-type="image-modal-trigger"/>
+          <div class="ui basic modal">
+            <i class="close icon"></i>
+            <div class="header">{{ header }}</div>
+            <div class="image content">
+              <img class="image" src="{{ src }}" />
+            </div>
+          </div>
+        {{ /image }}
+      </div>
+    {{/project}}
+
+    <h3 class="ui orange header">{{ cof-header }}</h3>
+    <p>{{ cof-description }}</p>
+    <p>
+      <a href="A GROWING Proposal.docx"><i class="file word outline icon"></i>A GROWING Proposal.docx</a>
+    </p>
+
+    <h2 id="contact" class="ui dividing blue header">Contact</h2>
+    <p>Want to get in touch? Use the form below to send us a message.</p>
+    <form class="ui form" id='contact-submit-form'>
+      <div class="ui positive hidden message">
+        <i class="close icon"></i>
+        <div class="header">Success</div>
+        <p>Message has been sent!</p>
+      </div>
+
+      <div class="ui negative hidden message">
+        <i class="close icon"></i>
+        <div class="header">Failure</div>
+        <p>Your message was unable to be sent. Please try again later.</p>
+      </div>
+
+      <div class="field">
+        <label>Your Name</label>
+        <input name='name' placeholder="Your Name" />
+      </div>
+      <div class="field">
+        <label>Email Address</label>
+        <input name='email' placeholder="Email Address" />
+      </div>
+      <div class="field">
+        <label>Message</label>
+        <textarea name='message' placeholder="Message"></textarea>
+      </div>
+      <button class="ui primary button" type='submit' id='contact-submit-button'>
+        Submit
+      </button>
+    </form>
+
+    <h2 class="ui dividing blue header" id="donate">Donate</h2>
+    <p>Donations are accepted through GoFundMe!</p>
+
+    <div class="ui vertical segment">
+      <a class="ui labeled icon primary button" href="https://charity.gofundme.com/o/en/donate-widget/22459" id="donate-button-page">
+        <i class="heart icon"></i>Donate
+      </a>
+    </div>
+  </div>
+
+  <div class="ui very padded center aligned inverted vertical segment">
+    <div class="ui container">
+      <i class="github icon"></i>
+      <a target="_blank" href='https://github.com/tylerschloesser'>github.com/tylerschloesser</a>
+    </div>
+  </div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.10/semantic.js"
+    integrity="sha256-Z8zOlL7Qb7adkTfszqcKWybBdjBOZBY0r7DuFLZqMX8="
+    crossorigin="anonymous"></script>
+  <script>
+    $(document).ready(function() {
+
+      // submit contact form
+      $('#contact-submit-button').click(function(e) {
+        e.preventDefault();
+        var $button = $(this);
+        $button.addClass('loading');
+
+        var $form = $('#contact-submit-form');
+        var data = {}
+        $form.serializeArray().forEach(function(elem) {
+          data[elem.name] = elem.value;
+        });
+
+        var $deferred = $.post(
+          'https://api.haitianrelief.org/email',
+          JSON.stringify(data),
+          null,
+          'json')
+
+        $deferred.done(function() {
+          $form.find('.ui.positive.message').removeClass('hidden');
+        })
+        .fail(function() {
+          $form.find('.ui.negative.message').removeClass('hidden');
+        }).always(function() {
+          $button.removeClass('loading');
+        });
+      });
+
+      // close contact success/failure message
+      $('.ui.message .close.icon').click(function() {
+        $(this).parent().addClass('hidden');
+      });
+
+      // setup project image modal triggers
+      $('[data-type="image-modal-trigger"]').each(function() {
+        var $image = $(this);
+        var $modal = $image.next();
+        $image.click(function() {
+          $modal.modal('show');
+        });
+      });
+    });
+  </script>
+
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-178061116-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'UA-178061116-1');
+  </script>
+
+</body>
+</html>
