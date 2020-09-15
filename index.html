@@ -342,7 +342,7 @@ receive an education.</p>
 
     </div>
 
-    <h3 class="ui header">Clean Oil Farming</h3>
+    <h3 class="ui orange header">Clean Oil Farming</h3>
     <p>At this time, HRS energy is focused on fund raising in two areas, (1) financial support of the school constructed in Ganthier, Haiti and (2) the development of an economic base in the Ganthier area. A proposal for a clean-oil farming plan, “A GROWING Project to Develop the Economy of Ganthier, Haiti”, has been developed and is described in the “GROWING Proposal”. This farming plan, when funded, will have a very favorable, sustainable and long term impact on the economy in Haiti. The project will begin in the Ganthier area, but in the long term will produce resources that will enable its continued expansion outward from Ganthier. We envision this project to be developed in a farming cooperative model so that ownership resides with the local Haitian farmers. Donors of means, who are looking to “help the less fortunate” rather than “invest for personal gain” are invited to donate to get this project going.</p>
     <p>
       <a href="A GROWING Proposal.docx"><i class="file word outline icon"></i>A GROWING Proposal.docx</a>
@@ -381,20 +381,12 @@ receive an education.</p>
     </form>
 
     <h2 class="ui dividing blue header" id="donate">Donate</h2>
-    <p>Donations are accepted through paypal!</p>
-
-    <div style="display: none;">
-      <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top" id='donate-form'>
-        <input type="hidden" name="cmd" value="_s-xclick">
-        <input type="hidden" name="hosted_button_id" value="FCQXF5HRVXA9N">
-        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-      </form>
-    </div>
+    <p>Donations are accepted through GoFundMe!</p>
 
     <div class="ui vertical segment">
-      <button class="ui labeled icon primary button" id='donate-button'>
-        <i class="paypal icon"></i>Donate
-      </button>
+      <a class="ui labeled icon primary button" href="https://charity.gofundme.com/o/en/donate-widget/22459">
+        <i class="heart icon"></i>Donate
+      </a>
     </div>
   </div>
 
@@ -444,12 +436,6 @@ receive an education.</p>
       // close contact success/failure message
       $('.ui.message .close.icon').click(function() {
         $(this).parent().addClass('hidden');
-      });
-
-      // submit paypal donate form
-      $('#donate-button').click(function() {
-        $(this).addClass('loading');
-        $('#donate-form').submit();
       });
 
       // setup project image modal triggers
