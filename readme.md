@@ -16,6 +16,11 @@ auto reload index.html
 live-server --ignore=index.mustache,index.yaml,index.json .
 ```
 
+manually compile yaml & mustache to html
+```
+./compile.sh
+```
+
 # steps to update
 
 1. navigate to s3 bucket: haitianrelief.org
