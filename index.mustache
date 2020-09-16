@@ -72,12 +72,12 @@
 
       <div class="ui small images">
         {{ #image }}
-          <img class="ui image" src="{{ src }}" data-type="image-modal-trigger"/>
+          <img class="ui image" src="images-sm/{{ file }}" data-type="image-modal-trigger"/>
           <div class="ui basic modal">
             <i class="close icon"></i>
             <div class="header">{{ header }}</div>
             <div class="image content">
-              <img class="image" src="{{ src }}" />
+              <img class="image" data-src="{{ file }}" />
             </div>
           </div>
         {{ /image }}
@@ -182,9 +182,11 @@
 
       // setup project image modal triggers
       $('[data-type="image-modal-trigger"]').each(function() {
-        var $image = $(this);
-        var $modal = $image.next();
-        $image.click(function() {
+        var smallImage = $(this);
+        var $modal = smallImage.next();
+        smallImage.click(function() {
+          var $largeImage = $modal.find('img')
+          $largeImage.attr('src', $largeImage.data('src'))
           $modal.modal('show');
         });
       });
