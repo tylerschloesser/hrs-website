@@ -135,6 +135,10 @@
           header: 'The living-study room'
           file: 'galette-chambon-orphanage-10.jpg'
     -
+      header: 'Galette Chambon Health Center'
+      description:
+        - 'The need for Health Centers in rural Haiti is particularly critical. A local health center can provide education and treatment that is quickly available for everyday medical emergencies. In November of 2020 Haitian Relief Services, with funding from the Servite Sisters (Servants of Mary of Ladysmith, Wisconsin), Ezekiel Lutheran Church and the River Falls, Wisconsin community, will begin the construction of a Health Center in Galette Chambon Village of Ganthier Commune, Haiti. The Health center will be constructed on the second floor of the orphanage that was completed in 2019. Electrical power for both the health center and the orphanage will be provided by a solar panel system. As construction proceeds, photographs will be added here to document the progress.'
+    -
       header: 'Clean Oil Farming'
       description:
         - 'At this time, HRS energy is focused on fund raising in three areas: financial support of (1) the school constructed in Ganthier Village, (2) the orphanage constructed in Galette Chambon Village, and (3) furnishing the health center currently under construction in Galette Chambon Village, all of Ganthier Commune, Haiti.'
