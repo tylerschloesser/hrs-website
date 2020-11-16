@@ -24,6 +24,12 @@
     [data-type="image-modal-trigger"] {
       cursor: pointer;
     }
+    @media (max-width: 480px) {
+      /* hack to hide the donate button on mobile since the UX is totally broken */
+      .right.menu {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
