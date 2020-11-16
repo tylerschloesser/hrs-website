@@ -7,7 +7,8 @@
   project:
     -
       header: 'Ezekiel Village'
-      description: 'In 2002, Ezekiel Lutheran Church, working in cooperation with six additional River Falls, Wisconsin churches and the nonprofit, Food For the Poor, led a project to fund twenty five houses and the associated bathrooms in Ganthier, Haiti. The project was funded by donations and the houses were completed and dedicated as “Ezekiel Village” in 2004. Donations were collected locally and funds were transferred using the nonprofit status of Food For the Poor. All construction design, engineering and labor for Ezekiel Village was provided by local Haitian people. The well-constructed buildings were undamaged in the 2010 earthquake and the 2016 Hurricane Matthew.'
+      description:
+        - 'In 2002, Ezekiel Lutheran Church, working in cooperation with six additional River Falls, Wisconsin churches and the nonprofit, Food For the Poor, led a project to fund twenty five houses and the associated bathrooms in Ganthier, Haiti. The project was funded by donations and the houses were completed and dedicated as “Ezekiel Village” in 2004. Donations were collected locally and funds were transferred using the nonprofit status of Food For the Poor. All construction design, engineering and labor for Ezekiel Village was provided by local Haitian people. The well-constructed buildings were undamaged in the 2010 earthquake and the 2016 Hurricane Matthew.'
       image:
         -
           header: 'A nearby power pole provides home wiring!'
@@ -23,7 +24,8 @@
           file: 'ev4.jpg'
     -
       header: 'Ganthier School'
-      description: 'In 2006 the River Falls churches, again led by Ezekiel, began a project to build a 650 student elementary school - high school in Ganthier. The first floor was built processing all donations and fund transfers through the nonprofit Food For the Poor, and was completed and in 2008. The second floor was completed and the school was dedicated in 2010. All donations and fund transfers for the second floor were processed through the nonprofit status of HRS. All construction design, engineering and labor for the school was provided by local Haitian people. The well-constructed building was undamaged in the 2010 earthquake and the 2016 Hurricane Matthew.'
+      description:
+        - 'In 2006 the River Falls churches, again led by Ezekiel, began a project to build a 650 student elementary school - high school in Ganthier. The first floor was built processing all donations and fund transfers through the nonprofit Food For the Poor, and was completed and in 2008. The second floor was completed and the school was dedicated in 2010. All donations and fund transfers for the second floor were processed through the nonprofit status of HRS. All construction design, engineering and labor for the school was provided by local Haitian people. The well-constructed building was undamaged in the 2010 earthquake and the 2016 Hurricane Matthew.'
       image:
         -
           header: 'A ninth grade class'
@@ -51,7 +53,8 @@
           file: 'gs8.jpg'
     -
       header: 'Ezekiel Village Water Cistern'
-      description: 'A 12,000 gallon water cistern was constructed, in cooperation with the United Nations, for the people of Ezekiel Village in 2010. Drought conditions in Ganthier have made the availability of water problematic, but a project is underway to connect this cistern to a more reliable source of water.'
+      description:
+        - 'A 12,000 gallon water cistern was constructed, in cooperation with the United Nations, for the people of Ezekiel Village in 2010. Drought conditions in Ganthier have made the availability of water problematic, but a project is underway to connect this cistern to a more reliable source of water.'
       image:
         -
           header: 'Ezekiel Village Water Cistern'
@@ -61,7 +64,8 @@
           file: 'ws2.jpg'
     -
       header: 'Pillowcase Dress Project'
-      description: 'On our September, 2015 trip to Haiti, we brought along 300 lbs. of clothing to distribute at two schools, one in Ganthier and the other in Gressier. The clothing was sewn in the Pillowcase Dress and T-shirt Shorts project, led by women of Ezekiel Lutheran Church, with contributions from our community and four addition communities. In 2016 this project produced 400 lbs. of clothing that was distributed in December to the same two schools. This project is a good example of how our community has supported the work of HRS in Haiti. Fr. Emmanuel Sainteliat is the priest in the Gressier parish. He was the parish priest in Ganthier when we built the school there, so we know him well. The 2010 earthquake devastated the Gressier parish and he was moved to that parish to lead its rebuilding. While our first commitment is to Ganthier, we try to help the Gressier school when we have sufficient funds to do so.'
+      description:
+        - 'On our September, 2015 trip to Haiti, we brought along 300 lbs. of clothing to distribute at two schools, one in Ganthier and the other in Gressier. The clothing was sewn in the Pillowcase Dress and T-shirt Shorts project, led by women of Ezekiel Lutheran Church, with contributions from our community and four addition communities. In 2016 this project produced 400 lbs. of clothing that was distributed in December to the same two schools. This project is a good example of how our community has supported the work of HRS in Haiti. Fr. Emmanuel Sainteliat is the priest in the Gressier parish. He was the parish priest in Ganthier when we built the school there, so we know him well. The 2010 earthquake devastated the Gressier parish and he was moved to that parish to lead its rebuilding. While our first commitment is to Ganthier, we try to help the Gressier school when we have sufficient funds to do so.'
       image:
         -
           header: 'Pillowcase Dress Project'
@@ -77,7 +81,8 @@
           file: 'pc4.jpg'
     -
       header: 'Hurricane Matthew Relief'
-      description: 'The October 2016 Hurricane Matthew devastated the Gressier, Haiti parish. Because of our relationship with Fr. Emmanuel Sainteliat, we responded to the hurricane by raising and sending $15,350 to Gressier. These funds were used to purchase emergency food and home repair construction materials.'
+      description:
+        - 'The October 2016 Hurricane Matthew devastated the Gressier, Haiti parish. Because of our relationship with Fr. Emmanuel Sainteliat, we responded to the hurricane by raising and sending $15,350 to Gressier. These funds were used to purchase emergency food and home repair construction materials.'
       image:
         -
           header: 'A home destroyed'
@@ -96,7 +101,8 @@
           file: 'mr5.jpg'
     -
       header: 'Galette Chambon Orphanage'
-      description: 'The need for orphanages in Haiti was increased by the devastating earthquake of 2010. In 2018 Haitian Relief Services, with funding from the Servite Sisters (Servants of Mary of Ladysmith, Wisconsin), Ezekiel Lutheran Church and the River Falls community, funded the construction and furnishing of an orphanage in Galette Chambon, Haiti. The orphanage was completed in 2019. The facility has beds for 14 boys and 14 girls. The children attend the local school and receive an education.'
+      description:
+        - 'The need for orphanages in Haiti was increased by the devastating earthquake of 2010. In 2018 Haitian Relief Services, with funding from the Servite Sisters (Servants of Mary of Ladysmith, Wisconsin), Ezekiel Lutheran Church and the River Falls community, funded the construction and furnishing of an orphanage in Galette Chambon, Haiti. The orphanage was completed in 2019. The facility has beds for 14 boys and 14 girls. The children attend the local school and receive an education.'
       image:
         -
           header: 'A view of front entrance'

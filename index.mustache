@@ -68,7 +68,9 @@
 
     {{#project}}
       <h3 class="ui orange header">{{ header }}</h3>
-      <p>{{ description }}</p>
+      {{ #description }}
+        <p>{{.}}</p>
+      {{ /description }}
 
       <div class="ui small images">
         {{ #image }}
