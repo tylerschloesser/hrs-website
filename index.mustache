@@ -120,39 +120,6 @@
   <script>
     $(document).ready(function() {
 
-      // submit contact form
-      $('#contact-submit-button').click(function(e) {
-        e.preventDefault();
-        var $button = $(this);
-        $button.addClass('loading');
-
-        var $form = $('#contact-submit-form');
-        var data = {}
-        $form.serializeArray().forEach(function(elem) {
-          data[elem.name] = elem.value;
-        });
-
-        var $deferred = $.post(
-          'https://api.haitianrelief.org/email',
-          JSON.stringify(data),
-          null,
-          'json')
-
-        $deferred.done(function() {
-          $form.find('.ui.positive.message').removeClass('hidden');
-        })
-        .fail(function() {
-          $form.find('.ui.negative.message').removeClass('hidden');
-        }).always(function() {
-          $button.removeClass('loading');
-        });
-      });
-
-      // close contact success/failure message
-      $('.ui.message .close.icon').click(function() {
-        $(this).parent().addClass('hidden');
-      });
-
       // setup project image modal triggers
       $('[data-type="image-modal-trigger"]').each(function() {
         var smallImage = $(this);
