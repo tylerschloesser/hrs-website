@@ -12,5 +12,5 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - run: (cd cdk && npm i && STAGE=staging npx cdk deploy)
+      - run: (cd cdk && npm ci && STAGE=staging npx cdk deploy)
       - run: aws s3 cp ui s3://org.haitianrelief.dev --recursive
