@@ -2,5 +2,9 @@
   "name": "@hrs/ui",
   "version": "1.0.0",
   "private": true,
-  "main": "index.js"
+  "main": "index.js",
+  "devDependencies": {
+    "mustache-loader": "^1.4.3",
+    "webpack": "^5.40.0"
+  }
 }
