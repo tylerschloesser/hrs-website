@@ -14,3 +14,10 @@ jobs:
           node-version: 14.x
       - run: (cd cdk && npm ci && STAGE=staging npx cdk deploy)
       - run: aws s3 cp ui s3://org.haitianrelief.dev --recursive
+  staging-cypress:
+    needs: staging
+    steps:
+      - uses: actions/checkout@v2
+      - uses: cypress-io/github-action@v2
+        with:
+          working-directory: ui-tests
