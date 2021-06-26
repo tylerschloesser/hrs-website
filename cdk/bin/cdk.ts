@@ -3,8 +3,20 @@ import 'source-map-support/register'
 import * as cdk from 'monocdk'
 import { CdkStack } from '../lib/cdk-stack'
 
+const stage = process.env.STAGE?.toLowerCase()
+if (!stage) {
+  throw Error('STAGE not provided')
+}
+if (!['dev', 'staging', 'prod'].includes(stage)) {
+  throw Error(`Invalid STAGE: ${stage}`)
+}
+
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 const app = new cdk.App()
-new CdkStack(app, 'OrgHaitianReliefDev', {
+new CdkStack(app, `OrgHaitianRelief${capitalize(stage)}`, {
   /* If you don't specify 'env', this stack will be environment-agnostic.
    * Account/Region-dependent features and context lookups will not work,
    * but a single synthesized template can be deployed anywhere. */

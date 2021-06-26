@@ -16,7 +16,7 @@ export class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props)
 
-    const domainName = 'dev.haitianrelief.org'
+    const domainName = `${process.env.STAGE}.haitianrelief.org`
 
     const bucket = new cdk.aws_s3.Bucket(this, 'Bucket', {
       bucketName: domainName.split('.').reverse().join('.'),
