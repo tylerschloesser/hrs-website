@@ -7,16 +7,19 @@ npm -g i live-server mustache yaml2json
 ```
 
 watch yaml & mustache
+
 ```
 ./watch.sh
 ```
 
 auto reload index.html
+
 ```
 live-server --ignore=index.mustache,index.yaml,index.json .
 ```
 
 manually compile yaml & mustache to html
+
 ```
 ./compile.sh
 ```
@@ -30,6 +33,7 @@ manually compile yaml & mustache to html
 # notes
 
 resize images to max width 150
+
 ```
 magick mogrify -resize 150 -path ./images-sm *.jpg
 ```
