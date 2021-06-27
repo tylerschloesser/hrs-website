@@ -11,6 +11,7 @@ import {
 import { Distribution, ViewerProtocolPolicy } from 'monocdk/lib/aws-cloudfront'
 import { S3Origin } from 'monocdk/lib/aws-cloudfront-origins'
 import { CloudFrontTarget } from 'monocdk/lib/aws-route53-targets'
+import { BucketDeployment, Source } from 'monocdk/lib/aws-s3-deployment'
 
 export class CdkStack extends cdk.Stack {
   constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
@@ -44,6 +45,12 @@ export class CdkStack extends cdk.Stack {
     new ARecord(this, 'AliasRecord', {
       zone: hostedZone,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+    })
+
+    new BucketDeployment(this, 'BucketDeployment', {
+      sources: [Source.asset('../ui/dist')],
+      destinationBucket: bucket,
+      distribution,
     })
   }
 }
