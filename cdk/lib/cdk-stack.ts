@@ -27,12 +27,29 @@ export class CdkStack extends cdk.Stack {
       zoneName: domainName,
     })
 
-    const certificate = new Certificate(this, 'Certificate', {
-      domainName,
-      validation: CertificateValidation.fromDns(hostedZone),
-      subjectAlternativeNames:
-        process.env.STAGE === 'prod' ? ['haitianrelief.org'] : [],
-    })
+    let certificate: Certificate
+    if (process.env.STAGE === 'prod') {
+      const rootHostedZone = PublicHostedZone.fromLookup(
+        this,
+        'RootHostedZone',
+        {
+          domainName: 'haitianrelief.org',
+        }
+      )
+      certificate = new Certificate(this, 'Certificate', {
+        domainName,
+        subjectAlternativeNames: ['haitianrelief.org'],
+        validation: CertificateValidation.fromDnsMultiZone({
+          [domainName]: hostedZone,
+          'haitianrelief.org': rootHostedZone,
+        }),
+      })
+    } else {
+      certificate = new Certificate(this, 'Certificate', {
+        domainName,
+        validation: CertificateValidation.fromDns(hostedZone),
+      })
+    }
 
     const distribution = new Distribution(this, 'Distribution', {
       defaultBehavior: {
