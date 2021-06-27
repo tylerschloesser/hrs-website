@@ -27,15 +27,12 @@ export class CdkStack extends cdk.Stack {
       zoneName: domainName,
     })
 
+    const rootHostedZone = PublicHostedZone.fromLookup(this, 'RootHostedZone', {
+      domainName: 'haitianrelief.org',
+    })
+
     let certificate: Certificate
     if (process.env.STAGE === 'prod') {
-      const rootHostedZone = PublicHostedZone.fromLookup(
-        this,
-        'RootHostedZone',
-        {
-          domainName: 'haitianrelief.org',
-        }
-      )
       certificate = new Certificate(this, 'Certificate', {
         domainName,
         subjectAlternativeNames: ['haitianrelief.org'],
@@ -65,6 +62,13 @@ export class CdkStack extends cdk.Stack {
       zone: hostedZone,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     })
+
+    if (process.env.STAGE === 'prod') {
+      new ARecord(this, 'RootAliasRecord', {
+        zone: rootHostedZone,
+        target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+      })
+    }
 
     new BucketDeployment(this, 'BucketDeployment', {
       sources: [Source.asset('../ui/dist')],
