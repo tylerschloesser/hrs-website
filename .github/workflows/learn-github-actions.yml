@@ -22,3 +22,16 @@ jobs:
       - uses: cypress-io/github-action@v2
         with:
           working-directory: ui-tests
+  prod:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: 'us-east-1'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - run: (cd ui && npm ci && npx webpack)
+      - run: (cd cdk && npm ci && STAGE=prod npx cdk deploy)

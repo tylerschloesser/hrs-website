@@ -30,6 +30,8 @@ export class CdkStack extends cdk.Stack {
     const certificate = new Certificate(this, 'Certificate', {
       domainName,
       validation: CertificateValidation.fromDns(hostedZone),
+      subjectAlternativeNames:
+        process.env.STAGE === 'prod' ? ['haitianrelief.org'] : [],
     })
 
     const distribution = new Distribution(this, 'Distribution', {
