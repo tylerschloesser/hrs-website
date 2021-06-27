@@ -20,8 +20,8 @@ module.exports = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      templateParameters: require('./v1/index.json'),
-      template: 'v1/index.handlebars',
+      templateParameters: require('./index.json'),
+      template: 'index.handlebars',
     }),
     new CopyPlugin({
       patterns: [
