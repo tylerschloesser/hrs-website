@@ -72,14 +72,14 @@
 
     <h2 class="ui dividing blue header" id="projects">Projects</h2>
 
-    {{#project}}
+    {{#each project}}
       <h3 class="ui orange header">{{ header }}</h3>
-      {{ #description }}
-        <p>{{.}}</p>
-      {{ /description }}
+      {{#if description}}
+        <p>{{description}}</p>
+      {{/if}}
 
       <div class="ui small images">
-        {{ #image }}
+        {{#each image}}
           <img class="ui image" src="images-sm/{{ file }}" data-type="image-modal-trigger"/>
           <div class="ui basic modal">
             <i class="close icon"></i>
@@ -88,9 +88,9 @@
               <img class="ui image fluid" data-src="{{ file }}" />
             </div>
           </div>
-        {{ /image }}
+        {{/each}}
       </div>
-    {{/project}}
+    {{/each}}
 
     <a href="https://haitianrelief.org/A%20GROWING%20Proposal.docx">Download GROWIN Proposal<i class="file word outline icon"></i></a>
 
