@@ -62,7 +62,7 @@
     <h1 class="ui dividing blue header">{{ header }}</h1>
     <p>{{intro}}</p>
 
-    <img class="ui fluid bordered image" src="pc2.jpg">
+    <img class="ui fluid bordered image" src="public/pc2.jpg">
     <h2 class="ui dividing blue header" id="mission-statement">Mission Statement</h2>
     <p>{{mission-statement-1}}</p>
     <p style="margin-left: 1em; margin-right: 1em;">
@@ -80,19 +80,19 @@
 
       <div class="ui small images">
         {{#each image}}
-          <img class="ui image" src="images-sm/{{ file }}" data-type="image-modal-trigger"/>
+          <img class="ui image" src="public/images-sm/{{ file }}" data-type="image-modal-trigger"/>
           <div class="ui basic modal">
             <i class="close icon"></i>
             <div class="header">{{ header }}</div>
             <div class="image content">
-              <img class="ui image fluid" data-src="{{ file }}" />
+              <img class="ui image fluid" data-src="public/{{ file }}" />
             </div>
           </div>
         {{/each}}
       </div>
     {{/each}}
 
-    <a href="https://haitianrelief.org/A%20GROWING%20Proposal.docx">Download GROWIN Proposal<i class="file word outline icon"></i></a>
+    <a href="public/A%20GROWING%20Proposal.docx">Download GROWIN Proposal<i class="file word outline icon"></i></a>
 
     <h2 id="contact" class="ui dividing blue header">Contact</h2>
     <p>Email <a href="mailto:curtiss.o.larson@uwrf.edu ">curtiss.o.larson@uwrf.edu</a></p>
