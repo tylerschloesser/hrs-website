@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
-      - run: (cd ui && npx webpack)
+      - run: (cd ui && npm ci && npx webpack)
       - run: (cd cdk && npm ci && STAGE=staging npx cdk deploy)
   staging-cypress:
     runs-on: ubuntu-latest
