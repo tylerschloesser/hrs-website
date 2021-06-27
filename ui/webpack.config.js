@@ -1,5 +1,6 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   mode: 'development',
@@ -21,6 +22,14 @@ module.exports = {
     new HtmlWebpackPlugin({
       templateParameters: require('./v1/index.json'),
       template: 'v1/index.handlebars',
+    }),
+    new CopyPlugin({
+      patterns: [
+        {
+          from: path.join(__dirname, 'public'),
+          to: path.join(__dirname, 'dist/public'),
+        },
+      ],
     }),
   ],
 }
