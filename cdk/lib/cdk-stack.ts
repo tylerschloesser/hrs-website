@@ -48,13 +48,18 @@ export class CdkStack extends cdk.Stack {
       })
     }
 
+    const domainNames = [domainName]
+    if (process.env.STAGE === 'prod') {
+      domainNames.push('haitianrelief.org')
+    }
+
     const distribution = new Distribution(this, 'Distribution', {
       defaultBehavior: {
         origin: new S3Origin(bucket),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       defaultRootObject: 'index.html',
-      domainNames: [domainName],
+      domainNames,
       certificate,
     })
 
