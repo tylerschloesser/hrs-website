@@ -75,9 +75,9 @@
 
     {{#each project}}
       <h3 class="ui orange header">{{ header }}</h3>
-      {{#if description}}
-        <p>{{description}}</p>
-      {{/if}}
+      {{#each description}}
+        <p>{{.}}</p>
+      {{/each}}
 
       <div class="ui small images">
         {{#each image}}
