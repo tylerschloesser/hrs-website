@@ -1,15 +1,18 @@
 import * as cdk from 'monocdk'
 import {
-  PublicHostedZone,
-  ARecord,
-  RecordTarget,
-} from 'monocdk/lib/aws-route53'
-import {
   Certificate,
   CertificateValidation,
 } from 'monocdk/lib/aws-certificatemanager'
 import { Distribution, ViewerProtocolPolicy } from 'monocdk/lib/aws-cloudfront'
 import { S3Origin } from 'monocdk/lib/aws-cloudfront-origins'
+import {
+  ARecord,
+  IHostedZone,
+  PublicHostedZone,
+  RecordSet,
+  RecordTarget,
+  RecordType,
+} from 'monocdk/lib/aws-route53'
 import { CloudFrontTarget } from 'monocdk/lib/aws-route53-targets'
 import { BucketDeployment, Source } from 'monocdk/lib/aws-s3-deployment'
 
@@ -27,9 +30,17 @@ export class CdkStack extends cdk.Stack {
       zoneName: domainName,
     })
 
-    const rootHostedZone = PublicHostedZone.fromLookup(this, 'RootHostedZone', {
-      domainName: 'haitianrelief.org',
-    })
+    let rootHostedZone: IHostedZone
+
+    if (process.env.STAGE === 'prod') {
+      rootHostedZone = new PublicHostedZone(this, 'RootHostedZone', {
+        zoneName: 'haitianrelief.org',
+      })
+    } else {
+      rootHostedZone = PublicHostedZone.fromLookup(this, 'RootHostedZone', {
+        domainName: 'haitianrelief.org',
+      })
+    }
 
     let certificate: Certificate
     if (process.env.STAGE === 'prod') {
@@ -38,7 +49,7 @@ export class CdkStack extends cdk.Stack {
         subjectAlternativeNames: ['haitianrelief.org'],
         validation: CertificateValidation.fromDnsMultiZone({
           [domainName]: hostedZone,
-          'haitianrelief.org': rootHostedZone,
+          'haitianrelief.org': rootHostedZone!,
         }),
       })
     } else {
@@ -70,10 +81,17 @@ export class CdkStack extends cdk.Stack {
 
     if (process.env.STAGE === 'prod') {
       new ARecord(this, 'RootAliasRecord', {
-        zone: rootHostedZone,
+        zone: rootHostedZone!,
         target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
       })
     }
+
+    new RecordSet(this, 'NsRecord', {
+      recordName: hostedZone.zoneName,
+      recordType: RecordType.NS,
+      target: RecordTarget.fromValues(...hostedZone.hostedZoneNameServers!),
+      zone: rootHostedZone,
+    })
 
     new BucketDeployment(this, 'BucketDeployment', {
       sources: [Source.asset('../ui/dist')],
