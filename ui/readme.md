@@ -1,4 +1,10 @@
 
+`npm i`
+
+`npx webpack serve`
+
+---
+
 resize images
 
 ```
