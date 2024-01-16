@@ -1,10 +1,10 @@
-import * as cdk from 'monocdk'
+import { Stack, StackProps } from 'aws-cdk-lib'
 import {
   Certificate,
   CertificateValidation,
-} from 'monocdk/lib/aws-certificatemanager'
-import { Distribution, ViewerProtocolPolicy } from 'monocdk/lib/aws-cloudfront'
-import { S3Origin } from 'monocdk/lib/aws-cloudfront-origins'
+} from 'aws-cdk-lib/aws-certificatemanager'
+import { Distribution, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront'
+import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
 import {
   ARecord,
   IHostedZone,
@@ -12,17 +12,19 @@ import {
   RecordSet,
   RecordTarget,
   RecordType,
-} from 'monocdk/lib/aws-route53'
-import { CloudFrontTarget } from 'monocdk/lib/aws-route53-targets'
-import { BucketDeployment, Source } from 'monocdk/lib/aws-s3-deployment'
+} from 'aws-cdk-lib/aws-route53'
+import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
+import { Bucket } from 'aws-cdk-lib/aws-s3'
+import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment'
+import { Construct } from 'constructs'
 
-export class CdkStack extends cdk.Stack {
-  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
+export class CdkStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props)
 
     const domainName = `${process.env.STAGE}.haitianrelief.org`
 
-    const bucket = new cdk.aws_s3.Bucket(this, 'Bucket', {
+    const bucket = new Bucket(this, 'Bucket', {
       bucketName: domainName.split('.').reverse().join('.'),
     })
 

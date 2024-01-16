@@ -7,20 +7,17 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "test": "jest",
     "cdk": "STAGE=dev AWS_PROFILE=personal cdk deploy"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.10",
-    "@types/node": "10.17.27",
-    "jest": "^26.4.2",
-    "ts-jest": "^26.2.0",
-    "ts-node": "^9.0.0",
-    "typescript": "~3.9.7"
+    "@types/node": "^20.11.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "constructs": "^3.3.90",
-    "monocdk": "^1.110.0",
+    "aws-cdk": "^2.121.1",
+    "aws-cdk-lib": "^2.121.1",
+    "constructs": "^10.3.0",
     "source-map-support": "^0.5.16"
   }
 }

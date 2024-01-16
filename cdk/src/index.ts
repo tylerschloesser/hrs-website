@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import 'source-map-support/register'
-import * as cdk from 'monocdk'
-import { CdkStack } from '../lib/cdk-stack'
+import * as cdk from 'aws-cdk-lib'
+import { CdkStack } from './cdk-stack'
 
 const stage = process.env.STAGE?.toLowerCase()
 if (!stage) {
