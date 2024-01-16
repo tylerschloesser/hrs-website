@@ -7,7 +7,6 @@ import { Distribution, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront'
 import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
 import {
   ARecord,
-  IHostedZone,
   PublicHostedZone,
   RecordSet,
   RecordTarget,
@@ -32,17 +31,9 @@ export class CdkStack extends Stack {
       zoneName: domainName,
     })
 
-    let rootHostedZone: IHostedZone
-
-    if (process.env.STAGE === 'prod') {
-      rootHostedZone = new PublicHostedZone(this, 'RootHostedZone', {
-        zoneName: 'haitianrelief.org',
-      })
-    } else {
-      rootHostedZone = PublicHostedZone.fromLookup(this, 'RootHostedZone', {
-        domainName: 'haitianrelief.org',
-      })
-    }
+    const rootHostedZone = PublicHostedZone.fromLookup(this, 'RootHostedZone', {
+      domainName: 'haitianrelief.org',
+    })
 
     let certificate: Certificate
     if (process.env.STAGE === 'prod') {
