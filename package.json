@@ -4,8 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "test": "prettier --check .",
-    "build": "npm run build -w app",
-    "deploy": "npm run deploy -w cdk"
+    "build": "npm run build -w packages/app",
+    "deploy": "npm run deploy -w packages/cdk"
   },
   "workspaces": [
     "./packages/*"

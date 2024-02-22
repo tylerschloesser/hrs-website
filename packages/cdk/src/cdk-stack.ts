@@ -21,7 +21,7 @@ import {
   getDefaultRootObject,
 } from './webpack-manifest'
 
-const DIST_PATH = '../ui/dist'
+const DIST_PATH = '../app/dist'
 
 export class CdkStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
