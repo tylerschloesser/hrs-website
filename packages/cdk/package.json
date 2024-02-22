@@ -1,5 +1,5 @@
 {
-  "name": "cdk",
+  "name": "@hrs-website/cdk",
   "version": "0.1.0",
   "scripts": {
     "deploy": "cdk deploy"

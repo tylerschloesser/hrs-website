@@ -1,5 +1,5 @@
 {
-  "name": "@haitianrelief.org/ui-tests",
+  "name": "@hrs-website/cypress-tests",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
