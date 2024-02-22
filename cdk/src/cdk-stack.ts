@@ -16,6 +16,12 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
 import { Bucket } from 'aws-cdk-lib/aws-s3'
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment'
 import { Construct } from 'constructs'
+import {
+  WEBPACK_MANIFEST_FILE_NAME,
+  getDefaultRootObject,
+} from './webpack-manifest'
+
+const DIST_PATH = '../ui/dist'
 
 export class CdkStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -62,7 +68,7 @@ export class CdkStack extends Stack {
         origin: new S3Origin(bucket),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
-      defaultRootObject: 'index.html',
+      defaultRootObject: getDefaultRootObject(DIST_PATH),
       domainNames,
       certificate,
     })
@@ -87,7 +93,11 @@ export class CdkStack extends Stack {
     })
 
     new BucketDeployment(this, 'BucketDeployment', {
-      sources: [Source.asset('../ui/dist')],
+      sources: [
+        Source.asset(DIST_PATH, {
+          exclude: [WEBPACK_MANIFEST_FILE_NAME],
+        }),
+      ],
       destinationBucket: bucket,
       distribution,
     })

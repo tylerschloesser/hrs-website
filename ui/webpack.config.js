@@ -1,7 +1,7 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
-const { WebpackManifestPlugin  } = require('webpack-manifest-plugin')
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin')
 
 module.exports = {
   entry: './index.js',
@@ -33,6 +33,6 @@ module.exports = {
         },
       ],
     }),
-    new WebpackManifestPlugin({})
+    new WebpackManifestPlugin({}),
   ],
 }
