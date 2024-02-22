@@ -1,13 +1,15 @@
 const path = require('path')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
+const { WebpackManifestPlugin  } = require('webpack-manifest-plugin')
 
 module.exports = {
   entry: './index.js',
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: 'index.[contenthash].js',
     publicPath: '/',
+    clean: true,
   },
   module: {
     rules: [
@@ -22,7 +24,6 @@ module.exports = {
       templateParameters: require('./index.json'),
       template: 'index.handlebars',
       filename: 'index.[contenthash].html',
-      hash: true,
     }),
     new CopyPlugin({
       patterns: [
@@ -32,5 +33,6 @@ module.exports = {
         },
       ],
     }),
+    new WebpackManifestPlugin({})
   ],
 }
