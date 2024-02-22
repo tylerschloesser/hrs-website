@@ -3,7 +3,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyPlugin = require('copy-webpack-plugin')
 
 module.exports = {
-  mode: 'development',
   entry: './index.js',
   output: {
     path: path.join(__dirname, 'dist'),
@@ -22,6 +21,8 @@ module.exports = {
     new HtmlWebpackPlugin({
       templateParameters: require('./index.json'),
       template: 'index.handlebars',
+      filename: 'index.[contenthash].html',
+      hash: true,
     }),
     new CopyPlugin({
       patterns: [
