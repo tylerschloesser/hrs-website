@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "main": "index.js",
+  "scripts": {
+    "start": "webpack serve"
+  },
   "devDependencies": {
     "copy-webpack-plugin": "^9.0.1",
     "handlebars": "^4.7.7",
