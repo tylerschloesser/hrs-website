@@ -19,7 +19,7 @@ import { Construct } from 'constructs'
 import {
   WEBPACK_MANIFEST_FILE_NAME,
   getDefaultRootObject,
-} from './webpack-manifest'
+} from './webpack-manifest.js'
 
 const DIST_PATH = '../app/dist'
 
