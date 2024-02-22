@@ -1,14 +1,14 @@
 {
-  "name": "@haitianrelief.org/monorepo",
+  "name": "@hrs-website/root",
   "private": true,
   "version": "1.0.0",
   "scripts": {
     "test": "prettier --check .",
-    "build": "npm run build -w ui",
+    "build": "npm run build -w app",
     "deploy": "npm run deploy -w cdk"
   },
   "workspaces": [
-    "./ui/*"
+    "./packages/*"
   ],
   "dependencies": {},
   "devDependencies": {
