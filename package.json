@@ -2,7 +2,9 @@
   "name": "@haitianrelief.org/monorepo",
   "private": true,
   "version": "1.0.0",
-  "workspaces": ["./ui/*"],
+  "workspaces": [
+    "./ui/*"
+  ],
   "dependencies": {},
   "devDependencies": {
     "prettier": "^2.3.2"
