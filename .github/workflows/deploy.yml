@@ -12,8 +12,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - run: (cd ui && npm ci && npx webpack)
-      - run: (cd cdk && npm ci && STAGE=staging npx cdk deploy)
+      - run: npm ci
+      - run: npm run build
+      - run: STAGE=staging npm run deploy
   staging-cypress:
     runs-on: ubuntu-latest
     needs: staging
@@ -34,5 +35,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - run: (cd ui && npm ci && npx webpack)
-      - run: (cd cdk && npm ci && STAGE=prod npx cdk deploy)
+      - run: npm ci
+      - run: npm run build
+      - run: STAGE=prod npm run deploy

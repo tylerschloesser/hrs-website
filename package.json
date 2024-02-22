@@ -2,6 +2,11 @@
   "name": "@haitianrelief.org/monorepo",
   "private": true,
   "version": "1.0.0",
+  "scripts": {
+    "test": "prettier --check .",
+    "build": "npm run build -w ui",
+    "deploy": "npm run deploy -w cdk"
+  },
   "workspaces": [
     "./ui/*"
   ],
