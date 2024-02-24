@@ -16,7 +16,7 @@ jobs:
       - run: npm run build
       - run: STAGE=staging npm run deploy
   staging-cypress:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: staging
     steps:
       - uses: actions/checkout@v4
