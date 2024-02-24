@@ -20,7 +20,7 @@ jobs:
     needs: staging
     steps:
       - uses: actions/checkout@v4
-      - uses: cypress-io/github-action@v2
+      - uses: cypress-io/github-action@v6
         with:
           working-directory: packages/cypress-tests
   prod:
