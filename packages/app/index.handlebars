@@ -84,7 +84,7 @@
         financial officer until 2023. Both gentlemen now serve as board members.
       </p>
 
-      <img class='ui fluid bordered image' src='public/pc2.jpg' />
+      <img class='ui fluid rounded bordered image' src='public/pc2.jpg' />
       <h2 class='ui dividing blue header' id='mission-statement'>Mission
         Statement</h2>
       <p>
@@ -128,7 +128,7 @@
         <div class='ui small images'>
           {{#each image}}
             <img
-              class='ui image'
+              class='ui rounded bordered image'
               src='public/images-sm/{{file}}'
               data-type='image-modal-trigger'
             />
@@ -136,7 +136,10 @@
               <i class='close icon'></i>
               <div class='header'>{{header}}</div>
               <div class='image content'>
-                <img class='ui image fluid' data-src='public/{{file}}' />
+                <img
+                  class='ui rounded image fluid'
+                  data-src='public/{{file}}'
+                />
               </div>
             </div>
           {{/each}}
@@ -149,30 +152,51 @@
 
       <h2 id='contact' class='ui dividing blue header'>Contacts</h2>
 
-      <h3 class='ui header'>
-        Joy (O'Malley) Richards
-        <div class='sub header'>President</div>
-      </h3>
-      <a href='mailto:joyomalley@hotmail.com'>joyomalley@hotmail.com</a>
+      <div class='ui grid'>
 
-      <h3 class='ui header'>
-        Jeanette Juetten
-        <div class='sub header'>Treasurer</div>
-      </h3>
-      <a
-        href='mailto:jeanettejuetten@hotmail.com'
-      >jeanettejuetten@hotmail.com</a>
+        <div class='eight wide column'>
 
-      <h3 class='ui header'>
-        Pat O'Malley
-        <div class='sub header'>At-large Member, Founder, and former President</div>
-      </h3>
+          <h3 class='ui header'>
+            Joy (O'Malley) Richards
+            <div class='sub header'>President</div>
+          </h3>
+          <a href='mailto:joyomalley@hotmail.com'>joyomalley@hotmail.com</a>
 
-      <h3 class='ui header'>
-        Curt Larson
-        <div class='sub header'>At-large Member and former Treasurer</div>
-      </h3>
-      <a href='mailto:curtiss.o.larson@uwrf.edu'>curtiss.o.larson@uwrf.edu</a>
+          <h3 class='ui header'>
+            Jeanette Juetten
+            <div class='sub header'>Treasurer</div>
+          </h3>
+          <a
+            href='mailto:jeanettejuetten@hotmail.com'
+          >jeanettejuetten@hotmail.com</a>
+
+          <h3 class='ui header'>
+            Pat O'Malley
+            <div class='sub header'>At-large Member, Founder, and former
+              President</div>
+          </h3>
+
+          <h3 class='ui header'>
+            Curt Larson
+            <div class='sub header'>At-large Member and former Treasurer</div>
+          </h3>
+          <a
+            href='mailto:curtiss.o.larson@uwrf.edu'
+          >curtiss.o.larson@uwrf.edu</a>
+
+        </div>
+
+        <div class='eight wide column'>
+          <img
+            class='ui fluid rounded bordered image'
+            src='public/staff.jpg'
+            style='border-bottom-left-radius: 0; border-bottom-right-radius: 0;'
+          />
+          <div class='ui bottom attached label' style='position: unset;'>Left to
+            right: Jeanette Juetten, Curt Larson, Pat O'Malley, Joy Richards</div>
+        </div>
+
+      </div>
 
       <h2 class='ui dividing blue header' id='donate'>Donate</h2>
       <p>
