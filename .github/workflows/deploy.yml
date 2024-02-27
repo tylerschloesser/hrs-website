@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - run: HUSKY=0 npm ci
+      - run: npm ci
       - run: npm test
       - run: npm run build
       - run: STAGE=staging npm run deploy
@@ -24,8 +24,6 @@ jobs:
       - uses: cypress-io/github-action@v6
         with:
           working-directory: packages/cypress-tests
-        env:
-          HUSKY: 0
   prod:
     runs-on: ubuntu-latest
     needs: staging-cypress
@@ -38,7 +36,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18.x
-      - run: HUSKY=0 npm ci
+      - run: npm ci
       - run: npm test
       - run: npm run build
       - run: STAGE=prod npm run deploy
