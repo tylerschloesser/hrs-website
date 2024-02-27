@@ -23,6 +23,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: cypress-io/github-action@v6
         with:
+          install-command: HUSKY=0 npm ci
           working-directory: packages/cypress-tests
   prod:
     runs-on: ubuntu-latest
