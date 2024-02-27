@@ -26,9 +26,7 @@
     <style>
       [data-type="image-modal-trigger"] { cursor: pointer; } @media (max-width:
       480px) { /* hack to hide the donate button on mobile since the UX is
-      totally broken */ .right.menu { display: none !important; } } address {
-      display: flex; flex-direction: column; font-style: inherit; background:
-      #eee; }
+      totally broken */ .right.menu { display: none !important; } }
     </style>
     <link rel='icon' href='public/favicon.ico' />
   </head>
@@ -201,7 +199,10 @@
       <h2 class='ui dividing blue header' id='donate'>Donate</h2>
       <p>
         Kindly mail your tax-deductible contribution to our Treasurer at:
-        <address class='ui segment' style='background: #eee'>
+        <address
+          class='ui segment'
+          style='background: #eee; display: flex; flex-direction: column; font-style: inherit;'
+        >
           <span>Haitian Relief Services</span>
           <span>Attn: Jeanette Juetten</span>
           <span>W12009 850th Ave</span>
