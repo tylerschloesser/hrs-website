@@ -6,7 +6,7 @@
     "test": "prettier --check .",
     "build": "npm run build -w packages/app",
     "deploy": "npm run deploy -w packages/cdk",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "workspaces": [
     "./packages/*"
