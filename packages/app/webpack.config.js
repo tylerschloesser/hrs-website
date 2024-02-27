@@ -30,6 +30,7 @@ module.exports = (_env, argv) => {
         templateParameters: require('./index.json'),
         template: 'index.handlebars',
         filename: prod ? 'index.[contenthash].html' : 'index.html',
+        minify: false,
       }),
       new CopyPlugin({
         patterns: [
@@ -45,5 +46,8 @@ module.exports = (_env, argv) => {
       historyApiFallback: true,
       watchFiles: ['index.handlebars'],
     },
+    optimization: {
+      minimize: false,
+    }
   }
 }
