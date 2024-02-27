@@ -13,6 +13,7 @@ jobs:
         with:
           node-version: 18.x
       - run: npm ci
+      - run: npm test
       - run: npm run build
       - run: STAGE=staging npm run deploy
   staging-cypress:
