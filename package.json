@@ -5,13 +5,14 @@
   "scripts": {
     "test": "prettier --check .",
     "build": "npm run build -w packages/app",
-    "deploy": "npm run deploy -w packages/cdk"
+    "deploy": "npm run deploy -w packages/cdk",
+    "prepare": "husky"
   },
   "workspaces": [
     "./packages/*"
   ],
-  "dependencies": {},
   "devDependencies": {
+    "husky": "^9.0.11",
     "prettier": "^2.3.2"
   }
 }
