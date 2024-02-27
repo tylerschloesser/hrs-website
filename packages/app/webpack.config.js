@@ -43,6 +43,7 @@ module.exports = (_env, argv) => {
     ],
     devServer: {
       historyApiFallback: true,
+      watchFiles: ['index.handlebars'],
     },
   }
 }
