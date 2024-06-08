@@ -48,6 +48,6 @@ module.exports = (_env, argv) => {
     },
     optimization: {
       minimize: false,
-    }
+    },
   }
 }
