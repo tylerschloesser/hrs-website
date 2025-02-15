@@ -25,10 +25,8 @@
 
     <style>
       [data-type="image-modal-trigger"] { cursor: pointer; } @media (max-width:
-      480px) { /* hack to hide the donate button on mobile since the UX is
-      totally broken */ .right.menu { display: none !important; } } @media
-      (max-width: 767px) { .desktop-only { display: none; } } @media (min-width:
-      768px) { .mobile-only { display: none; } }
+      767px) { .desktop-only { display: none; } } @media (min-width: 768px) {
+      .mobile-only { display: none; } }
     </style>
     <link rel='icon' href='public/favicon.ico' />
 
@@ -47,23 +45,41 @@
 
   <body>
 
-    <div class='ui inverted basic segment'>
-      <div class='ui inverted secondary menu'>
-        <div class='ui container'>
-          <a class='item' href='#mission-statement'>Mission Statement</a>
-          <a class='item' href='#mission-statement'>Events</a>
-          <a class='item' href='#projects'>Projects</a>
-          <a class='item' href='#contact'>Contact</a>
+    <div class='desktop-only'>
+      <div class='ui inverted basic segment'>
+        <div class='ui inverted secondary menu'>
+          <div class='ui container'>
+            <a class='item' href='#mission-statement'>Mission Statement</a>
+            <a class='item' href='#mission-statement'>Events</a>
+            <a class='item' href='#projects'>Projects</a>
+            <a class='item' href='#contact'>Contact</a>
 
-          <div class='right menu'>
-            <div class='item'>
-              <a
-                class='ui primary button'
-                href='#donate'
-                id='donate-button-menu'
-              >
-                Donate
-              </a>
+            <div class='right menu'>
+              <div class='item'>
+                <a class='ui primary button' href='#donate'>
+                  Donate
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class='mobile-only'>
+      <div class='ui inverted basic segment'>
+        <div class='ui container'>
+          <div class='ui inverted fluid vertical menu'>
+            <a class='item' href='#mission-statement'>Mission Statement</a>
+            <a class='item' href='#mission-statement'>Events</a>
+            <a class='item' href='#projects'>Projects</a>
+            <a class='item' href='#contact'>Contact</a>
+
+            <div class='right menu'>
+              <div class='item'>
+                <a class='ui primary fluid button' href='#donate'>
+                  Donate
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -80,6 +96,7 @@
     <!-- End Google Tag Manager (noscript) -->
 
     <div class='ui container'>
+      <div></div>
       <h1 class='ui dividing blue header'>{{header}}</h1>
       <p>
         Haitian Relief Services (HRS) is a small non-profit organization
