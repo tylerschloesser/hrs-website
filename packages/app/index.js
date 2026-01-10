@@ -1,4 +1,57 @@
 $(document).ready(function () {
+  // Add to Calendar buttons
+  var event = {
+    title: 'It Takes A Village Concert',
+    description:
+      '20th Anniversary Ecumenical Fundraising Concert supporting vital projects in Ganthier, Haiti.',
+    location: 'Ezekiel Lutheran Church, 202 South 2nd St, River Falls, WI',
+    start: '2026-02-22T16:00:00',
+    end: '2026-02-22T19:00:00',
+  }
+
+  $('#add-google-cal').click(function (e) {
+    e.preventDefault()
+    var startDate = event.start.replace(/[-:]/g, '').replace('T', 'T')
+    var endDate = event.end.replace(/[-:]/g, '').replace('T', 'T')
+    var url =
+      'https://calendar.google.com/calendar/render?action=TEMPLATE' +
+      '&text=' +
+      encodeURIComponent(event.title) +
+      '&dates=' +
+      startDate +
+      '/' +
+      endDate +
+      '&details=' +
+      encodeURIComponent(event.description) +
+      '&location=' +
+      encodeURIComponent(event.location)
+    window.open(url, '_blank')
+  })
+
+  $('#add-ical').click(function (e) {
+    e.preventDefault()
+    var startDate = event.start.replace(/[-:]/g, '')
+    var endDate = event.end.replace(/[-:]/g, '')
+    var icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Haitian Relief Services//ITAV Concert//EN',
+      'BEGIN:VEVENT',
+      'DTSTART:' + startDate,
+      'DTEND:' + endDate,
+      'SUMMARY:' + event.title,
+      'DESCRIPTION:' + event.description,
+      'LOCATION:' + event.location,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n')
+    var blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' })
+    var link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = 'itav-concert-2026.ics'
+    link.click()
+  })
+
   // setup project image modal triggers
   $('[data-type="image-modal-trigger"]').each(function () {
     var smallImage = $(this)

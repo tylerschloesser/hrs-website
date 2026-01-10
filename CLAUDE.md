@@ -18,12 +18,14 @@ This is a static website for haitianrelief.org, organized as an npm/bun workspac
 ### Packages
 
 - **packages/app**: Static website built with Webpack and Handlebars templates
+
   - `index.handlebars`: Main template
   - `index.json`: Template data/content
   - `index.js`: Client-side JavaScript (jQuery, Semantic UI modals)
   - `public/`: Static assets (images, CSS)
 
 - **packages/cdk**: AWS CDK infrastructure (TypeScript)
+
   - Deploys to S3 + CloudFront
   - Uses `STAGE` env var (`staging` or `prod`) to determine domain
   - Staging: staging.haitianrelief.org
@@ -34,6 +36,7 @@ This is a static website for haitianrelief.org, organized as an npm/bun workspac
 ### CI/CD
 
 GitHub Actions workflow (`.github/workflows/deploy.yml`):
+
 1. Runs prettier check
 2. Builds app
 3. Deploys to staging
