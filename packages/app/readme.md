@@ -1,6 +1,6 @@
 `npm i`
 
-`npx webpack serve`
+`npm start`
 
 ---
 
