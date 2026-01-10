@@ -1,7 +1,7 @@
 $(document).ready(function () {
   // Initialize share button popups
   $('#share-facebook, #share-twitter, #share-email, #share-copy').popup({
-    position: 'top center'
+    position: 'top center',
   })
 
   // Add to Calendar buttons

@@ -29,9 +29,10 @@
     <style>
       [data-type="image-modal-trigger"] { cursor: pointer; } @media (max-width:
       767px) { .desktop-only { display: none; } } @media (min-width: 768px) {
-      .mobile-only { display: none; } }
-      .ui.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 12px 24px; border-radius: 4px; opacity: 0; transition: opacity 0.3s; z-index: 1000; }
-      .ui.toast.visible { opacity: 1; }
+      .mobile-only { display: none; } } .ui.toast { position: fixed; bottom:
+      20px; left: 50%; transform: translateX(-50%); background: #333; color:
+      white; padding: 12px 24px; border-radius: 4px; opacity: 0; transition:
+      opacity 0.3s; z-index: 1000; } .ui.toast.visible { opacity: 1; }
     </style>
     <link rel='icon' href='public/favicon.ico' />
 
@@ -176,16 +177,33 @@
           <p>Your support keeps this tradition alive—Thank you!</p>
           <p style='margin-top: 1em;'>
             <strong>Share this event:</strong>
-            <a class='ui circular facebook icon button' id='share-facebook' style='margin-left: 0.5em;' data-content='Share on Facebook'>
+            <a
+              class='ui circular facebook icon button'
+              id='share-facebook'
+              style='margin-left: 0.5em;'
+              data-content='Share on Facebook'
+            >
               <i class='facebook f icon'></i>
             </a>
-            <a class='ui circular twitter icon button' id='share-twitter' data-content='Share on Twitter'>
+            <a
+              class='ui circular twitter icon button'
+              id='share-twitter'
+              data-content='Share on Twitter'
+            >
               <i class='twitter icon'></i>
             </a>
-            <a class='ui circular icon button' id='share-email' data-content='Share via Email'>
+            <a
+              class='ui circular icon button'
+              id='share-email'
+              data-content='Share via Email'
+            >
               <i class='mail icon'></i>
             </a>
-            <a class='ui circular icon button' id='share-copy' data-content='Copy Link'>
+            <a
+              class='ui circular icon button'
+              id='share-copy'
+              data-content='Copy Link'
+            >
               <i class='copy icon'></i>
             </a>
           </p>
