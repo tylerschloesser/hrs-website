@@ -32,6 +32,11 @@ module.exports = (_env, argv) => {
         filename: prod ? 'index.[contenthash].html' : 'index.html',
         minify: false,
       }),
+      new HtmlWebpackPlugin({
+        template: 'concert.handlebars',
+        filename: 'concert.html',
+        inject: false,
+      }),
       new CopyPlugin({
         patterns: [
           {

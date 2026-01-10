@@ -1,4 +1,9 @@
 $(document).ready(function () {
+  // Initialize share button popups
+  $('#share-facebook, #share-twitter, #share-email, #share-copy').popup({
+    position: 'top center'
+  })
+
   // Add to Calendar buttons
   var event = {
     title: 'It Takes A Village Concert',
@@ -50,6 +55,50 @@ $(document).ready(function () {
     link.href = URL.createObjectURL(blob)
     link.download = 'itav-concert-2026.ics'
     link.click()
+  })
+
+  // Share buttons
+  var shareUrl = 'https://haitianrelief.org/concert.html'
+  var shareText =
+    'It Takes A Village Concert - 20th Anniversary Ecumenical Fundraising Concert supporting Haiti. Feb 22, 2026'
+
+  $('#share-facebook').click(function (e) {
+    e.preventDefault()
+    window.open(
+      'https://www.facebook.com/sharer/sharer.php?u=' +
+        encodeURIComponent(shareUrl),
+      '_blank'
+    )
+  })
+
+  $('#share-twitter').click(function (e) {
+    e.preventDefault()
+    window.open(
+      'https://twitter.com/intent/tweet?url=' +
+        encodeURIComponent(shareUrl) +
+        '&text=' +
+        encodeURIComponent(shareText),
+      '_blank'
+    )
+  })
+
+  $('#share-email').click(function (e) {
+    e.preventDefault()
+    window.location.href =
+      'mailto:?subject=' +
+      encodeURIComponent('It Takes A Village Concert 2026') +
+      '&body=' +
+      encodeURIComponent(shareText + '\n\n' + shareUrl)
+  })
+
+  $('#share-copy').click(function (e) {
+    e.preventDefault()
+    navigator.clipboard.writeText(shareUrl)
+    var $toast = $('#toast')
+    $toast.addClass('visible')
+    setTimeout(function () {
+      $toast.removeClass('visible')
+    }, 2000)
   })
 
   // setup project image modal triggers

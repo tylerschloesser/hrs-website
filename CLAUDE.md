@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- **Install dependencies**: `bun install` (use bun, not npm)
-- **Build**: `bun run build` (builds the app package)
-- **Type check**: `bun tsc -b` (project uses references, so `--noEmit` doesn't work)
-- **Lint/Format check**: `bun run test` (runs prettier --check)
-- **Dev server**: `bun run start -w packages/app` (runs webpack-dev-server)
-- **Deploy**: `STAGE=staging bun run deploy` or `STAGE=prod bun run deploy`
+- **Install dependencies**: `npm install`
+- **Build**: `npm run build` (builds the app package)
+- **Type check**: `npx tsc -b` (project uses references, so `--noEmit` doesn't work)
+- **Lint/Format check**: `npm test` (runs prettier --check)
+- **Dev server**: `npm run start -w packages/app` (runs webpack-dev-server)
+- **Deploy**: `STAGE=staging npm run deploy` or `STAGE=prod npm run deploy`
 
 ## Architecture
 
-This is a static website for haitianrelief.org, organized as an npm/bun workspace monorepo.
+This is a static website for haitianrelief.org, organized as an npm workspace monorepo.
 
 ### Packages
 
