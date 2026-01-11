@@ -16,6 +16,10 @@ $(document).ready(function () {
 
   $('#add-google-cal').click(function (e) {
     e.preventDefault()
+    dataLayer.push({
+      event: 'calendar_click',
+      calendar_type: 'google',
+    })
     var startDate = event.start.replace(/[-:]/g, '').replace('T', 'T')
     var endDate = event.end.replace(/[-:]/g, '').replace('T', 'T')
     var url =
@@ -35,6 +39,10 @@ $(document).ready(function () {
 
   $('#add-ical').click(function (e) {
     e.preventDefault()
+    dataLayer.push({
+      event: 'calendar_click',
+      calendar_type: 'ical',
+    })
     var startDate = event.start.replace(/[-:]/g, '')
     var endDate = event.end.replace(/[-:]/g, '')
     var icsContent = [
@@ -64,6 +72,10 @@ $(document).ready(function () {
 
   $('#share-facebook').click(function (e) {
     e.preventDefault()
+    dataLayer.push({
+      event: 'social_share',
+      share_platform: 'facebook',
+    })
     window.open(
       'https://www.facebook.com/sharer/sharer.php?u=' +
         encodeURIComponent(shareUrl),
@@ -73,6 +85,10 @@ $(document).ready(function () {
 
   $('#share-twitter').click(function (e) {
     e.preventDefault()
+    dataLayer.push({
+      event: 'social_share',
+      share_platform: 'twitter',
+    })
     window.open(
       'https://twitter.com/intent/tweet?url=' +
         encodeURIComponent(shareUrl) +
@@ -84,6 +100,10 @@ $(document).ready(function () {
 
   $('#share-email').click(function (e) {
     e.preventDefault()
+    dataLayer.push({
+      event: 'social_share',
+      share_platform: 'email',
+    })
     window.location.href =
       'mailto:?subject=' +
       encodeURIComponent('It Takes A Village Concert 2026') +
@@ -93,6 +113,10 @@ $(document).ready(function () {
 
   $('#share-copy').click(function (e) {
     e.preventDefault()
+    dataLayer.push({
+      event: 'social_share',
+      share_platform: 'copy_link',
+    })
     navigator.clipboard.writeText(shareUrl)
     var $toast = $('#toast')
     $toast.addClass('visible')
