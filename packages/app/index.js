@@ -14,8 +14,7 @@ $(document).ready(function () {
     end: '2026-02-22T19:00:00',
   }
 
-  $('#add-google-cal').click(function (e) {
-    e.preventDefault()
+  $('#add-google-cal').click(function () {
     dataLayer.push({
       event: 'calendar_click',
       calendar_type: 'google',
@@ -37,8 +36,7 @@ $(document).ready(function () {
     window.open(url, '_blank')
   })
 
-  $('#add-ical').click(function (e) {
-    e.preventDefault()
+  $('#add-ical').click(function () {
     dataLayer.push({
       event: 'calendar_click',
       calendar_type: 'ical',
@@ -70,8 +68,7 @@ $(document).ready(function () {
   var shareText =
     'It Takes A Village Concert - 20th Anniversary Ecumenical Fundraising Concert supporting Haiti. Feb 22, 2026'
 
-  $('#share-facebook').click(function (e) {
-    e.preventDefault()
+  $('#share-facebook').click(function () {
     dataLayer.push({
       event: 'social_share',
       share_platform: 'facebook',
@@ -83,8 +80,7 @@ $(document).ready(function () {
     )
   })
 
-  $('#share-twitter').click(function (e) {
-    e.preventDefault()
+  $('#share-twitter').click(function () {
     dataLayer.push({
       event: 'social_share',
       share_platform: 'twitter',
@@ -98,8 +94,7 @@ $(document).ready(function () {
     )
   })
 
-  $('#share-email').click(function (e) {
-    e.preventDefault()
+  $('#share-email').click(function () {
     dataLayer.push({
       event: 'social_share',
       share_platform: 'email',
@@ -111,8 +106,7 @@ $(document).ready(function () {
       encodeURIComponent(shareText + '\n\n' + shareUrl)
   })
 
-  $('#share-copy').click(function (e) {
-    e.preventDefault()
+  $('#share-copy').click(function () {
     dataLayer.push({
       event: 'social_share',
       share_platform: 'copy_link',
