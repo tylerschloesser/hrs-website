@@ -113,7 +113,7 @@ export class CdkStack extends Stack {
 
     // GitHub Actions deploy role
     const deployRole = new iam.Role(this, 'DeployRole', {
-      roleName: `hrs-github-actions-deploy-${process.env.STAGE}`,
+      roleName: 'hrs-github-actions-deploy',
       assumedBy: new iam.FederatedPrincipal(
         oidcProvider.openIdConnectProviderArn,
         {
