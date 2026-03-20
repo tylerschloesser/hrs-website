@@ -5,7 +5,7 @@ import {
   CertificateValidation,
 } from 'aws-cdk-lib/aws-certificatemanager'
 import { Distribution, ViewerProtocolPolicy } from 'aws-cdk-lib/aws-cloudfront'
-import { S3Origin } from 'aws-cdk-lib/aws-cloudfront-origins'
+import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins'
 import {
   ARecord,
   PublicHostedZone,
@@ -66,7 +66,7 @@ export class CdkStack extends Stack {
 
     const distribution = new Distribution(this, 'Distribution', {
       defaultBehavior: {
-        origin: new S3Origin(bucket),
+        origin: S3BucketOrigin.withOriginAccessControl(bucket),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       defaultRootObject: getDefaultRootObject(DIST_PATH),
@@ -101,6 +101,7 @@ export class CdkStack extends Stack {
       ],
       destinationBucket: bucket,
       distribution,
+      memoryLimit: 256,
     })
 
     // GitHub OIDC provider (account-wide singleton, import existing)
