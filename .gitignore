@@ -2,3 +2,4 @@ node_modules
 cypress/videos
 .DS_Store
 .playwright-cli
+*.js.map

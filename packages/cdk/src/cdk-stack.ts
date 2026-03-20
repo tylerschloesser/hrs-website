@@ -1,4 +1,5 @@
-import { Stack, StackProps } from 'aws-cdk-lib'
+import { CfnOutput, Stack, StackProps } from 'aws-cdk-lib'
+import * as iam from 'aws-cdk-lib/aws-iam'
 import {
   Certificate,
   CertificateValidation,
@@ -100,6 +101,38 @@ export class CdkStack extends Stack {
       ],
       destinationBucket: bucket,
       distribution,
+    })
+
+    // GitHub OIDC provider (account-wide singleton, import existing)
+    const oidcProvider = iam.OpenIdConnectProvider.fromOpenIdConnectProviderArn(
+      this,
+      'GitHubOidcProvider',
+      `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`
+    )
+
+    // GitHub Actions deploy role
+    const deployRole = new iam.Role(this, 'DeployRole', {
+      roleName: `hrs-github-actions-deploy-${process.env.STAGE}`,
+      assumedBy: new iam.FederatedPrincipal(
+        oidcProvider.openIdConnectProviderArn,
+        {
+          StringEquals: {
+            'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+          },
+          StringLike: {
+            'token.actions.githubusercontent.com:sub':
+              'repo:tylerschloesser/hrs-website:ref:refs/heads/master',
+          },
+        },
+        'sts:AssumeRoleWithWebIdentity'
+      ),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'),
+      ],
+    })
+
+    new CfnOutput(this, 'DeployRoleArn', {
+      value: deployRole.roleArn,
     })
   }
 }
