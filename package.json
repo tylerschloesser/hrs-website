@@ -2,17 +2,20 @@
   "name": "@hrs-website/root",
   "private": true,
   "version": "1.0.0",
+  "packageManager": "pnpm@11.25.0",
   "scripts": {
-    "test": "prettier --check .",
-    "build": "npm run build -w packages/app",
-    "deploy": "npm run deploy -w packages/cdk",
+    "dev": "pnpm --filter @hrs-website/app dev",
+    "build": "pnpm --filter @hrs-website/app build",
+    "preview": "pnpm --filter @hrs-website/app preview",
+    "check": "prettier --check . && pnpm --filter @hrs-website/app check && tsc -b packages/cdk",
+    "format": "prettier --write .",
+    "deploy": "pnpm --filter @hrs-website/cdk deploy",
     "prepare": "husky || true"
   },
-  "workspaces": [
-    "./packages/*"
-  ],
-  "dependencies": {
-    "husky": "^9.0.11",
-    "prettier": "^2.3.2"
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.9.3"
   }
 }

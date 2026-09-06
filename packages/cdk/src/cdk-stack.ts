@@ -17,11 +17,6 @@ import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
 import { Bucket } from 'aws-cdk-lib/aws-s3'
 import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment'
 import { Construct } from 'constructs'
-import {
-  WEBPACK_MANIFEST_FILE_NAME,
-  getDefaultRootObject,
-} from './webpack-manifest.js'
-
 const DIST_PATH = '../app/dist'
 
 export class CdkStack extends Stack {
@@ -69,7 +64,7 @@ export class CdkStack extends Stack {
         origin: S3BucketOrigin.withOriginAccessControl(bucket),
         viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
-      defaultRootObject: getDefaultRootObject(DIST_PATH),
+      defaultRootObject: 'index.html',
       domainNames,
       certificate,
     })
@@ -94,11 +89,7 @@ export class CdkStack extends Stack {
     })
 
     new BucketDeployment(this, 'BucketDeployment', {
-      sources: [
-        Source.asset(DIST_PATH, {
-          exclude: [WEBPACK_MANIFEST_FILE_NAME],
-        }),
-      ],
+      sources: [Source.asset(DIST_PATH)],
       destinationBucket: bucket,
       distribution,
       memoryLimit: 256,
