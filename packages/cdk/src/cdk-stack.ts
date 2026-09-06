@@ -124,7 +124,7 @@ export class CdkStack extends Stack {
             },
             StringLike: {
               'token.actions.githubusercontent.com:sub':
-                'repo:tylerschloesser/hrs-website:ref:refs/heads/master',
+                'repo:tylerschloesser/hrs-website:ref:refs/heads/main',
             },
           },
           'sts:AssumeRoleWithWebIdentity'
