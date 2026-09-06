@@ -1,0 +1,20 @@
+---
+interface Props {
+  githubUrl: string
+}
+
+const { githubUrl } = Astro.props
+---
+
+<footer class="bg-brand-dark py-10 text-center text-white">
+  <div class="mx-auto max-w-5xl px-4">
+    <a
+      href={githubUrl}
+      target="_blank"
+      rel="noopener"
+      class="underline underline-offset-2 hover:text-accent"
+    >
+      github.com/tylerschloesser
+    </a>
+  </div>
+</footer>

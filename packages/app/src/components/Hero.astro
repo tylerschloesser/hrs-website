@@ -1,0 +1,28 @@
+---
+import type { ImageMetadata } from 'astro'
+import { Image } from 'astro:assets'
+import Markdown from './Markdown.astro'
+
+interface Props {
+  siteName: string
+  intro: string
+  heroImage: ImageMetadata
+  heroAlt: string
+}
+
+const { siteName, intro, heroImage, heroAlt } = Astro.props
+---
+
+<section class="bg-surface">
+  <div class="mx-auto max-w-5xl space-y-6 px-4 py-12">
+    <h1 class="text-4xl font-semibold sm:text-5xl">{siteName}</h1>
+    <Markdown content={intro} />
+    <Image
+      src={heroImage}
+      alt={heroAlt}
+      loading="eager"
+      fetchpriority="high"
+      class="w-full rounded"
+    />
+  </div>
+</section>

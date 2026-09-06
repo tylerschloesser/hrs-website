@@ -1,0 +1,117 @@
+---
+interface Props {
+  siteName: string
+}
+
+const { siteName } = Astro.props
+
+const links = [
+  { href: '#events', label: 'Events' },
+  { href: '#mission-statement', label: 'Our Mission' },
+  { href: '#projects', label: 'Our Impact' },
+  { href: '#contact', label: 'Contact' },
+]
+---
+
+<header class="sticky top-0 z-40 bg-brand-dark text-white">
+  <div class="mx-auto max-w-5xl px-4">
+    <div class="flex h-16 items-center justify-between gap-4">
+      <a href="/" class="font-serif text-lg font-semibold text-white">
+        {siteName}
+      </a>
+
+      <nav aria-label="Primary" class="hidden items-center gap-6 sm:flex">
+        {
+          links.map((link) => (
+            <a href={link.href} class="hover:text-accent">
+              {link.label}
+            </a>
+          ))
+        }
+        <a
+          href="#donate"
+          class="rounded bg-accent px-4 py-2 font-medium text-ink hover:opacity-90"
+        >
+          Donate
+        </a>
+      </nav>
+
+      <button
+        type="button"
+        id="nav-toggle"
+        aria-expanded="false"
+        aria-controls="nav-panel"
+        class="inline-flex items-center justify-center rounded p-2 sm:hidden"
+      >
+        <span class="sr-only">Menu</span>
+        <svg
+          aria-hidden="true"
+          focusable="false"
+          viewBox="0 0 24 24"
+          class="h-6 w-6"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"></path>
+        </svg>
+      </button>
+    </div>
+
+    <nav
+      id="nav-panel"
+      aria-label="Primary"
+      hidden
+      class="flex flex-col gap-1 pb-4 sm:hidden"
+    >
+      {
+        links.map((link) => (
+          <a href={link.href} class="rounded px-2 py-2 hover:bg-white/10">
+            {link.label}
+          </a>
+        ))
+      }
+      <a
+        href="#donate"
+        class="mt-2 rounded bg-accent px-4 py-2 text-center font-medium text-ink"
+      >
+        Donate
+      </a>
+    </nav>
+  </div>
+</header>
+
+<script>
+  const toggle = document.getElementById('nav-toggle')
+  const panel = document.getElementById('nav-panel')
+
+  if (toggle instanceof HTMLButtonElement && panel) {
+    toggle.addEventListener('click', () => {
+      const isOpen = toggle.getAttribute('aria-expanded') === 'true'
+      toggle.setAttribute('aria-expanded', String(!isOpen))
+      panel.hidden = isOpen
+    })
+
+    panel.addEventListener('click', (event) => {
+      const target = event.target
+      if (target instanceof HTMLElement && target.closest('a')) {
+        toggle.setAttribute('aria-expanded', 'false')
+        panel.hidden = true
+      }
+    })
+
+    document.addEventListener('keydown', (event) => {
+      if (
+        event.key === 'Escape' &&
+        toggle.getAttribute('aria-expanded') === 'true'
+      ) {
+        toggle.setAttribute('aria-expanded', 'false')
+        panel.hidden = true
+        toggle.focus()
+      }
+    })
+  }
+</script>

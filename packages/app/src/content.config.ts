@@ -1,5 +1,6 @@
 import { glob } from 'astro/loaders'
-import { defineCollection, z } from 'astro:content'
+import { defineCollection, type SchemaContext } from 'astro:content'
+import { z } from 'astro/zod'
 
 const CONTENT_DIR = './src/content'
 
@@ -15,7 +16,7 @@ const CONTENT_DIR = './src/content'
  */
 function singleton<S extends z.ZodRawShape>(
   name: string,
-  shape: (image: () => z.ZodType) => S
+  shape: (image: SchemaContext['image']) => S
 ) {
   return defineCollection({
     loader: glob({ pattern: `${name}.yml`, base: CONTENT_DIR }),

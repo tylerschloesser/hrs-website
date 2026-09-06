@@ -1,0 +1,61 @@
+---
+import { render } from 'astro:content'
+import type { CollectionEntry } from 'astro:content'
+import ProjectGallery from './ProjectGallery.astro'
+
+interface Props {
+  projects: CollectionEntry<'projects'>[]
+}
+
+const { projects } = Astro.props
+
+const sorted = [...projects].sort((a, b) => a.data.order - b.data.order)
+
+const rendered = await Promise.all(
+  sorted.map(async (project) => {
+    const { Content } = await render(project)
+    return { project, Content }
+  })
+)
+
+const withAttachments = sorted.filter(
+  (project) => project.data.attachments.length > 0
+)
+---
+
+<section class="bg-surface-alt">
+  <div class="mx-auto max-w-5xl space-y-12 px-4 py-12">
+    <h2 id="projects" class="text-3xl font-semibold">Our Impact</h2>
+
+    {
+      rendered.map(({ project, Content }) => (
+        <article class="space-y-4">
+          <h3 class="text-2xl font-semibold">{project.data.title}</h3>
+          <div class="space-y-4 [&_p]:leading-relaxed">
+            <Content />
+          </div>
+          {project.data.gallery.length > 0 && (
+            <ProjectGallery gallery={project.data.gallery} />
+          )}
+        </article>
+      ))
+    }
+
+    {
+      withAttachments.length > 0 && (
+        <div class="space-y-2">
+          {withAttachments.map((project) =>
+            project.data.attachments.map((attachment) => (
+              <a
+                href={attachment.file}
+                class="inline-flex items-center gap-2 text-primary underline underline-offset-2 hover:text-primary-strong"
+              >
+                {attachment.label}
+              </a>
+            ))
+          )}
+        </div>
+      )
+    }
+  </div>
+</section>

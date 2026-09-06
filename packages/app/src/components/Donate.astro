@@ -1,0 +1,84 @@
+---
+interface Mail {
+  attn: string
+  street: string
+  city_state_zip: string
+}
+
+interface Props {
+  paypalUrl: string
+  venmoUrl: string
+  mail: Mail
+}
+
+const { paypalUrl, venmoUrl, mail } = Astro.props
+---
+
+<section class="bg-surface">
+  <div class="mx-auto max-w-5xl space-y-6 px-4 py-12">
+    <h2 id="donate" class="text-3xl font-semibold">Donate</h2>
+    <p>We offer 3 methods for donation:</p>
+
+    <div class="grid gap-6 sm:grid-cols-3">
+      <div
+        class="flex flex-col items-center gap-4 rounded border border-border p-6 text-center"
+      >
+        <h3 class="text-lg font-semibold">Donate by PayPal</h3>
+        <a
+          href={paypalUrl}
+          class="block w-full rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-strong"
+        >
+          Donate
+        </a>
+      </div>
+
+      <div
+        class="flex flex-col items-center gap-4 rounded border border-border p-6 text-center"
+      >
+        <h3
+          class="flex items-center justify-center gap-2 text-lg font-semibold"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1333.33 1333.33"
+            shape-rendering="geometricPrecision"
+            text-rendering="geometricPrecision"
+            image-rendering="optimizeQuality"
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            style="height: 1em;"
+            aria-hidden="true"
+            focusable="false"
+            ><g fill-rule="nonzero"
+              ><path
+                d="M157.62 0h1018.09c87.04 0 157.62 70.58 157.62 157.62v1018.09c0 87.04-70.58 157.62-157.62 157.62H157.62C70.58 1333.33 0 1262.74 0 1175.7V157.62C0 70.58 70.59 0 157.63 0z"
+                fill="black"></path><path
+                d="M995.24 271.32c28.68 47.29 41.55 96.05 41.55 157.62 0 196.38-167.62 451.42-303.67 630.49H422.45L297.88 314.34 570 288.5l66.17 530.15c61.5-100.31 137.55-257.93 137.55-365.32 0-58.84-10.08-98.84-25.84-131.78l247.36-50.23z"
+                fill="#fff"></path></g
+            ></svg
+          >
+          Donate by Venmo
+        </h3>
+        <a
+          href={venmoUrl}
+          class="block w-full rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-strong"
+        >
+          Donate
+        </a>
+      </div>
+
+      <div
+        class="flex flex-col items-center gap-3 rounded border border-border p-6 text-center"
+      >
+        <h3 class="text-lg font-semibold">Donate by Mail</h3>
+        <p>Kindly mail your tax-deductible contribution to our Treasurer at:</p>
+        <address class="w-full rounded bg-surface-alt p-4 text-left not-italic">
+          <div>Haitian Relief Services</div>
+          <div>Attn: {mail.attn}</div>
+          <div>{mail.street}</div>
+          <div>{mail.city_state_zip}</div>
+        </address>
+      </div>
+    </div>
+  </div>
+</section>

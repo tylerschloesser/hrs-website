@@ -1,0 +1,198 @@
+---
+// Rendered once per page. Every `ProjectGallery` thumbnail button carries
+// `data-full-src` / `data-full-srcset` / `data-caption`; this component
+// delegates a click listener from `document` so it doesn't need to know
+// about any particular gallery ahead of time.
+---
+
+<dialog
+  id="lightbox"
+  aria-label="Image viewer"
+  class="fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%-2rem)] max-w-4xl rounded-lg border-0 bg-ink p-6 text-white"
+>
+  <button
+    type="button"
+    data-lightbox-close
+    aria-label="Close"
+    class="absolute right-3 top-3 z-10 rounded-full bg-white/10 p-2 hover:bg-white/20"
+  >
+    <svg
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 24 24"
+      class="h-6 w-6"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        d="M6 18 18 6M6 6l12 12"></path>
+    </svg>
+  </button>
+
+  <div class="relative flex items-center justify-center">
+    <button
+      type="button"
+      data-lightbox-prev
+      aria-label="Previous image"
+      class="absolute left-0 z-10 rounded-full bg-white/10 p-2 hover:bg-white/20"
+    >
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        viewBox="0 0 24 24"
+        class="h-6 w-6"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M15.75 19.5 8.25 12l7.5-7.5"></path>
+      </svg>
+    </button>
+
+    <img
+      data-lightbox-img
+      alt=""
+      class="max-h-[70dvh] max-w-full rounded object-contain"
+    />
+
+    <button
+      type="button"
+      data-lightbox-next
+      aria-label="Next image"
+      class="absolute right-0 z-10 rounded-full bg-white/10 p-2 hover:bg-white/20"
+    >
+      <svg
+        aria-hidden="true"
+        focusable="false"
+        viewBox="0 0 24 24"
+        class="h-6 w-6"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="m8.25 4.5 7.5 7.5-7.5 7.5"></path>
+      </svg>
+    </button>
+  </div>
+
+  <p data-lightbox-caption class="mt-4 text-center"></p>
+</dialog>
+
+<style>
+  #lightbox::backdrop {
+    background-color: color-mix(in srgb, var(--color-ink) 85%, transparent);
+  }
+</style>
+
+<script>
+  const dialog = document.getElementById('lightbox')
+  const imgEl = dialog?.querySelector('[data-lightbox-img]')
+  const captionEl = dialog?.querySelector('[data-lightbox-caption]')
+  const closeBtn = dialog?.querySelector('[data-lightbox-close]')
+  const prevBtn = dialog?.querySelector('[data-lightbox-prev]')
+  const nextBtn = dialog?.querySelector('[data-lightbox-next]')
+
+  if (
+    dialog instanceof HTMLDialogElement &&
+    imgEl instanceof HTMLImageElement &&
+    captionEl instanceof HTMLElement &&
+    closeBtn instanceof HTMLButtonElement &&
+    prevBtn instanceof HTMLButtonElement &&
+    nextBtn instanceof HTMLButtonElement
+  ) {
+    let currentGroup: HTMLButtonElement[] = []
+    let currentIndex = 0
+    let openerButton: HTMLButtonElement | null = null
+
+    const getGroup = (button: HTMLButtonElement): HTMLButtonElement[] => {
+      const container = button.closest('.gallery') ?? document
+      return Array.from(
+        container.querySelectorAll('button[data-full-src]')
+      ).filter((el): el is HTMLButtonElement => el instanceof HTMLButtonElement)
+    }
+
+    const show = (button: HTMLButtonElement) => {
+      imgEl.src = button.dataset.fullSrc ?? ''
+      imgEl.srcset = button.dataset.fullSrcset ?? ''
+      imgEl.sizes = '100vw'
+      imgEl.alt = button.dataset.caption ?? ''
+      captionEl.textContent = button.dataset.caption ?? ''
+    }
+
+    const move = (delta: number) => {
+      if (currentGroup.length === 0) return
+      currentIndex =
+        (currentIndex + delta + currentGroup.length) % currentGroup.length
+      const next = currentGroup[currentIndex]
+      if (next) show(next)
+    }
+
+    const openFrom = (button: HTMLButtonElement) => {
+      currentGroup = getGroup(button)
+      currentIndex = currentGroup.indexOf(button)
+      openerButton = button
+      show(button)
+      dialog.showModal()
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target
+      const button =
+        target instanceof HTMLElement
+          ? target.closest('button[data-full-src]')
+          : null
+      if (button instanceof HTMLButtonElement) {
+        openFrom(button)
+      }
+    })
+
+    closeBtn.addEventListener('click', () => dialog.close())
+    prevBtn.addEventListener('click', () => move(-1))
+    nextBtn.addEventListener('click', () => move(1))
+
+    // Clicking the dialog's own box (its padding, or the backdrop outside
+    // it) closes it; clicking the image, caption, or the nav buttons does
+    // not, since those are separate elements and won't be `event.target`.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close()
+    })
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') move(-1)
+      if (event.key === 'ArrowRight') move(1)
+    })
+
+    dialog.addEventListener('close', () => {
+      imgEl.src = ''
+      imgEl.srcset = ''
+      imgEl.alt = ''
+      captionEl.textContent = ''
+      currentGroup = []
+      openerButton?.focus()
+      openerButton = null
+    })
+
+    // Basic touch swipe support.
+    let touchStartX: number | null = null
+    dialog.addEventListener('pointerdown', (event) => {
+      touchStartX = event.clientX
+    })
+    dialog.addEventListener('pointerup', (event) => {
+      if (touchStartX === null) return
+      const delta = event.clientX - touchStartX
+      touchStartX = null
+      if (Math.abs(delta) > 50) {
+        move(delta > 0 ? -1 : 1)
+      }
+    })
+  }
+</script>
