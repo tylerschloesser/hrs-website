@@ -2,10 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> Migration in progress. `docs/migration-plan.md` is the spec and
-> `docs/migration-status.md` is the live state — read both before doing
-> anything substantial. Work happens on branch `sveltia` until cutover.
-
 ## Commands
 
 Package manager is **pnpm** (see `packageManager` in `package.json`). npm will not work.
@@ -19,10 +15,13 @@ Package manager is **pnpm** (see `packageManager` in `package.json`). npm will n
   `packages/app/scripts/validate-cms-config.mjs` + `tsc -b packages/cdk` + the
   `cms-auth` unit tests.
 - **Format**: `pnpm format`
-- **Deploy**: `AWS_PROFILE=admin STAGE=<sveltia|prod> pnpm run deploy`
+- **Deploy**: `AWS_PROFILE=admin pnpm run deploy`
   (`pnpm run`, not `pnpm deploy` — pnpm has a built-in command by that name).
-  Pushing to `sveltia` or `main` does this in CI; a local deploy is for
-  infrastructure changes you want to see before pushing.
+  Pushing to `main` does this in CI; a local deploy is for infrastructure
+  changes you want to see before pushing. If the CDK CLI says "no credentials
+  have been configured" while the `aws` CLI works, the JS SDK has not picked
+  up the SSO session — prefix with
+  `eval "$(AWS_PROFILE=admin aws configure export-credentials --format env)"`.
 
 ## Architecture
 
@@ -56,10 +55,9 @@ through Sveltia CMS at `/admin/`, all in a pnpm workspace.
 - `public/`: the favicon set, `documents/` and `admin/index.html` (the pinned
   Sveltia CMS loader). Anything that should be optimized belongs in
   `src/content/`, not here.
-- `src/pages/robots.txt.ts` generates robots.txt from `STAGE`: production gets
-  the real one (with the `Sitemap:` line), every other stage gets `Disallow: /`
-  so the test domain is never indexed as a duplicate of the site. Unset
-  `STAGE` means production.
+- `src/pages/robots.txt.ts` generates robots.txt at build time so the
+  `Sitemap:` line follows whatever `site` the build was given. There is only
+  one flavour of it now that there are no stages.
 
 Search and social metadata:
 
@@ -96,22 +94,29 @@ exception — `pnpm check` runs it.
 ### packages/cdk — AWS infrastructure
 
 CDK in TypeScript, run with `tsx`. Account `063257577013`, us-east-1.
-`STAGE` is `sveltia` or `prod`, and `src/index.ts` always synthesizes two
-stacks:
 
-- **`OrgHaitianReliefShared`** (`src/shared-stack.ts`) — account-wide, stage
-  independent. Owns the GitHub Actions OIDC deploy role `hrs-website-deploy`,
-  which trusts only `refs/heads/main` and `refs/heads/sveltia` of
-  `tylerschloesser/hrs-website`. It holds `AdministratorAccess`: the trust
-  policy is the control. It also owns the CMS auth Lambda (below).
-- **`OrgHaitianRelief<Stage>`** (`src/site-stack.ts`) — S3 bucket
-  `org.haitianrelief.<stage>`, its own hosted zone plus an NS delegation from
-  the apex zone, an ACM cert, and the CloudFront distribution. The NS record is
-  an explicit dependency of the certificate, because ACM validates over public
-  DNS and cannot until the subdomain is delegated.
+**One stack, `HaitianReliefSite` (`src/site-stack.ts`), and no stages.** The
+`sveltia` and `staging` stages and the separate `Shared` stack were torn down
+at the 2026-09-07 cutover: `Shared` existed only to hold what the stages had
+in common, so it had nothing left to share. `src/index.ts` synthesizes the one
+stack and passes it the apex zone.
 
-Things in `site-stack.ts` worth knowing before you change them:
+If a test environment is ever wanted again, add it as a **separate app with
+its own domain** rather than reintroducing a `STAGE` switch through every
+construct — the stage conditionals were the biggest source of accidental
+complexity in the old stack.
 
+The stack owns the S3 bucket `org.haitianrelief`, the ACM certificate, the
+CloudFront distribution, the apex DNS record, the GitHub Actions deploy role,
+the CMS auth Lambda, and the canary and its alarm.
+
+- **The site is served from the apex only.** There is no
+  `prod.haitianrelief.org`, no per-stage hosted zone and no NS delegation, so
+  nothing has to be delegated before ACM can validate — validation happens in
+  the zone that already answers for the domain.
+- **The apex hosted zone is imported by id, never created**
+  (`Z0010048114HS2EOWXJLC`). Creating it would mint new nameservers and take
+  the domain off the internet.
 - Content ships in **two** `BucketDeployment`s. `_astro/*` goes first, cached
   `immutable`, never pruned; everything else follows, `must-revalidate`, pruned,
   and invalidates `/*`. The second one's `exclude: ['_astro/*']` is what stops
@@ -120,28 +125,39 @@ Things in `site-stack.ts` worth knowing before you change them:
 - A viewer-request CloudFront Function rewrites `/foo/` → `/foo/index.html` and
   extension-less `/foo` → `/foo/index.html`. With `build.format: 'file'` almost
   every URL already has an extension; this is mainly what makes `/admin` work.
-- Non-prod stages get `X-Robots-Tag: noindex, nofollow` on every response and a
-  bucket that is destroyed with the stack.
-- Construct ids match the old single-stack `CdkStack` so the live prod stack can
-  be adopted in place at cutover. Renaming one replaces a live resource.
 - There is **no CSP**, on purpose — see the comment on the response headers
   policy. The Google Tag Manager bootstrap is inline and a static S3 origin
   can't mint a nonce, so any policy we could ship would need `unsafe-inline`.
+- **CI deploys the stack that grants CI its own credentials.** The deploy role
+  `hrs-website-deploy` trusts only `refs/heads/main` of
+  `tylerschloesser/hrs-website` and holds `AdministratorAccess` — the trust
+  policy is the control, not the permission set. If a bad change to that role
+  ever lands, the fix is a local `AWS_PROFILE=admin pnpm run deploy`, not
+  another push.
+- **Renaming a stack replaces every resource in it**, and CloudFormation
+  cannot do that in place. Named resources (the role, the bucket, the
+  distribution's alias, the apex A record) collide with the originals, so a
+  rename means deleting the old stack first and accepting the outage. Do not
+  start one casually.
 
-### CMS sign-in (`shared-stack.ts`)
+### CMS sign-in
 
 Sveltia signs editors in through GitHub OAuth, and the code-for-token exchange
 runs in `lambda/cms-auth/index.ts` (a port of `sveltia/sveltia-cms-auth`, MIT)
 behind a Lambda Function URL. Two things will break sign-in silently:
 
-- **The Function URL is derived from the function's logical id.** Renaming the
-  `CmsAuthFunction` construct id gives a new URL, and the GitHub OAuth App's
-  registered callback (`<url>/callback`) no longer matches. If the URL ever
-  does change, update the OAuth App's callback **and** the `CMS_AUTH_URL`
-  GitHub Actions variable (`gh variable set CMS_AUTH_URL`), which is what
-  `config.yml.ts` compiles into `base_url`.
+- **A Function URL's hostname follows the function's _name_.** The function is
+  therefore pinned to `functionName: 'hrs-cms-auth'` — an unnamed CDK function
+  is named after its stack, which is exactly how the 2026-09 rename changed the
+  sign-in URL. With the name pinned, a future stack rename no longer touches
+  it. If the name ever does change, two things outside CloudFormation have to
+  change with it: the GitHub OAuth App's callback (`<url>/callback`), and the
+  `CMS_AUTH_URL` Actions variable (`gh variable set CMS_AUTH_URL`), which is
+  what `config.yml.ts` compiles into `base_url`. Nothing in any AWS log tells
+  you when this is wrong; sign-in just fails.
 - **`ALLOWED_DOMAINS`** (a Lambda env var) is the allow-list of sites that may
-  start the flow. A new stage domain has to be added there or sign-in fails.
+  start the flow. It is `haitianrelief.org` alone; another domain has to be
+  added there or sign-in fails.
 
 The client id and secret live in Secrets Manager under `hrs/cms-auth`, created
 outside CloudFormation and imported with `fromSecretNameV2`, so `cdk destroy`
@@ -149,12 +165,12 @@ can never delete them.
 
 ### Monitoring
 
-Each stage gets a daily CloudWatch Synthetics canary, `hrs-<stage>-daily`, from
-`packages/cdk/canary/index.js`. It loads `https://<stage domain>/` at 13:00 UTC
-and asserts three things: HTTP 200, an `h1` containing "Haitian Relief
+A daily CloudWatch Synthetics canary, `hrs-daily`, from
+`packages/cdk/canary/index.js`. It loads `https://haitianrelief.org/` at 13:00
+UTC and asserts three things: HTTP 200, an `h1` containing "Haitian Relief
 Services", and at least one `.gallery img`. Its `SuccessPercent` alarms below
-100% to the SNS topic `hrs-<stage>-alerts`, with the OK action wired too so a
-recovery is emailed as well.
+100% to the SNS topic `hrs-alerts`, with the OK action wired too so a recovery
+is emailed as well.
 
 - `canary/index.js` is **CommonJS on purpose**, despite `packages/cdk` being
   `"type": "module"` — it is zipped and run inside the Synthetics Lambda
@@ -164,17 +180,38 @@ recovery is emailed as well.
 - The alarm's `.gallery img` assertion is a **contract with
   `ProjectGallery.astro`**. Change that container class and the canary starts
   failing at 8am, not at build time.
+- **A newly created canary has no datapoints**, and the alarm uses
+  `treatMissingData: BREACHING` — so it is born in ALARM and stays there until
+  the first 13:00 UTC run. That is correct, not a fault. To settle it
+  immediately, force one run: `stop-canary`, `update-canary --schedule
+Expression='rate(0 minute)'`, `start-canary`, then restore
+  `cron(0 13 * * ? *)` with `DurationInSeconds=0` and start it again. Check
+  afterwards that `cdk diff` shows no canary drift.
+- `aws synthetics get-canary-runs` returns runs under **`CanaryRuns`**, not
+  `CanaryRunsStatus`. Querying the wrong key returns `None` rather than an
+  error, which looks exactly like "the canary never ran".
 - **Changing the alert email** means editing the `EmailSubscription` in
   `site-stack.ts` and deploying. SNS then emails the new address a
   subscription confirmation that someone has to click — until they do, alarms
-  go nowhere. A new stage means a new topic means a new confirmation.
+  go nowhere. Recreating the topic (a stack rename does this) means a new
+  confirmation too; `aws sns list-subscriptions` shows `PendingConfirmation`
+  until it is clicked.
 - `artifactsBucketLifecycleRules` on the `Canary` construct **does nothing**
   once you pass `artifactsBucketLocation`. The 30-day expiry lives on the
   explicit `CanaryArtifactsBucket` instead.
 
-The old `OrgHaitianReliefStaging` and `OrgHaitianReliefProd` stacks are still
-deployed and untouched by this code; `main` still deploys prod the old way until
-cutover.
+### Tearing down a stack in this account
+
+Both times a stack here was deleted, the delete **failed on the hosted zone**
+with `HostedZoneNotEmptyException`. The cause is an orphaned ACM validation
+CNAME that CloudFormation does not consider its own. Delete every record in
+the zone except `NS` and `SOA`, then re-issue the stack delete; it then
+finishes in under a minute, because the slow part (disabling and deleting the
+CloudFront distribution) already happened on the failed attempt.
+
+S3 buckets in a deleted stack are **retained**, not destroyed, unless the
+construct sets `removalPolicy: DESTROY` — so a teardown leaves orphaned
+buckets behind that have to be emptied and deleted by hand.
 
 ## Conventions
 
@@ -194,5 +231,8 @@ cutover.
 - `README.md` — the public front door for the repo.
 - `docs/editing.md` — the guide for the board members who edit the site. It is
   written for people with no technical background; keep it that way.
-- `docs/migration-plan.md` / `docs/migration-status.md` — the migration spec
-  and its live state.
+- `docs/migration-plan.md` / `docs/migration-status.md` — the 2026-09 move
+  from the old semantic-ui site to this one. **History, not live state**: the
+  migration is complete. Useful for _why_ something is the way it is; do not
+  treat either as a description of the current stack. The old site is on the
+  `semantic-ui` branch.

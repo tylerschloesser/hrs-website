@@ -16,13 +16,7 @@ That's the whole setup. There is no separate CMS password.
 
 ## Signing in
 
-Until the site officially launches, this guide points at a **test** copy:
-**https://sveltia.haitianrelief.org**. It works exactly like the real site and
-saves for real, but nobody outside this project sees it. Once the real site
-launches, everything below is the same — only the address changes, to
-**https://haitianrelief.org/admin/**.
-
-1. Go to **https://sveltia.haitianrelief.org/admin/**.
+1. Go to **https://haitianrelief.org/admin/**.
 2. Click **Sign In with GitHub**.
 3. A GitHub window opens and asks you to authorize _Haitian Relief Services
    CMS_. It asks for access to your **public** repositories only — it cannot

@@ -1,8 +1,10 @@
 # Migration status
 
-Live progress log for the migration described in `docs/migration-plan.md`.
-Each phase appends its own section. Read this plus the plan before starting a
-new phase.
+**The migration is complete (2026-09-07). This is history, not live state.**
+For how the stack works today, read `CLAUDE.md`; read this for why it is that
+way. The final shape is in "Migration complete" at the bottom — the only
+section describing the stack as it now stands. Every phase section above it
+describes the world as it was during that phase.
 
 | Phase                                     | State    | Notes                                             |
 | ----------------------------------------- | -------- | ------------------------------------------------- |
@@ -12,16 +14,15 @@ new phase.
 | 3.5 — photo quality pass                  | **done** | 21 photos upscaled 2x; 14 deliberately left alone |
 | 4 — UI redesign                           | **done** | axe clean; Lighthouse mobile 96-100/100/100       |
 | 5 — SEO, canary, docs                     | **done** | canary green; forced failure emailed 2026-09-07   |
-| 6 — cutover and cleanup                   | **live** | prod cut over 2026-09-07; cleanup partly gated    |
+| 6 — cutover and cleanup                   | **done** | complete 2026-09-07; one stack, no stages         |
 
 **Plan amended 2026-09-06** with two changes Tyler asked for after Phase 1:
 Font Awesome Pro icons (plan §2.5) and a one-off photo restoration pass
 (§2.6, new Phase 3.5). Both were researched and the toolchain validated before
 the plan was written — see "Amendments" below.
 
-Branch: `main`. The migration is merged (`72dae25`) and `main` deploys prod.
-`sveltia` still exists and still deploys the test domain; both are removed in
-the remaining Phase 6 cleanup. `semantic-ui` holds the old site.
+Branches: `main` (deploys production) and `semantic-ui` (the old site, kept
+as the rollback path). Everything else was deleted at cutover.
 
 ## Commands
 
@@ -603,13 +604,8 @@ deletes them and deactivates the underlying IAM access key.
 
 ## Manual steps for Tyler
 
-**Open right now, after the 2026-09-07 cutover** (details under "Phase 6"):
-
-1. **Confirm the prod SNS subscription** — AWS emailed
-   `tylerschloesser@gmail.com` a confirmation for `hrs-prod-alerts`. Until it
-   is clicked, canary alarms on the live site go nowhere.
-2. **Make one real edit at https://haitianrelief.org/admin/** and check it goes
-   live. This is Phase 6 step 6, and the rest of the cleanup is gated on it.
+**All of the below are done.** The only thing still open is the GitHub OAuth
+App callback — see "Still open" at the very bottom of this document.
 
 - **Still open, and the longest lead time in the whole migration**: ask Joy
   Richards / Jeanette Juetten whether the original camera files or the original
@@ -1180,3 +1176,156 @@ somewhere other than the live site:
 - **The sveltia alarm is still in ALARM** from Phase 5's forced-failure test
   and clears itself around 15:20 UTC on 2026-09-08 — unless the stack is
   destroyed first, which makes it moot.
+
+## Migration complete — 2026-09-07
+
+Phase 6 finished the same day it started. `https://haitianrelief.org` serves
+the Astro + Sveltia site from `main`, Tyler verified a CMS edit on prod, and
+the cleanup below is done. **This document is now history.** For how the stack
+actually works, read `CLAUDE.md`; for why, read here.
+
+After the cutover Tyler asked for three further changes, which are the reason
+the final shape differs from what the plan described:
+
+1. **No stages.** `STAGE` is gone from the CDK, the app and the workflow.
+2. **No `prod.haitianrelief.org`.** The site is served from the apex only.
+3. **Stacks renamed to the recent convention**, and then collapsed to one.
+
+### The final shape
+
+**One stack: `HaitianReliefSite`.** The plan's Phase 6 deliverable expected
+`OrgHaitianReliefShared` + `OrgHaitianReliefProd`; there is now neither.
+
+The naming convention came from `tylerschloesser/cdk-core`, which is the most
+recent thing in this account — `DefineSiteStacksProps.stackPrefix` documents
+`<prefix>{Shared,Preview,Site,GithubOidc}`, and `docs/migration.md` there
+tables the same five. The older `*Stack` suffix (`YahnSharedStack`,
+`ThaiLerDevSiteStack`) is the superseded style. So `HaitianRelief` + `Site`.
+
+The `Shared`/`Site` split was then dropped on Tyler's call, and he was right:
+`Shared` existed to hold the singletons the `sveltia` and `prod` stages had in
+common — the deploy role and the CMS auth Lambda — and once the stages were
+gone it had nothing left to share. Splitting `GithubOidc` out (as cdk-core
+does, so CI never redeploys the stack granting its own credentials) was
+considered and declined for a site this size. The consequence is written down
+in `CLAUDE.md`: if a bad change to the deploy role lands, the fix is a local
+deploy, not another push.
+
+### What a stack rename actually costs
+
+CloudFormation cannot rename a stack, and every named resource collides with
+its original — the IAM role name, the S3 bucket, the CloudFront alias, the
+apex A record. So the old stacks had to be **deleted before** the new one
+could be created. Tyler accepted the outage; the site was down for roughly
+nine minutes.
+
+Two traps, both paid for:
+
+- **Every stack delete failed the first time**, on the hosted zone:
+  `HostedZoneNotEmptyException`. Each stage zone held an orphaned ACM
+  validation CNAME that CloudFormation did not consider its own. The fix is
+  to delete every record except `NS` and `SOA` and re-issue the delete — which
+  then finishes in under a minute, because the slow part (disabling and
+  deleting the CloudFront distribution) already happened on the failed
+  attempt. This hit `sveltia`, `staging` and `prod` identically.
+- **Retained buckets.** A bucket with no `removalPolicy` survives its stack.
+  The teardown orphaned `org.haitianrelief.prod`, `org.haitianrelief.staging`
+  and the prod canary artifacts bucket; all three were emptied and deleted by
+  hand afterwards.
+
+### The CMS sign-in URL changed, and this is the last time
+
+A Lambda Function URL's hostname follows the function's **name**, and an
+unnamed CDK function is named after its stack — so renaming the stack moved
+the sign-in endpoint. `CLAUDE.md` had warned about the construct id; the stack
+name matters just as much.
+
+The function is now pinned to `functionName: 'hrs-cms-auth'`, which decouples
+the URL from the stack for good. The one-time cost:
+
+- old: `https://7fxcmotv2d3aaxnnfkrba4ikpq0ryofm.lambda-url.us-east-1.on.aws`
+- new: `https://cklwegsabdtrgjz4af5urzcxty0roqrb.lambda-url.us-east-1.on.aws`
+
+`CMS_AUTH_URL` was updated with `gh variable set`. **The GitHub OAuth App's
+callback has to be repointed to `<new url>/callback` by hand** — see "Still
+open" below.
+
+### Resource inventory
+
+Account `063257577013` / us-east-1, everything for this site:
+
+| Thing            | Value                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| Stack            | `HaitianReliefSite` (plus the shared `CDKToolkit`)                                             |
+| Bucket           | `org.haitianrelief`                                                                            |
+| Canary artifacts | `haitianreliefsite-canaryartifactsbucketa78d38f8-5uvckkopucny`, 30-day expiry                  |
+| Deploy role      | `hrs-website-deploy`, OIDC, trusts `refs/heads/main` only                                      |
+| CMS auth         | Lambda `hrs-cms-auth` → `https://cklwegsabdtrgjz4af5urzcxty0roqrb.lambda-url.us-east-1.on.aws` |
+| CMS secret       | Secrets Manager `hrs/cms-auth` (outside CFN; `cdk destroy` cannot delete it)                   |
+| Canary           | `hrs-daily`, `cron(0 13 * * ? *)`, `syn-nodejs-playwright-6.0`                                 |
+| Alarm / topic    | `hrs-daily-canary` → `hrs-alerts` (subscription confirmed)                                     |
+| Hosted zone      | apex `haitianrelief.org` only, `Z0010048114HS2EOWXJLC`, imported never created                 |
+| Repo secret      | `FONTAWESOME_PACKAGE_TOKEN`                                                                    |
+| Repo variable    | `CMS_AUTH_URL`                                                                                 |
+| Branches         | `main`, `semantic-ui` (the old site)                                                           |
+
+`CDKToolkit` is shared with unrelated projects in this account (`CdkCore*`,
+`Yahn*`, `ThaiLer*`, `LerDev-*`). Do not touch those.
+
+### Cleanup log
+
+- Destroyed `OrgHaitianReliefSveltia`, `OrgHaitianReliefStaging`,
+  `OrgHaitianReliefProd`, `OrgHaitianReliefShared`. All four are gone.
+- Deleted the orphaned buckets `org.haitianrelief.prod`,
+  `org.haitianrelief.staging` and the old prod canary artifacts bucket.
+- The apex zone now holds only `A`, `NS`, `SOA` and the new certificate's
+  validation `CNAME`. The `prod`, `staging` and `sveltia` NS delegations and
+  their hosted zones are gone.
+- The old deploy role `hrs-github-actions-deploy` went with the staging stack;
+  the old response-headers policy `hrs-website-security-headers-prod` went
+  with the prod stack.
+- Deleted repo secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`. There
+  was **no IAM key to deactivate**: the account has `Users: 0` and
+  `AccountAccessKeysPresent: 0`, so those 2021 credentials had been inert for
+  some time. The plan assumed otherwise.
+- Deleted every stale branch: 20 `dependabot/*`, `static`, `sveltia`, and the
+  local `v3`. `main` and `semantic-ui` remain.
+- `docs/editing.md` now points board members at `https://haitianrelief.org/admin/`
+  instead of the test domain.
+- `CLAUDE.md` rewritten for the one-stack shape, with the teardown and
+  Function-URL traps written down.
+
+### Verification run after the rebuild
+
+- `haitianrelief.org` 200 with the expected `h1`; `prod.haitianrelief.org` no
+  longer resolves, which is the point.
+- Production `robots.txt`, sitemap and canonical all on the apex. No
+  `X-Robots-Tag` (that header was non-prod only, and there is no non-prod).
+- 200 on `/concert.html`, `/admin/`, `/admin/config.yml`, `/favicon.ico`,
+  `/documents/growin-proposal.docx`, `/sitemap-0.xml`; 404 on an unknown path.
+- `/admin/config.yml` carries `branch: main` and the **new** `base_url`.
+- Cache headers unchanged: HTML `must-revalidate`, `/_astro/*` `immutable`.
+- The CI deploy on `main` went green **after** the teardown, which is what
+  proves the recreated OIDC deploy role works.
+- The canary was forced through one run against the live site: **PASSED**, and
+  `hrs-daily-canary` settled to `OK`. Schedule restored; `cdk diff` shows no
+  canary or alarm drift.
+
+### Still open
+
+- **The GitHub OAuth App callback must be repointed by hand** to
+  `https://cklwegsabdtrgjz4af5urzcxty0roqrb.lambda-url.us-east-1.on.aws/callback`
+  at https://github.com/settings/developers. There is no REST API for this.
+  **Until it is done, CMS sign-in at `/admin/` fails** — the editor loads and
+  the button works, but GitHub rejects the redirect. Everything else on the
+  site is unaffected.
+- **Two IAM roles predate this repo's CDK and were left alone** rather than
+  deleted blind: `codebuild-hrs-website-service-role` (last used 2026-02-13)
+  and `hrs-website-lambda` (created 2017, never used). Neither is referenced
+  by `HaitianReliefSite`. Worth deleting once someone confirms what, if
+  anything, still uses the CodeBuild one.
+- **Lighthouse SEO has still not been re-measured on prod.** Phase 5 could not
+  score it on the test domain because of the deliberate `noindex`; that cap is
+  gone now.
+- **Board members' GitHub usernames** are still needed before anyone but Tyler
+  can edit.
