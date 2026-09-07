@@ -18,57 +18,42 @@ interface Props {
 const { paypalUrl, venmoUrl, mail } = Astro.props
 ---
 
-<section class="bg-surface">
-  <div class="mx-auto max-w-5xl space-y-6 px-4 py-12">
-    <h2 id="donate" class="text-3xl font-semibold">Donate</h2>
-    <p>We offer 3 methods for donation:</p>
+<section class="band bg-brand-dark on-dark">
+  <div class="shell">
+    <h2 id="donate" class="text-3xl font-semibold text-white sm:text-4xl">
+      Donate
+    </h2>
+    <span class="rule"></span>
+    <p class="mt-6 text-white/80">We offer 3 methods for donation:</p>
 
-    <div class="grid gap-6 sm:grid-cols-3">
+    <div class="mt-10 grid gap-6 sm:grid-cols-3">
       <div
-        class="flex flex-col items-center gap-4 rounded border border-border p-6 text-center"
+        class="flex flex-col items-center justify-center rounded-xl border border-white/15 bg-white/5 p-6 text-center"
       >
-        <h3
-          class="flex items-center justify-center gap-2 text-lg font-semibold"
-        >
-          <Icon icon={faPaypal} />
-          Donate by PayPal
-        </h3>
-        <a
-          href={paypalUrl}
-          class="block w-full rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-strong"
-        >
-          Donate
-        </a>
+        <Icon icon={faPaypal} class="text-3xl text-accent" />
+        <h3 class="mt-4 text-lg font-semibold text-white">Donate by PayPal</h3>
+        <a href={paypalUrl} class="btn btn-accent mt-6 w-full"> Donate </a>
       </div>
 
       <div
-        class="flex flex-col items-center gap-4 rounded border border-border p-6 text-center"
+        class="flex flex-col items-center justify-center rounded-xl border border-white/15 bg-white/5 p-6 text-center"
       >
-        <h3
-          class="flex items-center justify-center gap-2 text-lg font-semibold"
-        >
-          <Icon icon={faVenmo} />
-          Donate by Venmo
-        </h3>
-        <a
-          href={venmoUrl}
-          class="block w-full rounded bg-primary px-4 py-2 font-medium text-white hover:bg-primary-strong"
-        >
-          Donate
-        </a>
+        <Icon icon={faVenmo} class="text-4xl text-accent" />
+        <h3 class="mt-4 text-lg font-semibold text-white">Donate by Venmo</h3>
+        <a href={venmoUrl} class="btn btn-accent mt-6 w-full"> Donate </a>
       </div>
 
       <div
-        class="flex flex-col items-center gap-3 rounded border border-border p-6 text-center"
+        class="flex flex-col items-center justify-center rounded-xl border border-white/15 bg-white/5 p-6 text-center"
       >
-        <h3
-          class="flex items-center justify-center gap-2 text-lg font-semibold"
+        <Icon icon={faEnvelope} class="text-3xl text-accent" />
+        <h3 class="mt-4 text-lg font-semibold text-white">Donate by Mail</h3>
+        <p class="mt-4 text-sm text-white/80">
+          Kindly mail your tax-deductible contribution to our Treasurer at:
+        </p>
+        <address
+          class="mt-4 w-full rounded-lg bg-white/10 p-4 text-left text-white not-italic"
         >
-          <Icon icon={faEnvelope} />
-          Donate by Mail
-        </h3>
-        <p>Kindly mail your tax-deductible contribution to our Treasurer at:</p>
-        <address class="w-full rounded bg-surface-alt p-4 text-left not-italic">
           <div>Haitian Relief Services</div>
           <div>Attn: {mail.attn}</div>
           <div>{mail.street}</div>

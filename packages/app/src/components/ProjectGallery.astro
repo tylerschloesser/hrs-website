@@ -1,6 +1,8 @@
 ---
 import type { ImageMetadata } from 'astro'
 import { Image, getImage } from 'astro:assets'
+import { faMagnifyingGlassPlus } from '@fortawesome/pro-solid-svg-icons'
+import Icon from './Icon.astro'
 
 interface GalleryItem {
   image: ImageMetadata
@@ -29,24 +31,34 @@ const items = await Promise.all(
 )
 ---
 
-<div class="gallery grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+<div
+  class="gallery mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4"
+>
   {
     items.map((item) => (
       <button
         type="button"
-        class="block overflow-hidden rounded border border-border"
-        aria-label={item.caption}
+        class="group block w-full text-left"
         data-full-src={item.full.src}
         data-full-srcset={item.full.srcSet.attribute}
         data-caption={item.caption}
       >
-        <Image
-          src={item.image}
-          width={400}
-          alt={item.caption}
-          loading="lazy"
-          class="h-full w-full object-cover"
-        />
+        <div class="relative aspect-[4/3] overflow-hidden rounded-lg border border-border">
+          <Image
+            src={item.image}
+            alt=""
+            loading="lazy"
+            widths={[240, 360, 560]}
+            sizes="(min-width: 1024px) 17rem, (min-width: 640px) 30vw, 44vw"
+            class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <div class="absolute inset-0 flex items-center justify-center bg-ink/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+            <Icon icon={faMagnifyingGlassPlus} class="text-2xl text-white" />
+          </div>
+        </div>
+        <span class="mt-2 block text-sm leading-snug text-muted">
+          {item.caption}
+        </span>
       </button>
     ))
   }

@@ -1,24 +1,35 @@
 ---
 import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import { faArrowUpRightFromSquare } from '@fortawesome/pro-solid-svg-icons'
 import Icon from './Icon.astro'
 
 interface Props {
+  siteName: string
   githubUrl: string
 }
 
-const { githubUrl } = Astro.props
+const { siteName, githubUrl } = Astro.props
 ---
 
-<footer class="bg-brand-dark py-10 text-center text-white">
-  <div class="mx-auto max-w-5xl px-4">
-    <a
-      href={githubUrl}
-      target="_blank"
-      rel="noopener"
-      class="inline-flex items-center gap-2 underline underline-offset-2 hover:text-accent"
+<footer class="on-dark border-t border-white/10 bg-brand-dark text-white">
+  <div class="shell py-10 sm:py-12">
+    <div
+      class="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left"
     >
-      <Icon icon={faGithub} />
-      github.com/tylerschloesser
-    </a>
+      <p class="font-serif text-lg font-semibold text-white">
+        {siteName}
+      </p>
+
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noopener"
+        class="inline-flex items-center gap-2 text-white/70 underline underline-offset-2 transition-colors hover:text-accent"
+      >
+        <Icon icon={faGithub} />
+        github.com/tylerschloesser
+        <Icon icon={faArrowUpRightFromSquare} class="text-xs" />
+      </a>
+    </div>
   </div>
 </footer>

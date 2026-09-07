@@ -19,46 +19,45 @@ const rendered = await Promise.all(
     return { project, Content }
   })
 )
-
-const withAttachments = sorted.filter(
-  (project) => project.data.attachments.length > 0
-)
 ---
 
-<section class="bg-surface-alt">
-  <div class="mx-auto max-w-5xl space-y-12 px-4 py-12">
-    <h2 id="projects" class="text-3xl font-semibold">Our Impact</h2>
+<section class="band bg-surface">
+  <div class="shell">
+    <header>
+      <h2 id="projects" class="text-3xl font-semibold sm:text-4xl">
+        Our Impact
+      </h2>
+      <span class="rule"></span>
+    </header>
 
-    {
-      rendered.map(({ project, Content }) => (
-        <article class="space-y-4">
-          <h3 class="text-2xl font-semibold">{project.data.title}</h3>
-          <div class="space-y-4 [&_p]:leading-relaxed">
-            <Content />
-          </div>
-          {project.data.gallery.length > 0 && (
-            <ProjectGallery gallery={project.data.gallery} />
-          )}
-        </article>
-      ))
-    }
-
-    {
-      withAttachments.length > 0 && (
-        <div class="space-y-2">
-          {withAttachments.map((project) =>
-            project.data.attachments.map((attachment) => (
-              <a
-                href={attachment.file}
-                class="inline-flex items-center gap-2 text-primary underline underline-offset-2 hover:text-primary-strong"
-              >
-                <Icon icon={faFileWord} />
-                {attachment.label}
-              </a>
-            ))
-          )}
-        </div>
-      )
-    }
+    <div class="mt-14 space-y-14 lg:mt-20 lg:space-y-20">
+      {
+        rendered.map(({ project, Content }, index) => (
+          <article
+            class={index > 0 ? 'border-t border-border pt-14 lg:pt-20' : ''}
+          >
+            <h3 class="text-xl font-semibold sm:text-2xl">
+              {project.data.title}
+            </h3>
+            <div class="prose-hrs mt-4 max-w-3xl">
+              <Content />
+            </div>
+            {project.data.gallery.length > 0 && (
+              <ProjectGallery gallery={project.data.gallery} />
+            )}
+            {project.data.attachments.length > 0 && (
+              <div class="mt-8 flex flex-wrap gap-4">
+                {project.data.attachments.map((attachment) => (
+                  <a href={attachment.file} class="btn btn-primary">
+                    <Icon icon={faFileWord} />
+                    {attachment.label}
+                  </a>
+                ))}
+              </div>
+            )}
+          </article>
+        ))
+      }
+    </div>
   </div>
 </section>

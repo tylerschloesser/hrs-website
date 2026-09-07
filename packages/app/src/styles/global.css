@@ -8,7 +8,13 @@
 @theme {
   --color-ink: #0f172a; /* slate-900  headings, text on light  */
   --color-body: #334155; /* slate-700  paragraph text           */
-  --color-muted: #64748b; /* slate-500  captions, meta           */
+  /*
+   * §2.4 specifies slate-500 here, but slate-500 on the blue-50 band is
+   * 4.37:1 — axe flags every caption sitting on `surface-alt`. Slate-600
+   * is 6.9:1 there and 7.5:1 on white, and still reads clearly secondary
+   * to the slate-700 body text.
+   */
+  --color-muted: #475569; /* slate-600  captions, meta           */
   --color-surface: #ffffff; /* white      page background          */
   --color-surface-alt: #eff6ff; /* blue-50    alternating bands, cards */
   --color-border: #e2e8f0; /* slate-200  rules, card borders      */

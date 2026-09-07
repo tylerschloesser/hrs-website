@@ -13,11 +13,16 @@ interface Props {
 
 const { icon, label, class: className } = Astro.props
 const [width, height, , , path] = icon.icon
+
+// Font Awesome glyphs are not all square (Venmo is 640x512). Forcing both
+// dimensions to 1em letterboxes the wide ones and they read as smaller than
+// the square icons next to them, so height is the fixed side.
+const emWidth = `${(width / height).toFixed(3)}em`
 ---
 
 <svg
   viewBox={`0 0 ${width} ${height}`}
-  width="1em"
+  width={emWidth}
   height="1em"
   fill="currentColor"
   class={className}

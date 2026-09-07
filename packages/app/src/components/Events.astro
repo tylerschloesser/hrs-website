@@ -4,6 +4,7 @@ import { Image } from 'astro:assets'
 import Markdown from './Markdown.astro'
 
 import { faYoutube } from '@fortawesome/free-brands-svg-icons'
+import { faArrowUpRightFromSquare } from '@fortawesome/pro-solid-svg-icons'
 import Icon from './Icon.astro'
 
 interface Video {
@@ -23,38 +24,53 @@ interface Props {
 const { heading, body, videos, closing, image, imageAlt } = Astro.props
 ---
 
-<section class="bg-surface-alt">
-  <div class="mx-auto max-w-5xl px-4 py-12">
-    <h2 id="events" class="text-3xl font-semibold">Events</h2>
+<section class="band bg-surface">
+  <div class="shell">
+    <header>
+      <h2 id="events" class="text-3xl font-semibold sm:text-4xl">Events</h2>
+      <span class="rule"></span>
+    </header>
 
-    <div class="mt-6 grid gap-8 md:grid-cols-[3fr_2fr] md:items-start">
-      <div class="space-y-4">
-        <h3 class="text-2xl font-semibold">{heading}</h3>
+    <div
+      class="mt-10 grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-12"
+    >
+      <div class="space-y-6">
+        <h3 class="text-xl font-semibold sm:text-2xl">{heading}</h3>
         <Markdown content={body} />
-        <ul class="list-disc space-y-1 pl-6">
+
+        <ul class="space-y-3">
           {
             videos.map((video) => (
               <li>
                 <a
                   href={video.url}
-                  class="inline-flex items-center gap-2 text-primary underline underline-offset-2 hover:text-primary-strong"
+                  target="_blank"
+                  rel="noopener"
+                  class="flex items-center gap-3 rounded-lg border border-border px-4 py-3 hover:border-primary hover:bg-surface-alt"
                 >
                   <Icon icon={faYoutube} />
-                  {video.label}
+                  <span class="flex-1">{video.label}</span>
+                  <Icon icon={faArrowUpRightFromSquare} class="text-xs" />
                 </a>
               </li>
             ))
           }
         </ul>
-        <p>{closing}</p>
+
+        <p
+          class="mt-8 border-l-2 border-accent pl-5 font-serif text-xl text-ink italic sm:text-2xl"
+        >
+          {closing}
+        </p>
       </div>
 
       <Image
         src={image}
         alt={imageAlt}
-        width={600}
+        widths={[400, 600, 900]}
+        sizes="(min-width: 1024px) 26rem, 100vw"
         loading="lazy"
-        class="w-full rounded"
+        class="w-full rounded-xl lg:sticky lg:top-28"
       />
     </div>
   </div>

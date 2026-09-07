@@ -1,5 +1,5 @@
 ---
-import { faBars } from '@fortawesome/pro-solid-svg-icons'
+import { faBars, faXmark } from '@fortawesome/pro-solid-svg-icons'
 import Icon from './Icon.astro'
 
 interface Props {
@@ -16,24 +16,32 @@ const links = [
 ]
 ---
 
-<header class="sticky top-0 z-40 bg-brand-dark text-white">
-  <div class="mx-auto max-w-5xl px-4">
-    <div class="flex h-16 items-center justify-between gap-4">
-      <a href="/" class="font-serif text-lg font-semibold text-white">
+<header class="on-dark sticky top-0 z-50 bg-brand-dark text-white">
+  <div class="shell">
+    <div class="flex h-16 items-center justify-between gap-4 lg:h-20">
+      <a
+        href="/"
+        class="min-w-0 truncate font-serif text-base leading-tight font-semibold text-white transition-colors hover:text-accent sm:text-lg lg:text-xl"
+      >
         {siteName}
       </a>
 
-      <nav aria-label="Primary" class="hidden items-center gap-6 sm:flex">
+      <nav aria-label="Primary" class="hidden items-center gap-6 md:flex">
         {
           links.map((link) => (
-            <a href={link.href} class="hover:text-accent">
+            <a
+              href={link.href}
+              data-nav-link
+              class="nav-link relative py-2 text-sm text-white transition-colors hover:text-accent lg:text-base"
+            >
               {link.label}
             </a>
           ))
         }
         <a
           href="#donate"
-          class="rounded bg-accent px-4 py-2 font-medium text-ink hover:opacity-90"
+          data-nav-link
+          class="btn btn-accent px-4 py-2 text-sm lg:text-base"
         >
           Donate
         </a>
@@ -44,10 +52,13 @@ const links = [
         id="nav-toggle"
         aria-expanded="false"
         aria-controls="nav-panel"
-        class="inline-flex items-center justify-center rounded p-2 sm:hidden"
+        class="inline-flex items-center justify-center rounded-lg p-2 text-white md:hidden"
       >
         <span class="sr-only">Menu</span>
-        <Icon icon={faBars} class="text-xl" />
+        <span id="nav-icon-open"><Icon icon={faBars} class="text-xl" /></span>
+        <span id="nav-icon-close" class="hidden"
+          ><Icon icon={faXmark} class="text-xl" /></span
+        >
       </button>
     </div>
 
@@ -55,18 +66,23 @@ const links = [
       id="nav-panel"
       aria-label="Primary"
       hidden
-      class="flex flex-col gap-1 pb-4 sm:hidden"
+      class="flex flex-col gap-1 border-t border-white/10 pb-4 md:hidden"
     >
       {
         links.map((link) => (
-          <a href={link.href} class="rounded px-2 py-2 hover:bg-white/10">
+          <a
+            href={link.href}
+            data-nav-link
+            class="nav-link relative flex min-h-11 items-center rounded-lg px-2 py-2 text-white hover:bg-white/10"
+          >
             {link.label}
           </a>
         ))
       }
       <a
         href="#donate"
-        class="mt-2 rounded bg-accent px-4 py-2 text-center font-medium text-ink"
+        data-nav-link
+        class="btn btn-accent mt-2 w-full px-4 py-2 text-center"
       >
         Donate
       </a>
@@ -74,22 +90,65 @@ const links = [
   </div>
 </header>
 
+<style>
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: 0;
+    height: 2px;
+    border-radius: 9999px;
+    background-color: var(--color-accent);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+
+  .nav-link:hover::after,
+  .nav-link[aria-current]::after {
+    opacity: 1;
+  }
+
+  /*
+   * A full-width underline inside the stacked panel reads as a divider, not
+   * as a marker, so the mobile rows carry the state in their own colour.
+   */
+  #nav-panel .nav-link::after {
+    display: none;
+  }
+
+  #nav-panel .nav-link[aria-current] {
+    background-color: rgb(255 255 255 / 0.1);
+    color: var(--color-accent);
+  }
+</style>
+
 <script>
   const toggle = document.getElementById('nav-toggle')
   const panel = document.getElementById('nav-panel')
+  const iconOpen = document.getElementById('nav-icon-open')
+  const iconClose = document.getElementById('nav-icon-close')
+
+  const setOpen = (open: boolean) => {
+    if (!(toggle instanceof HTMLButtonElement) || !panel) return
+    toggle.setAttribute('aria-expanded', String(open))
+    panel.hidden = !open
+    if (iconOpen instanceof HTMLElement)
+      iconOpen.classList.toggle('hidden', open)
+    if (iconClose instanceof HTMLElement)
+      iconClose.classList.toggle('hidden', !open)
+  }
 
   if (toggle instanceof HTMLButtonElement && panel) {
     toggle.addEventListener('click', () => {
       const isOpen = toggle.getAttribute('aria-expanded') === 'true'
-      toggle.setAttribute('aria-expanded', String(!isOpen))
-      panel.hidden = isOpen
+      setOpen(!isOpen)
     })
 
     panel.addEventListener('click', (event) => {
       const target = event.target
       if (target instanceof HTMLElement && target.closest('a')) {
-        toggle.setAttribute('aria-expanded', 'false')
-        panel.hidden = true
+        setOpen(false)
       }
     })
 
@@ -98,10 +157,64 @@ const links = [
         event.key === 'Escape' &&
         toggle.getAttribute('aria-expanded') === 'true'
       ) {
-        toggle.setAttribute('aria-expanded', 'false')
-        panel.hidden = true
+        setOpen(false)
         toggle.focus()
       }
     })
+
+    const mql = window.matchMedia('(min-width: 48rem)')
+    mql.addEventListener('change', (event) => {
+      if (event.matches) {
+        setOpen(false)
+      }
+    })
+  }
+
+  const navLinks = Array.from(document.querySelectorAll('[data-nav-link]'))
+
+  const sectionIds = [
+    'events',
+    'mission-statement',
+    'projects',
+    'contact',
+    'donate',
+  ]
+  const sections = sectionIds
+    .map((id) => document.getElementById(id))
+    .filter((el): el is HTMLElement => el instanceof HTMLElement)
+
+  if (sections.length > 0 && navLinks.length > 0) {
+    const setCurrent = (id: string | null) => {
+      for (const link of navLinks) {
+        if (!(link instanceof HTMLAnchorElement)) continue
+        if (id && link.hash === `#${id}`) {
+          link.setAttribute('aria-current', 'location')
+        } else {
+          link.removeAttribute('aria-current')
+        }
+      }
+    }
+
+    const header = document.querySelector('header')
+    const headerHeight =
+      header instanceof HTMLElement ? header.getBoundingClientRect().height : 64
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.target instanceof HTMLElement) {
+            setCurrent(entry.target.id)
+          }
+        }
+      },
+      {
+        rootMargin: `-${headerHeight + 8}px 0px -70% 0px`,
+        threshold: 0,
+      }
+    )
+
+    for (const section of sections) {
+      observer.observe(section)
+    }
   }
 </script>
