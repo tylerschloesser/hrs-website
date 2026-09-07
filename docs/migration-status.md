@@ -10,7 +10,7 @@ new phase.
 | 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live         |
 | 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06        |
 | 3.5 — photo quality pass                  | **done**    | 21 photos upscaled 2x; 14 deliberately left alone |
-| 4 — UI redesign                           | not started | also adds Font Awesome icons                      |
+| 4 — UI redesign                           | **done**    | axe clean; Lighthouse mobile 95/100/100 + SEO n/a |
 | 5 — SEO, canary, docs                     | not started |                                                   |
 | 6 — cutover and cleanup                   | not started |                                                   |
 
@@ -616,3 +616,181 @@ deletes them and deactivates the underlying IAM access key.
   route on the files we have; there is nothing left to recover.
 - **Needed before any board member can edit**: their GitHub usernames, so they
   can be invited as collaborators.
+
+## Phase 4 — what was done
+
+The site was redesigned in place: **same copy, same section order, same
+anchors**, new look. Live at https://sveltia.haitianrelief.org.
+
+Structure of the page, top to bottom, with the band each section sits on:
+
+| Section  | Anchor               | Band                    |
+| -------- | -------------------- | ----------------------- |
+| Nav      | —                    | `brand-dark`, sticky    |
+| Hero     | —                    | `brand-dark`            |
+| Events   | `#events`            | `surface` (white)       |
+| Mission  | `#mission-statement` | `surface-alt` (blue-50) |
+| Projects | `#projects`          | `surface`               |
+| Contacts | `#contact`           | `surface-alt`           |
+| Donate   | `#donate`            | `brand-dark`            |
+| Footer   | —                    | `brand-dark`            |
+
+The dark hero and the dark Donate/Footer close the page as a pair, and the
+white/blue-50 alternation in between replaces the old divider lines. The one
+decorative element is a short amber rule under every top-level heading — it
+appears nowhere else, on purpose.
+
+### Final token values
+
+`packages/app/src/styles/global.css`. §2.4's palette, with one change:
+
+| Token                    | Value     | Tailwind  |
+| ------------------------ | --------- | --------- |
+| `--color-ink`            | `#0f172a` | slate-900 |
+| `--color-body`           | `#334155` | slate-700 |
+| **`--color-muted`**      | `#475569` | slate-600 |
+| `--color-surface`        | `#ffffff` | white     |
+| `--color-surface-alt`    | `#eff6ff` | blue-50   |
+| `--color-border`         | `#e2e8f0` | slate-200 |
+| `--color-primary`        | `#1d4ed8` | blue-700  |
+| `--color-primary-strong` | `#1e40af` | blue-800  |
+| `--color-brand-dark`     | `#172554` | blue-950  |
+| `--color-accent`         | `#fbbf24` | amber-400 |
+
+Body type is Inter Variable at **17px, 18px from `lg` up**, line-height 1.7.
+Headings are Lora Variable with `text-wrap: balance`. Shared classes:
+`.shell` (max-w-6xl + responsive padding), `.band` (section rhythm),
+`.rule` (the amber mark), `.prose-hrs` (rendered markdown), `.btn` +
+`.btn-accent`/`.btn-primary`, and `.on-dark`.
+
+### Deviations from §2.4, and why
+
+- **`--color-muted` is slate-600, not slate-500.** Slate-500 on the blue-50
+  band is **4.37:1** — under AA, and axe flags every caption sitting on
+  `surface-alt`. Slate-600 is 6.9:1 there and 7.5:1 on white, and still reads
+  clearly secondary to the slate-700 body text. This was found by running axe,
+  not by inspection; §2.4's own contrast figures were all quoted against
+  white.
+- **`site.tagline` is now rendered** (in the hero, under the h1, in amber). It
+  has existed in `site.yml` since Phase 1 and nothing displayed it. This is
+  the only text that appears on the page that did not appear before — it is
+  existing content, not new copy.
+- **A skip link was added** (`Base.astro`, first focusable element, visible on
+  focus). An affordance, not copy.
+- **The project attachment moved.** Every project's attachments used to be
+  collected into one lump rendered after all eight articles, which read as if
+  it belonged to the last project. Each project's attachments now render
+  inside its own `<article>`. Only `clean-oil-farming` has one.
+- **The desktop nav breaks at `md` (768px), not `sm`.** "Haitian Relief
+  Services" plus five items does not fit at 640px.
+- **`.on-dark` is a required class, not decoration.** The focus ring is
+  `--color-primary` (blue-700), which is invisible on the blue-950 bands, so
+  `.on-dark` swaps it to amber and adapts prose/heading colours. Any new
+  section with a `bg-brand-dark` must carry it.
+
+### Icons (§2.5)
+
+`@fortawesome/pro-solid-svg-icons` and `@fortawesome/free-brands-svg-icons`,
+both 7.3.1. `pro-regular` was installed, went unused against the actual
+design, and was removed — solid reads better at the small sizes here.
+
+`src/components/Icon.astro` inlines the path data at build time. **No Font
+Awesome runtime, no FA stylesheet, and no JavaScript ships for icons**: the
+built `index.html` contains 12 inlined `<svg>` elements and `dist/_astro`
+contains no `.js` at all. Icons in use: `faBars`, `faXmark`,
+`faChevronLeft`/`Right`, `faMagnifyingGlassPlus`, `faEnvelope`, `faFileWord`,
+`faArrowUpRightFromSquare`, `faPaypal`, `faVenmo`, `faGithub`, `faYoutube`.
+The hand-pasted inline Venmo SVG is gone from `Donate.astro`.
+
+**`Icon.astro` deviates from the snippet in §2.5 in one way**: it sets
+`height="1em"` and derives `width` from the glyph's own aspect ratio.
+Font Awesome glyphs are not square — Venmo is 640×512, YouTube 576×512 — and
+forcing both dimensions to `1em` letterboxes the wide ones so they render
+visibly smaller than the square icons beside them.
+
+The registry auth from Phase 2 worked first time in CI, with no change to
+`.npmrc` or the workflow.
+
+### Verification actually run
+
+Against **https://sveltia.haitianrelief.org** unless noted.
+
+- **axe** (`packages/app/scripts/axe.mjs`, dev-only, not in CI): 375 / 768 /
+  1280px, each also with the mobile nav panel open and with the lightbox open
+  — axe cannot audit a closed `<dialog>`, so those states are scanned
+  explicitly. Tags `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`,
+  `best-practice`. **0 violations at any severity.** Run it with:
+
+  ```sh
+  pnpm --filter @hrs-website/app exec node scripts/axe.mjs <url>
+  ```
+
+- **Lighthouse mobile**: Performance **95**, Accessibility **100**, Best
+  Practices **100**, SEO **69**. FCP 1.4s, TBT 0ms, CLS 0, total 409 KiB.
+  **The SEO score is entirely `is-crawlable`** — the test domain deliberately
+  serves `Disallow: /` plus `X-Robots-Tag: noindex, nofollow` (Phase 2), so it
+  cannot score above ~70 there and no other SEO audit fails. Re-measure on
+  prod at cutover; Phase 5 owns SEO regardless.
+- **Screenshots** at 375/768/1280 plus a 320px overflow check
+  (`packages/app/scripts/shots.mjs`): **0px horizontal overflow at every
+  width including 320**, and **0 console errors**.
+- **Keyboard walkthrough**, all passing: first Tab reaches the skip link;
+  Enter on the hamburger opens the panel and sets `aria-expanded`; Escape
+  closes it and returns focus to the toggle; clicking a link closes it; Enter
+  on a gallery thumbnail opens the lightbox as a real `:modal` with the
+  caption as its accessible name and a `1 / 4` position indicator; arrow keys
+  move and wrap within that project's gallery only; Escape closes, clears
+  `src`, releases the scroll lock and returns focus to the originating
+  thumbnail.
+- Gallery counts on the live page are unchanged: 4/8/2/4/5/10/2/0.
+- `/concert.html` still redirects to `/#events`; `/404.html` still renders.
+
+Screenshots are in the session scratchpad
+(`.../scratchpad/live/`, `.../scratchpad/v3-1280/`, `.../scratchpad/v3-375/`),
+not in the repo.
+
+### Things worth knowing before changing this
+
+**`ProjectGallery` ↔ `Lightbox` is a data-attribute contract.** Thumbnails are
+`<button>`s carrying `data-full-src` / `data-full-srcset` / `data-caption`
+inside a `.gallery` container; the lightbox delegates clicks from `document`
+and uses `closest('.gallery')` to scope prev/next to one project. The full
+image is produced at build time by `getImage()` but is never an `<img src>` on
+the page, so **nothing full-size is fetched until the lightbox opens** — that
+was re-verified after the redesign. Neighbours are prefetched afterwards, in
+a `requestIdleCallback`, only once the current image has loaded.
+
+**A gallery thumbnail's accessible name comes from its visible caption.** The
+button has no `aria-label`, the `<Image>` has `alt=""`, and the magnifier icon
+is `aria-hidden`, so the caption `<span>` is the whole name. Adding an
+`aria-label` back would double it up.
+
+**The lightbox prev/next buttons must stay over the image.** They were first
+built translated outside the flex container at `sm` and up, which put them
+outside the dialog box, where they were clipped and unusable on desktop.
+
+**The latin font subsets are preloaded** in `Base.astro`
+(`@fontsource-variable/*/files/*-latin-wght-normal.woff2?url`). The hero
+paragraph is the LCP element, and with `font-display: swap` the swap to Inter
+repainted it into a second, later LCP candidate. Preloading collapses that.
+
+**Every `sizes` attribute subtracts `.shell`'s padding** (20px below `sm`,
+32px from `sm` up) rather than claiming `100vw`. Lighthouse's
+`uses-responsive-images` caught the over-fetch.
+
+**`<Image>` with `width` alone emits no `srcset`**, which makes a `sizes`
+attribute inert. Use `widths={[...]}` + `sizes`. Two components shipped with
+`width={800}` + `sizes` before this was noticed.
+
+### Still open from Phase 4
+
+- **Tyler's sign-off on the look** is the one deliverable a machine cannot
+  close: the phone and desktop layouts, the hamburger, and the lightbox on a
+  real touch device.
+- The **Events** section leaves a tall empty area to the right of its photo on
+  wide screens — inherent to "two-column, image right" (§2.4) with a short
+  image. The image is `lg:sticky` so it follows the text. If it still reads as
+  a void, the fix is a layout change, not a tweak.
+- **Lighthouse SEO on the test domain cannot pass**, by design (above).
+- Lighthouse's `unused-javascript` and `legacy-javascript` findings are
+  **Google Tag Manager**, not our code. We ship no JavaScript bundle at all.
