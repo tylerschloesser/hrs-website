@@ -279,6 +279,12 @@ immutable`; HSTS `max-age=31536000; includeSubDomains`, `nosniff`,
 - The old `OrgHaitianReliefStaging` and `OrgHaitianReliefProd` stacks are
   untouched, as the plan requires. Prod is still served by the old
   distribution and still deployed by the old workflow on `main`.
+- Every run annotates: **"Node.js 20 is deprecated"** for `actions/checkout@v4`,
+  `actions/setup-node@v4`, `aws-actions/configure-aws-credentials@v4` and
+  `pnpm/action-setup@v4`. GitHub forces them onto Node 24 today, so runs are
+  green; the pins are the versions the plan specifies. Bump them to v5 in a
+  phase that has room to retest — `configure-aws-credentials@v5` changed inputs
+  — rather than as a drive-by.
 
 ## For Phase 3
 
