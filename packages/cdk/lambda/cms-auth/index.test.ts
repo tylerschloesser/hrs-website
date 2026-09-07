@@ -9,7 +9,7 @@ import {
   handler,
 } from './index.js'
 
-const ALLOWED_DOMAINS = 'haitianrelief.org,sveltia.haitianrelief.org'
+const ALLOWED_DOMAINS = 'haitianrelief.org'
 
 const baseEnv = {
   ALLOWED_DOMAINS,
@@ -40,7 +40,7 @@ test('getDomainPatterns: wildcard matches, but does not over-match a similar-loo
   const matches = (hostname: string) =>
     patterns.some((pattern) => new RegExp(pattern).test(hostname))
 
-  assert.equal(matches('sveltia.haitianrelief.org'), true)
+  assert.equal(matches('preview.haitianrelief.org'), true)
   assert.equal(matches('haitianrelief.org'), true)
   assert.equal(matches('evil-haitianrelief.org'), false)
 })
@@ -50,13 +50,38 @@ test('handleAuth: wildcard ALLOWED_DOMAINS allows a matching site_id', () => {
     {
       queryStringParameters: {
         provider: 'github',
-        site_id: 'sveltia.haitianrelief.org',
+        site_id: 'preview.haitianrelief.org',
       },
     },
     { ...baseEnv, ALLOWED_DOMAINS: '*.haitianrelief.org' }
   )
 
   assert.equal(result.statusCode, 302)
+})
+
+test('handleAuth: production ALLOWED_DOMAINS allows the apex and rejects a subdomain', () => {
+  const allowed = handleAuth(
+    {
+      queryStringParameters: {
+        provider: 'github',
+        site_id: 'haitianrelief.org',
+      },
+    },
+    { ...baseEnv, ALLOWED_DOMAINS: 'haitianrelief.org' }
+  )
+  assert.equal(allowed.statusCode, 302)
+
+  const rejected = handleAuth(
+    {
+      queryStringParameters: {
+        provider: 'github',
+        site_id: 'preview.haitianrelief.org',
+      },
+    },
+    { ...baseEnv, ALLOWED_DOMAINS: 'haitianrelief.org' }
+  )
+  assert.equal(rejected.statusCode, 200)
+  assert.match(bodyOf(rejected), /UNSUPPORTED_DOMAIN/)
 })
 
 test('handleAuth: unsupported provider gets UNSUPPORTED_BACKEND', () => {
@@ -86,13 +111,81 @@ test('handleCallback: state not matching the cookie gets CSRF_DETECTED', async (
   assert.match(bodyOf(result), /CSRF_DETECTED/)
 })
 
-test('handleCallback: no cookie at all gets UNSUPPORTED_BACKEND', async () => {
+test('handleCallback: no cookie at all (an expired CSRF cookie) gets CSRF_TOKEN_EXPIRED and a renderable popup', async () => {
   const result = await handleCallback(
     { queryStringParameters: { code: 'abc', state: 'xyz' } },
     baseEnv
   )
 
-  assert.match(bodyOf(result), /UNSUPPORTED_BACKEND/)
+  assert.match(bodyOf(result), /CSRF_TOKEN_EXPIRED/)
+  assert.match(bodyOf(result), /try signing in again/)
+  // The popup only renders if the emitted script listens for the provider
+  // Sveltia's client actually announces itself as; `provider: 'unknown'`
+  // (the outputHTML default) would leave it listening for
+  // `authorizing:unknown`, which is never sent.
+  assert.match(bodyOf(result), /authorizing:github/)
+})
+
+test('handleCallback: a cookie name that merely ends in csrf-token= is not mistaken for ours', async () => {
+  const result = await handleCallback(
+    {
+      queryStringParameters: { code: 'abc', state: 'xyz' },
+      cookies: ['my-csrf-token=github_00000000000000000000000000000000'],
+    },
+    baseEnv
+  )
+
+  assert.match(bodyOf(result), /CSRF_TOKEN_EXPIRED/)
+})
+
+const CSRF_TOKEN = '0'.repeat(32)
+
+const validCallbackRequest = {
+  queryStringParameters: { code: 'abc', state: CSRF_TOKEN },
+  cookies: [`csrf-token=github_${CSRF_TOKEN}`],
+}
+
+test('handleCallback: a fetch failure is logged and reported as TOKEN_REQUEST_FAILED', async (t) => {
+  const fetchMock = t.mock.method(globalThis, 'fetch', async () => {
+    throw new Error('network down')
+  })
+  const errorMock = t.mock.method(console, 'error', () => {})
+
+  const result = await handleCallback(validCallbackRequest, baseEnv)
+
+  assert.equal(fetchMock.mock.calls.length, 1)
+  assert.ok(errorMock.mock.calls.length > 0)
+  assert.match(bodyOf(result), /TOKEN_REQUEST_FAILED/)
+})
+
+test('handleCallback: a non-ok response is reported as TOKEN_REQUEST_FAILED, not success', async (t) => {
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () => new Response('{}', { status: 401 })
+  )
+  t.mock.method(console, 'error', () => {})
+
+  const result = await handleCallback(validCallbackRequest, baseEnv)
+
+  assert.match(bodyOf(result), /TOKEN_REQUEST_FAILED/)
+  assert.match(bodyOf(result), /authorization:github:error:/)
+})
+
+test('handleCallback: a token-less 200 response is reported as an error, not success', async (t) => {
+  t.mock.method(
+    globalThis,
+    'fetch',
+    async () => new Response('{}', { status: 200 })
+  )
+
+  const result = await handleCallback(validCallbackRequest, baseEnv)
+
+  // Before the fix, an empty-but-ok response computed `state: 'success'`
+  // with no token — a silently broken CMS session instead of a visible
+  // failure.
+  assert.match(bodyOf(result), /authorization:github:error:/)
+  assert.doesNotMatch(bodyOf(result), /authorization:github:success:/)
 })
 
 test('handleAuth: a valid request redirects to github.com with client_id, scope and a matching state', () => {

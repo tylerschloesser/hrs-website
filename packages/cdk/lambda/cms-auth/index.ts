@@ -131,7 +131,7 @@ interface OutputHtmlArgs {
 /**
  * Build the HTML response that communicates with the window opener.
  */
-export const outputHTML = ({
+const outputHTML = ({
   provider = 'unknown',
   token,
   error,
@@ -140,6 +140,15 @@ export const outputHTML = ({
 }: OutputHtmlArgs): APIGatewayProxyStructuredResultV2 => {
   const state = error ? 'error' : 'success'
   const content = error ? { provider, error, errorCode } : { provider, token }
+  // `content` is interpolated into the browser-side message below. A bare
+  // `${JSON.stringify(content)}` spliced inside the surrounding single-quoted
+  // JS string literal would break on a GitHub `error` value that contains an
+  // apostrophe (JSON.stringify escapes neither `'` nor `<`) with a
+  // SyntaxError — and one containing `</script>` would close the block
+  // early. `serialize()` turns the JSON text into its own safely-escaped JS
+  // string literal, which is concatenated in rather than interpolated
+  // inside another string's quotes.
+  const serializedContent = serialize(JSON.stringify(content))
 
   const body = `
       <!doctype html><html><body><script>
@@ -171,7 +180,7 @@ export const outputHTML = ({
             }
 
             window.opener?.postMessage(
-              'authorization:${provider}:${state}:${JSON.stringify(content)}',
+              'authorization:${provider}:${state}:' + ${serializedContent},
               origin
             );
           });
@@ -276,9 +285,31 @@ export const handleCallback = async (
   env: CmsAuthEnv
 ): Promise<APIGatewayProxyStructuredResultV2> => {
   const { code, state } = request.queryStringParameters ?? {}
-  const cookieHeader = (request.cookies ?? []).join('; ')
+  // `event.cookies` is already split into individual `name=value` pairs, so
+  // find the one we set rather than joining them back into a header and
+  // re-matching: a joined-and-matched `\bcsrf-token=` is not anchored to a
+  // cookie boundary and also matches inside e.g. `my-csrf-token=...`.
+  const csrfCookie = (request.cookies ?? []).find((cookie) =>
+    cookie.startsWith('csrf-token=')
+  )
+
+  if (!csrfCookie) {
+    // No cookie at all is the expected shape of "the editor took more than
+    // the 10-minute Max-Age to get through GitHub's consent screen", not a
+    // malformed request — tell them to retry rather than blaming their Git
+    // backend, and pass the real provider so the popup's `authorizing:`
+    // listener actually matches (the outputHTML default of 'unknown' would
+    // otherwise leave the popup showing nothing).
+    return outputHTML({
+      env,
+      provider: PROVIDER,
+      error: 'Your session has expired. Please try signing in again.',
+      errorCode: 'CSRF_TOKEN_EXPIRED',
+    })
+  }
+
   const [, provider, csrfToken] =
-    cookieHeader.match(/\bcsrf-token=([a-z-]+?)_([0-9a-f]{32})\b/) ?? []
+    csrfCookie.match(/^csrf-token=([a-z-]+?)_([0-9a-f]{32})$/) ?? []
 
   if (!provider || provider !== PROVIDER) {
     return outputHTML({
@@ -334,11 +365,17 @@ export const handleCallback = async (
       },
       body: JSON.stringify(requestBody),
     })
-  } catch {
-    //
+  } catch (fetchError) {
+    console.error('failed to request a GitHub access token', fetchError)
   }
 
-  if (!response) {
+  if (!response || !response.ok) {
+    if (response) {
+      console.error(
+        `GitHub token request failed with status ${response.status}`
+      )
+    }
+
     return outputHTML({
       env,
       provider,
@@ -359,6 +396,14 @@ export const handleCallback = async (
       error: 'Server responded with malformed data. Please try again later.',
       errorCode: 'MALFORMED_RESPONSE',
     })
+  }
+
+  if (!token && !error) {
+    // A 200 with neither a token nor an error isn't a shape GitHub's API
+    // documents, but reporting it as `state: 'success'` with no token (the
+    // default if this weren't caught) would leave the editor with a
+    // silently broken CMS session instead of a visible failure.
+    error = 'GitHub did not return an access token. Please try again later.'
   }
 
   return outputHTML({ env, provider, token, error })
