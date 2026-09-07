@@ -63,6 +63,16 @@ export class SiteStack extends Stack {
       domainName: 'haitianrelief.org',
     })
 
+    // Delegate the stage subdomain from the apex zone. ACM's DNS validation
+    // resolves its CNAME over public DNS, so this has to exist first or the
+    // certificate sits pending for the better part of an hour.
+    const nsRecord = new RecordSet(this, 'NsRecord', {
+      recordName: hostedZone.zoneName,
+      recordType: RecordType.NS,
+      target: RecordTarget.fromValues(...hostedZone.hostedZoneNameServers!),
+      zone: rootHostedZone,
+    })
+
     const certificate = isProd
       ? new Certificate(this, 'Certificate', {
           domainName,
@@ -76,6 +86,8 @@ export class SiteStack extends Stack {
           domainName,
           validation: CertificateValidation.fromDns(hostedZone),
         })
+
+    certificate.node.addDependency(nsRecord)
 
     const domainNames = isProd
       ? [domainName, 'haitianrelief.org']
@@ -192,13 +204,6 @@ function handler(event) {
         target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
       })
     }
-
-    new RecordSet(this, 'NsRecord', {
-      recordName: hostedZone.zoneName,
-      recordType: RecordType.NS,
-      target: RecordTarget.fromValues(...hostedZone.hostedZoneNameServers!),
-      zone: rootHostedZone,
-    })
 
     // Hashed, immutable assets go first so that by the time the HTML
     // deployment lands (and invalidates the distribution), every asset the
