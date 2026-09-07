@@ -4,15 +4,15 @@ Live progress log for the migration described in `docs/migration-plan.md`.
 Each phase appends its own section. Read this plus the plan before starting a
 new phase.
 
-| Phase                                     | State       | Notes                                                    |
-| ----------------------------------------- | ----------- | -------------------------------------------------------- |
-| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                             |
-| 2 — infra and pipeline, test domain       | not started | also does the Font Awesome registry plumbing             |
-| 3 — Sveltia CMS auth and round-trip       | not started |                                                          |
-| 3.5 — photo quality pass                  | not started | **added 2026-09-06**; ask about originals during Phase 2 |
-| 4 — UI redesign                           | not started | also adds Font Awesome icons                             |
-| 5 — SEO, canary, docs                     | not started |                                                          |
-| 6 — cutover and cleanup                   | not started |                                                          |
+| Phase                                     | State       | Notes                                                   |
+| ----------------------------------------- | ----------- | ------------------------------------------------------- |
+| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                            |
+| 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live               |
+| 3 — Sveltia CMS auth and round-trip       | not started |                                                         |
+| 3.5 — photo quality pass                  | not started | **added 2026-09-06**; originals still to be asked about |
+| 4 — UI redesign                           | not started | also adds Font Awesome icons                            |
+| 5 — SEO, canary, docs                     | not started |                                                         |
+| 6 — cutover and cleanup                   | not started |                                                         |
 
 **Plan amended 2026-09-06** with two changes Tyler asked for after Phase 1:
 Font Awesome Pro icons (plan §2.5) and a one-off photo restoration pass
@@ -32,10 +32,10 @@ pnpm check                   # prettier + astro check + cms/schema parity + tsc 
 pnpm format
 ```
 
-Nothing deploys yet — Phase 2 rewrites `packages/cdk` and the workflow. The old
-`.github/workflows/deploy.yml` is still in place and **will fail on pushes to
-`sveltia`**, because the existing deploy role trusts only `refs/heads/main`.
-That is expected until Phase 2; `main` still deploys prod the old way.
+Every push to `sveltia` deploys https://sveltia.haitianrelief.org. `main` still
+carries the _old_ `.github/workflows/deploy.yml` and still deploys prod the old
+way — GitHub runs the workflow file from the pushed ref, so the two do not
+interfere until the branches merge in Phase 6.
 
 ## Phase 1 — what was done
 
@@ -55,7 +55,7 @@ That is expected until Phase 2; `main` still deploys prod the old way.
   `webpack-manifest.ts` deleted, `defaultRootObject` stubbed to `'index.html'`.
 - `CLAUDE.md` rewritten for the new stack.
 
-## Decisions and gotchas
+## Phase 1 — decisions and gotchas
 
 **Path spike (the Phase 1 blocker) — resolved, no workaround needed.**
 Astro's `image()` resolves entry-relative paths **with or without** a leading
@@ -137,7 +137,7 @@ file is the hero. The other 34 are not.
 - New copy that had no source: `site.tagline`, `site.description` (meta
   description), `home.hero_alt`, `events.image_alt`. Worth Tyler's review.
 
-## Verification actually run
+## Phase 1 — verification actually run
 
 - On a **fresh clone of `origin/sveltia`** into a temp dir:
   `pnpm install`, `pnpm check` and `pnpm build` all exit 0. Do this after any
@@ -164,24 +164,129 @@ file is the hero. The other 34 are not.
     offers "Sign In with GitHub" / "Access Token" / "Work with Local
     Repository". Sign-in cannot work until the Phase 3 auth Lambda exists.
 
-## For Phase 2
+## Phase 2 — what was done
 
-- Rewrite `packages/cdk` per plan §Phase 2. `cdk-stack.ts` is still the old
-  single-stack file with the OIDC deploy role inlined under
-  `if (STAGE === 'staging')`; that role must move to `SharedStack` before the
-  staging stack can be destroyed in Phase 6.
-- **`public/robots.txt` currently hardcodes the prod sitemap URL and allows
-  indexing.** Once `sveltia.haitianrelief.org` is live it would invite Google
-  to index a duplicate of the whole site. Phase 2 should make robots.txt a
-  build-time endpoint that emits `Disallow: /` for any non-prod stage (and a
-  correct `Sitemap:` from `SITE_URL`), or add an `X-Robots-Tag: noindex`
-  response header on the test distribution.
-- Build-time env the workflow must set: `SITE_URL`, `CMS_BRANCH`, and later
-  `CMS_AUTH_URL`. `admin/config.yml` omits `base_url` entirely when
-  `CMS_AUTH_URL` is unset, which is the current state.
+Live: **https://sveltia.haitianrelief.org**, deployed by GitHub Actions on every
+push to `sveltia`.
+
+- `packages/cdk` split into two stacks (`src/index.ts` synthesizes both;
+  `STAGE` is now `sveltia | prod`, `dev`/`staging` are gone):
+  - **`OrgHaitianReliefShared`** — the GitHub OIDC deploy role
+    `arn:aws:iam::063257577013:role/hrs-website-deploy`, trusting
+    `repo:tylerschloesser/hrs-website:ref:refs/heads/{main,sveltia}`. Phase 3's
+    CMS auth Lambda goes in this file, at the marked placeholder.
+  - **`OrgHaitianReliefSveltia`** — bucket `org.haitianrelief.sveltia`
+    (DESTROY + autoDeleteObjects, non-prod only), hosted zone
+    `sveltia.haitianrelief.org` + NS delegation, ACM cert, CloudFront
+    `E1WLK7EZ5J25PC`, viewer-request URL rewrite, security headers,
+    403/404 → `/404.html`, two `BucketDeployment`s.
+  - `cdk-stack.ts` is gone, and with it the OIDC role that used to be inlined
+    under `if (STAGE === 'staging')`. The old `hrs-github-actions-deploy` role
+    still exists inside the untouched `OrgHaitianReliefStaging` stack; Phase 6
+    deletes it with that stack.
+- `.github/workflows/deploy.yml` rewritten: one job, pnpm, `pnpm check`,
+  `pnpm build`, OIDC, `pnpm run deploy`. Stage/`SITE_URL`/`CMS_BRANCH` derive
+  from `github.ref_name`. Concurrency group per branch, never cancelling.
+- `robots.txt` is now generated (`src/pages/robots.txt.ts`) — non-prod stages
+  get `Disallow: /` and no sitemap. Non-prod also gets an
+  `X-Robots-Tag: noindex, nofollow` response header, so the test domain is
+  unindexable even if a build somewhere forgets `STAGE`.
+- Font Awesome registry plumbing is in place ahead of Phase 4: root `.npmrc`
+  maps `@fortawesome` to `https://npm.fontawesome.com/` and holds **no** token;
+  the repo secret `FONTAWESOME_PACKAGE_TOKEN` is set and CI writes it with
+  `pnpm config set --location=user`. No `@fortawesome` package is installed
+  yet, so the mapping is inert.
+- `packages/cdk/cdk.context.json` is now tracked (see below), and the stale
+  `.npmignore` / `*.js` / `!jest.config.js` ignore rules are gone.
+
+### How to deploy, and how long it takes
+
+```sh
+AWS_PROFILE=admin STAGE=sveltia pnpm run deploy   # both stacks
+```
+
+`pnpm run`, not `pnpm deploy` — pnpm has a built-in command of that name. The
+script is `cdk deploy --all --require-approval never`, so CI and a local deploy
+take the same path.
+
+Measured on the first (create) run: `OrgHaitianReliefShared` 28s. The cert was
+ISSUED 2m14s after the site stack started, and the whole site stack took ~8.5
+minutes — CloudFront is the long pole, not ACM. A subsequent content-only CI
+run is ~45s of CDK on top of ~1m of install/check/build.
+
+### Gotchas found in Phase 2
+
+**The NS delegation has to exist before ACM validates.** CDK gives you no
+ordering between the new hosted zone's NS record in the apex zone and the
+certificate that validates against that zone, so ACM can sit pending while the
+subdomain is not yet delegated. `site-stack.ts` makes the certificate depend on
+the `NsRecord` explicitly. With that in place the cert issued in ~2 minutes.
+
+**The two-`BucketDeployment` split works because `aws s3 sync --delete` applies
+`--exclude` to the destination, not just the source.** The HTML deployment
+prunes the whole bucket root while the assets deployment does not prune at all;
+if excludes only filtered the source, the HTML deployment's prune would delete
+every `_astro/*` object the assets deployment had just uploaded. Verified two
+ways: the CDK handler
+(`custom-resource-handlers/dist/aws-s3-deployment/bucket-deployment-handler/index.py`)
+emits `--delete` before the `--exclude` filters, and a live sync against a
+scratch prefix in the real bucket deleted a stale HTML object while leaving an
+`_astro/` object that was absent from the source. Do not "simplify" this into
+one deployment or drop the exclude.
+
+**The CloudFront Function was verified with `aws cloudfront test-function`**,
+not by reading it. `String.prototype.endsWith` does work on the JS 2.0 runtime.
+Results: `/`→`/index.html`, `/admin`→`/admin/index.html`,
+`/admin/`→`/admin/index.html`, and `/concert.html`, `/_astro/*.webp`,
+`/documents/*.docx` all passed through untouched. Re-run that test after any
+edit to the function — a runtime error there is a 503 on every request.
+
+**`packages/cdk/cdk.context.json` was gitignored**, so the note in Phase 1 about
+the apex hosted-zone lookup being "already cached" was only true locally; CI
+resolved it live on every synth. It is tracked now.
+
+**`pnpm deploy` is a built-in pnpm command.** It happens to fall through to the
+root `deploy` script today, but do not rely on it — use `pnpm run deploy`.
+
+### Verification actually run against the live domain
+
+- 18/18 header and cache checks pass: http→https redirect; `index.html`
+  `public, max-age=0, must-revalidate`; `_astro/*` `public, max-age=31536000,
+immutable`; HSTS `max-age=31536000; includeSubDomains`, `nosniff`,
+  `strict-origin-when-cross-origin`, `X-Frame-Options: DENY`,
+  `X-Robots-Tag: noindex, nofollow`; `robots.txt` is `Disallow: /` with no
+  sitemap line; `/concert.html` 200; `/admin` and `/admin/` both 200;
+  `/nope` returns the 404 page with a real 404 status.
+- Playwright against the live site: 35 gallery thumbnails; the lightbox opens as
+  a real `:modal`, sets `src`/`srcset`/`sizes` only on open, moves on arrow
+  keys, closes on Escape and clears `src`; the mobile nav at 375px toggles
+  `aria-expanded`/`hidden` and closes on Escape; no horizontal overflow; zero
+  console errors. `/concert.html` redirects to `/#events`.
+- `/admin/` boots the Sveltia CMS shell and parses the served `config.yml`
+  without error; it has `branch: sveltia` and no `base_url`, as expected until
+  Phase 3. Sign-in still cannot work.
+- The bucket holds 123 `_astro` objects plus 9 other keys, with the right
+  cache-control on each.
+- One green Actions run end to end (install → check → build → OIDC → deploy),
+  including the Font Awesome registry auth step.
+
+### Noticed, not fixed
+
+- **The canonical URL is `https://<host>/index.html`**, not `https://<host>/`.
+  That follows from `build.format: 'file'` and would make prod's canonical for
+  the home page `https://haitianrelief.org/index.html`. Phase 5 (SEO) should
+  decide whether to normalize it.
+- The old `OrgHaitianReliefStaging` and `OrgHaitianReliefProd` stacks are
+  untouched, as the plan requires. Prod is still served by the old
+  distribution and still deployed by the old workflow on `main`.
 
 ## For Phase 3
 
+- The CMS auth Lambda + Function URL go in `packages/cdk/src/shared-stack.ts`,
+  at the marked placeholder. Once it exists, publish its URL with
+  `gh variable set CMS_AUTH_URL` — the workflow already passes
+  `vars.CMS_AUTH_URL` into the build, and `admin/config.yml` starts emitting
+  `base_url` the moment it is non-empty. No workflow change is needed.
 - Sveltia's `richtext` widget takes `modes: [rich_text, raw]` — _not_
   `rich-text`/`markdown`, which the plan suggested. The valid `buttons` values
   used are `bold, italic, link, bulleted-list, heading-three`, and the list
@@ -254,10 +359,11 @@ deletes them and deactivates the underlying IAM access key.
 
 ## Manual steps for Tyler
 
-- **During Phase 2** (long lead time, do not wait for Phase 3.5): ask Joy
+- **Still open, and the longest lead time in the whole migration**: ask Joy
   Richards / Jeanette Juetten whether the original camera files or the original
   email attachments survive for the Galette Chambon orphanage and health-centre
-  photos.
+  photos. This was Phase 2's manual step and has not been done; Phase 3.5 is
+  much cheaper if the originals turn up, so ask now rather than at Phase 3.5.
 - **Phase 3.5**: approve the before/after upscaling samples before the batch
   runs.
 - Phase 3 needs a GitHub OAuth App and Phase 5 needs an SNS subscription
