@@ -13,10 +13,13 @@ const { share } = events
 const OG_IMAGE_WIDTH = 1200
 const OG_IMAGE_HEIGHT = 630
 
+// JPEG rather than WebP: some social scrapers still refuse WebP previews.
 const ogImage = await getImage({
   src: share.image,
   width: OG_IMAGE_WIDTH,
   height: OG_IMAGE_HEIGHT,
+  fit: 'cover',
+  format: 'jpg',
 })
 const ogImageUrl = new URL(ogImage.src, Astro.site).toString()
 const pageUrl = new URL('/concert.html', Astro.site).toString()

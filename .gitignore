@@ -6,3 +6,4 @@ dist
 cdk.out
 *.js.map
 *.tsbuildinfo
+.playwright-mcp
