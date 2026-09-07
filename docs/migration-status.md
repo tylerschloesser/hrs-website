@@ -85,6 +85,12 @@ wraps `marked`. (Astro 7's internal markdown package is
 `@astrojs/markdown-satteri`, no longer `@astrojs/markdown-remark`; relying on
 it directly would tie us to an Astro internal, so `marked` is a direct dep.)
 
+**pnpm's strict `node_modules` exposed a missing `@types/node` in
+`packages/cdk`.** It used to resolve through npm's flat hoisting. It is now a
+direct devDependency. This only failed on a clean install — locally a stale
+`tsconfig.tsbuildinfo` hid it — so _verify on a fresh clone_, not just in the
+working tree.
+
 **`packages/app/src/content` is prettier-ignored on purpose.** Sveltia writes
 those files; if prettier reformatted them, every CMS commit would fail
 `pnpm check` and break the deploy the editor just triggered.
@@ -127,7 +133,9 @@ file is the hero. The other 34 are not.
 
 ## Verification actually run
 
-- `pnpm install` (exit 0), `pnpm build`, `pnpm check` — all green.
+- On a **fresh clone of `origin/sveltia`** into a temp dir:
+  `pnpm install`, `pnpm check` and `pnpm build` all exit 0. Do this after any
+  dependency change; the working tree hides missing deps.
 - Project copy diffed programmatically against the old `index.json`: titles,
   every description paragraph, every gallery caption and filename match
   byte-for-byte, curly quotes included.
@@ -156,7 +164,6 @@ file is the hero. The other 34 are not.
   single-stack file with the OIDC deploy role inlined under
   `if (STAGE === 'staging')`; that role must move to `SharedStack` before the
   staging stack can be destroyed in Phase 6.
-- `packages/cdk` still depends on `tiny-invariant`, now unused — drop it.
 - **`public/robots.txt` currently hardcodes the prod sitemap URL and allows
   indexing.** Once `sveltia.haitianrelief.org` is live it would invite Google
   to index a duplicate of the whole site. Phase 2 should make robots.txt a
