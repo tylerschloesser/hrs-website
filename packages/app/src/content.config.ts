@@ -29,6 +29,7 @@ const site = singleton('site', (image) => ({
   tagline: z.string(),
   description: z.string(),
   og_image: image(),
+  og_image_alt: z.string(),
   donate: z.object({
     paypal_url: z.string().url(),
     venmo_url: z.string().url(),
@@ -62,18 +63,20 @@ const events = singleton('events', (image) => ({
     title: z.string(),
     description: z.string(),
     image: image(),
-    redirect_to: z.string(),
+    redirect_to: z.string().startsWith('/'),
   }),
 }))
 
 const contacts = singleton('contacts', (image) => ({
-  members: z.array(
-    z.object({
-      name: z.string(),
-      role: z.string(),
-      email: z.string().email(),
-    })
-  ),
+  members: z
+    .array(
+      z.object({
+        name: z.string(),
+        role: z.string(),
+        email: z.string().email(),
+      })
+    )
+    .min(1),
   photo: image(),
   photo_caption: z.string(),
 }))

@@ -1,8 +1,13 @@
 /**
  * The Sveltia CMS config and the Astro content schema describe the same files.
  * If they drift, an editor's save writes a document Astro can no longer build,
- * and the site breaks minutes later with nothing to point at. This compares the
- * two field-by-field so the drift is caught by `pnpm check` instead.
+ * and the site breaks minutes later with nothing to point at. This compares
+ * the CMS config's field names against `EXPECTED` below, a hand-maintained
+ * list of the paths `content.config.ts` requires (plus `body`, the markdown
+ * body that never appears in the Zod schema at all) — not a derivation from
+ * the Zod schema itself, so the two lists can still drift from each other and
+ * this won't notice. Keep `EXPECTED` in sync by hand whenever the schema
+ * changes.
  *
  * Before that, a separate check validates the generated config against the
  * official Sveltia CMS JSON schema. That's the guard against a typo'd option
@@ -62,13 +67,18 @@ if (!validateSchema(config)) {
 }
 console.log('cms config matches the sveltia-cms schema')
 
-/** Field paths the Astro schema requires, per CMS file. Keep in sync by hand. */
+/**
+ * Field paths expected in the CMS config, per CMS file, hand-copied from
+ * `content.config.ts` (plus `body`, which isn't in the Zod schema — it's the
+ * markdown body). Keep in sync by hand; nothing derives this from the schema.
+ */
 const EXPECTED = {
   site: [
     'name',
     'tagline',
     'description',
     'og_image',
+    'og_image_alt',
     'donate',
     'donate.paypal_url',
     'donate.venmo_url',

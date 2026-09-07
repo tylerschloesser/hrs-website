@@ -32,7 +32,7 @@ logo:
 output:
   omit_empty_optional_fields: true
 media_folder: packages/app/src/content/media
-public_folder: /packages/app/src/content/media
+public_folder: media
 media_libraries:
   all:
     transformations:
@@ -62,6 +62,10 @@ singletons:
         media_folder: /packages/app/src/content/media
         public_folder: media
         hint: Shown as the preview image when the site is shared on social media.
+      - label: Social share image alt text
+        name: og_image_alt
+        widget: string
+        hint: Describe the image for screen readers.
       - label: Donate
         name: donate
         widget: object
@@ -156,7 +160,7 @@ ${richtext('        ')}
           - label: Redirect to
             name: redirect_to
             widget: string
-            hint: Path visitors land on after the share preview loads (e.g. /events).
+            hint: Path visitors land on after the share preview loads (e.g. /#events).
 
   - name: contacts
     label: Contacts
@@ -165,6 +169,7 @@ ${richtext('        ')}
       - label: Members
         name: members
         widget: list
+        min: 1
         fields:
           - { label: Name, name: name, widget: string }
           - { label: Role, name: role, widget: string }

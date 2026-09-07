@@ -34,10 +34,15 @@ const ogImage = await getImage({
 })
 const ogImageUrl = new URL(ogImage.src, Astro.site).toString()
 
-// Girls at the Ganthier school, arm in arm and laughing on a covered
-// walkway, several wearing pillowcase dresses and blue hair ribbons.
-const OG_IMAGE_ALT =
-  'A group of smiling Haitian schoolgirls, several in handmade pillowcase dresses, standing arm in arm outside a coral-colored school building.'
+// `build.format: 'file'` means the index page's own URL is `/index.html`
+// (that's what keeps `/concert.html` etc. working), so `Astro.url.pathname`
+// on the home page is literally `/index.html` — not the `/` anyone actually
+// visits or links to. Strip a trailing `index.html` back to `/` so the
+// canonical and og:url are the real, shareable URL. Any other `.html` path
+// (e.g. `/concert.html`) is left untouched — it *is* the visited URL.
+const canonicalPath = Astro.url.pathname.replace(/\/index\.html$/, '/')
+const canonicalUrl = new URL(canonicalPath, Astro.site)
+---
 
 // `build.format: 'file'` means the index page's own URL is `/index.html`
 // (that's what keeps `/concert.html` etc. working), so `Astro.url.pathname`
@@ -63,7 +68,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site)
 <meta property="og:image" content={ogImageUrl} />
 <meta property="og:image:width" content={String(OG_IMAGE_WIDTH)} />
 <meta property="og:image:height" content={String(OG_IMAGE_HEIGHT)} />
-<meta property="og:image:alt" content={OG_IMAGE_ALT} />
+<meta property="og:image:alt" content={site.og_image_alt} />
 <meta property="og:locale" content="en_US" />
 
 <meta name="twitter:card" content="summary_large_image" />

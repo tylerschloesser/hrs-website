@@ -1,7 +1,8 @@
 ---
-// schema.org NGO structured data for the home page. Every value is read
-// from content (site.yml / contacts.yml) rather than hard-coded, so an
-// editor updating the CMS keeps this in sync automatically.
+// schema.org NGO structured data for the home page. Most values are read
+// from content (site.yml / contacts.yml) so an editor updating the CMS keeps
+// this in sync automatically; `foundingDate` and `nonprofitStatus` below are
+// hard-coded facts about the org that the CMS has no field for.
 import { getImage } from 'astro:assets'
 import { getSingleton } from '../lib/content'
 
@@ -26,14 +27,21 @@ const imageUrl = new URL(ogImage.src, Astro.site).toString()
 // icon is just a flattened PNG derived from it for iOS home-screen use.
 const logoUrl = new URL('/favicon.svg', Astro.site).toString()
 
+// contacts.members has at least one entry (content.config.ts enforces
+// `min(1)`), so this always resolves — either the President or, failing
+// that, the first member.
 const president =
-  contacts.members.find((m) => m.role === 'President') ?? contacts.members[0]
+  contacts.members.find((m) => m.role === 'President') ?? contacts.members[0]!
 
-// site.donate.mail.city_state_zip is "City, ST 12345".
+// site.donate.mail.city_state_zip is expected to be "City, ST 12345", but
+// it's free-form CMS text with no structure the schema enforces. Parse it
+// defensively and omit whichever address sub-fields don't parse, rather than
+// throwing at build time (no comma) or shipping a bad value (comma, no
+// space) into the JSON-LD.
 const [addressLocality, regionZip] = site.donate.mail.city_state_zip
   .split(',')
   .map((s) => s.trim())
-const [addressRegion, postalCode] = regionZip.split(/\s+/)
+const [addressRegion, postalCode] = regionZip ? regionZip.split(/\s+/) : []
 
 const data = {
   '@context': 'https://schema.org',
@@ -47,9 +55,9 @@ const data = {
   address: {
     '@type': 'PostalAddress',
     streetAddress: site.donate.mail.street,
-    addressLocality,
-    addressRegion,
-    postalCode,
+    ...(addressLocality && { addressLocality }),
+    ...(addressRegion && { addressRegion }),
+    ...(postalCode && { postalCode }),
   },
   foundingDate: '1997',
   nonprofitStatus: 'Nonprofit501c3',
