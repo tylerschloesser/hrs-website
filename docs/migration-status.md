@@ -787,9 +787,8 @@ attribute inert. Use `widths={[...]}` + `sizes`. Two components shipped with
 
 ### Still open from Phase 4
 
-- **Tyler's sign-off on the look** is the one deliverable a machine cannot
-  close: the phone and desktop layouts, the hamburger, and the lightbox on a
-  real touch device.
+- **Nothing blocking.** Tyler reviewed the 375/768/1280 screenshots and the
+  live test domain on 2026-09-07 and signed off on the look.
 - The **Events** section leaves a tall empty area to the right of its photo on
   wide screens — inherent to "two-column, image right" (§2.4) with a short
   image. The image is `lg:sticky` so it follows the text. If it still reads as
