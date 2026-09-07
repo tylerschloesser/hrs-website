@@ -8,7 +8,7 @@ new phase.
 | ----------------------------------------- | ----------- | ------------------------------------------------------- |
 | 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                            |
 | 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live               |
-| 3 — Sveltia CMS auth and round-trip       | **done**    | one manual OAuth sign-in still to confirm — see below   |
+| 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06              |
 | 3.5 — photo quality pass                  | not started | **added 2026-09-06**; originals still to be asked about |
 | 4 — UI redesign                           | not started | also adds Font Awesome icons                            |
 | 5 — SEO, canary, docs                     | not started |                                                         |
@@ -426,17 +426,17 @@ secret and the OAuth App outright.
 
 ### Still open from Phase 3
 
-- **One manual OAuth sign-in.** Tyler chose to authenticate the round-trip with
-  a `gh auth token` rather than the OAuth popup, so `/auth` is proven live but
-  `/callback` — the code-for-token exchange and the `postMessage` handshake —
-  has only been proven by unit tests. Sign in once at
-  `/admin/` with **Sign In with GitHub** to close this out. If it fails, the
-  Lambda's CloudWatch log group has the reason.
-- That token now lives in the test site's `localStorage`. Sign out from the CMS
-  (bottom toolbar → Menu) when done, and rotate it if you would rather not
-  leave a `repo`-scoped token there.
+- **Nothing blocking.** The OAuth round-trip was verified by Tyler on
+  2026-09-06: "Sign In with GitHub" at `/admin/` completes, which exercises the
+  `/callback` code-for-token exchange and the `postMessage` handshake that the
+  unit tests can only approximate. Both sign-in methods now work.
+- Housekeeping: the round-trip before that was driven with a `gh auth token`,
+  which is stored in the test site's `localStorage` for that browser profile.
+  Sign out from the CMS (bottom toolbar → Menu) and rotate it if you would
+  rather not leave a `repo`-scoped token there.
 - Board members still need GitHub accounts and collaborator invitations before
-  they can use the CMS at all.
+  they can use the CMS at all. That is the gating step for anyone but Tyler
+  editing the site, and it has human lead time.
 
 ## For Phase 3.5
 
@@ -509,5 +509,10 @@ deletes them and deactivates the underlying IAM access key.
   runs.
 - Phase 3's GitHub OAuth App is **done** (created 2026-09-06). Phase 5 still
   needs an SNS subscription confirmation; it is described in the plan.
-- **Phase 3, one thing left**: sign in at `/admin/` once with "Sign In with
-  GitHub" to prove the OAuth callback end to end. See "Still open from Phase 3".
+- **Phase 3 is fully closed** — OAuth sign-in verified 2026-09-06.
+- **Blocking Phase 3.5, and unanswered since Phase 2**: ask Joy Richards /
+  Jeanette Juetten for the original Galette Chambon camera files or email
+  attachments. One recovered original beats any upscaler, and 11 of the 35
+  gallery images depend on the answer.
+- **Needed before any board member can edit**: their GitHub usernames, so they
+  can be invited as collaborators.
