@@ -1,7 +1,8 @@
 ---
 import { render } from 'astro:content'
 import type { CollectionEntry } from 'astro:content'
-import { faFileWord } from '@fortawesome/pro-solid-svg-icons'
+import { faFile, faFilePdf, faFileWord } from '@fortawesome/pro-solid-svg-icons'
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types'
 import Icon from './Icon.astro'
 import ProjectGallery from './ProjectGallery.astro'
 
@@ -12,6 +13,21 @@ interface Props {
 const { projects } = Astro.props
 
 const sorted = [...projects].sort((a, b) => a.data.order - b.data.order)
+
+// The CMS hint says "A PDF or Word document", but nothing enforces that, so
+// anything else falls back to a generic file icon.
+const attachmentIcon = (file: string): IconDefinition => {
+  const extension = file.split('.').pop()?.toLowerCase()
+  switch (extension) {
+    case 'pdf':
+      return faFilePdf
+    case 'doc':
+    case 'docx':
+      return faFileWord
+    default:
+      return faFile
+  }
+}
 
 const rendered = await Promise.all(
   sorted.map(async (project) => {
@@ -49,7 +65,7 @@ const rendered = await Promise.all(
               <div class="mt-8 flex flex-wrap gap-4">
                 {project.data.attachments.map((attachment) => (
                   <a href={attachment.file} class="btn btn-primary">
-                    <Icon icon={faFileWord} />
+                    <Icon icon={attachmentIcon(attachment.file)} />
                     {attachment.label}
                   </a>
                 ))}

@@ -54,7 +54,7 @@ import { dirname, join } from 'node:path'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-const DIST_PATH = '../app/dist'
+const DIST_PATH = join(__dirname, '../../app/dist')
 
 export interface SiteStackProps extends StackProps {
   /** The apex zone, imported by attributes - never created. */
@@ -228,16 +228,12 @@ function handler(event) {
       new EmailSubscription('tylerschloesser@gmail.com')
     )
 
-    // The `Canary` construct's default artifacts bucket has no
-    // `removalPolicy`, which means CDK's S3 default (RETAIN) applies. Build
-    // it explicitly instead so the 30-day expiration below is actually
-    // attached to something we control.
-    //
-    // That expiration lives here, not in the canary's own
-    // `artifactsBucketLifecycleRules` prop: that prop is documented as "has
-    // no effect if a bucket is passed to `artifactsBucketLocation`", which
-    // this does, so the lifecycle rule has to go directly on the bucket or it
-    // is silently dropped.
+    // Built explicitly (rather than left to the `Canary` construct's default
+    // artifacts bucket) so the 30-day expiration below has somewhere to live:
+    // the canary's own `artifactsBucketLifecycleRules` prop is documented as
+    // "has no effect if a bucket is passed to `artifactsBucketLocation`",
+    // which this does, so the lifecycle rule has to go directly on the
+    // bucket or it is silently dropped.
     const canaryArtifactsBucket = new Bucket(this, 'CanaryArtifactsBucket', {
       lifecycleRules: [{ expiration: Duration.days(30) }],
     })
@@ -253,7 +249,7 @@ function handler(event) {
         code: Code.fromAsset(join(__dirname, '../canary')),
         handler: 'index.handler',
       }),
-      schedule: Schedule.cron({ minute: '0', hour: '13' }), // ~08:00 Central
+      schedule: Schedule.cron({ minute: '0', hour: '13' }), // 8am/9am Central (CDT/CST)
       environmentVariables: {
         SITE_URL: `https://${domainName}`,
       },

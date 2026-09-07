@@ -140,6 +140,12 @@
   .on-dark .prose-hrs strong {
     @apply text-white;
   }
+  .prose-hrs h3 {
+    @apply text-xl font-semibold text-ink sm:text-2xl;
+  }
+  .on-dark .prose-hrs h3 {
+    @apply text-white;
+  }
 
   /* Buttons. `btn-accent` is the donate CTA; `btn-primary` is everything else. */
   .btn {

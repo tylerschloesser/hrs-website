@@ -210,9 +210,15 @@ import Icon from './Icon.astro'
       openerButton = null
     })
 
-    // Basic touch swipe support.
+    // Basic touch swipe support. Ignored when the press starts on a button
+    // (close/prev/next) so a drifting tap doesn't both swipe and click,
+    // advancing two images at once.
     let touchStartX: number | null = null
     dialog.addEventListener('pointerdown', (event) => {
+      // `Element`, not `HTMLElement`: the press usually lands on the `<svg>`
+      // glyph inside the button, and an SVGElement is not an HTMLElement.
+      if (event.target instanceof Element && event.target.closest('button'))
+        return
       touchStartX = event.clientX
     })
     dialog.addEventListener('pointerup', (event) => {

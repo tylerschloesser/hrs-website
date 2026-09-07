@@ -199,13 +199,25 @@ const links = [
     const headerHeight =
       header instanceof HTMLElement ? header.getBoundingClientRect().height : 64
 
+    // A callback only carries the sections whose intersection *changed*, so
+    // the set of what is currently in the band has to be tracked across calls
+    // - deciding from `entries` alone would clear the highlight on a section
+    // that is still in view whenever a different one leaves.
+    const intersecting = new Set<HTMLElement>()
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          if (entry.isIntersecting && entry.target instanceof HTMLElement) {
-            setCurrent(entry.target.id)
+          if (!(entry.target instanceof HTMLElement)) continue
+          if (entry.isIntersecting) {
+            intersecting.add(entry.target)
+          } else {
+            intersecting.delete(entry.target)
           }
         }
+        // Topmost section wins; an empty set (the hero) clears the highlight.
+        const current = sections.find((section) => intersecting.has(section))
+        setCurrent(current ? current.id : null)
       },
       {
         rootMargin: `-${headerHeight + 8}px 0px -70% 0px`,

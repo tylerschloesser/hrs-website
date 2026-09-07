@@ -10,12 +10,13 @@ interface Mail {
 }
 
 interface Props {
+  siteName: string
   paypalUrl: string
   venmoUrl: string
   mail: Mail
 }
 
-const { paypalUrl, venmoUrl, mail } = Astro.props
+const { siteName, paypalUrl, venmoUrl, mail } = Astro.props
 ---
 
 <section class="band bg-brand-dark on-dark">
@@ -54,7 +55,7 @@ const { paypalUrl, venmoUrl, mail } = Astro.props
         <address
           class="mt-4 w-full rounded-lg bg-white/10 p-4 text-left text-white not-italic"
         >
-          <div>Haitian Relief Services</div>
+          <div>{siteName}</div>
           <div>Attn: {mail.attn}</div>
           <div>{mail.street}</div>
           <div>{mail.city_state_zip}</div>

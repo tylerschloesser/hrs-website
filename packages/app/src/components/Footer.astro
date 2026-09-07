@@ -9,6 +9,10 @@ interface Props {
 }
 
 const { siteName, githubUrl } = Astro.props
+
+// Derived so the visible label always matches where the link actually goes,
+// even if an editor points `github_url` at a different account or repo.
+const githubLabel = githubUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')
 ---
 
 <footer class="on-dark border-t border-white/10 bg-brand-dark text-white">
@@ -27,7 +31,7 @@ const { siteName, githubUrl } = Astro.props
         class="inline-flex items-center gap-2 text-white/70 underline underline-offset-2 transition-colors hover:text-accent"
       >
         <Icon icon={faGithub} />
-        github.com/tylerschloesser
+        {githubLabel}
         <Icon icon={faArrowUpRightFromSquare} class="text-xs" />
       </a>
     </div>

@@ -52,6 +52,7 @@ const projects = await getCollection('projects')
       photoCaption={contacts.photo_caption}
     />
     <Donate
+      siteName={site.name}
       paypalUrl={site.donate.paypal_url}
       venmoUrl={site.donate.venmo_url}
       mail={site.donate.mail}

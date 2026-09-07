@@ -20,11 +20,15 @@ const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const SVG_PATH = `${ROOT}/public/favicon.svg`
 const BRAND_DARK = '#172554'
 
-const svg = await sharp(SVG_PATH).toBuffer()
+// `favicon.svg` has a 64x64 viewBox and no width/height, so sharp's default
+// rasterization is 64x64. Resizing that raster up for the larger sizes below
+// would upscale a bitmap instead of rendering the vector — rasterize
+// straight from the SVG at each target size instead.
+const rasterize = (size) =>
+  sharp(SVG_PATH, { density: (72 * size) / 64 }).resize(size, size)
 
 // apple-touch-icon.png: 180x180, opaque (flattened onto brand-dark).
-const appleTouchIcon = await sharp(svg)
-  .resize(180, 180)
+const appleTouchIcon = await rasterize(180)
   .flatten({ background: BRAND_DARK })
   .png()
   .toBuffer()
@@ -34,7 +38,7 @@ console.log('wrote public/apple-touch-icon.png (180x180)')
 // favicon.ico: 16, 32, 48px PNG-compressed entries.
 const sizes = [16, 32, 48]
 const pngs = await Promise.all(
-  sizes.map((size) => sharp(svg).resize(size, size).png().toBuffer())
+  sizes.map((size) => rasterize(size).png().toBuffer())
 )
 
 const ICONDIR_SIZE = 6
@@ -64,4 +68,6 @@ for (const [i, size] of sizes.entries()) {
 
 const ico = Buffer.concat([iconDir, ...entries, ...pngs])
 await writeFile(`${ROOT}/public/favicon.ico`, ico)
-console.log(`wrote public/favicon.ico (${sizes.join('x, ')}x)`)
+console.log(
+  `wrote public/favicon.ico (${sizes.map((s) => `${s}x${s}`).join(', ')})`
+)

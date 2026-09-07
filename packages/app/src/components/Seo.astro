@@ -44,16 +44,6 @@ const canonicalPath = Astro.url.pathname.replace(/\/index\.html$/, '/')
 const canonicalUrl = new URL(canonicalPath, Astro.site)
 ---
 
-// `build.format: 'file'` means the index page's own URL is `/index.html`
-// (that's what keeps `/concert.html` etc. working), so `Astro.url.pathname`
-// on the home page is literally `/index.html` — not the `/` anyone actually
-// visits or links to. Strip a trailing `index.html` back to `/` so the
-// canonical and og:url are the real, shareable URL. Any other `.html` path
-// (e.g. `/concert.html`) is left untouched — it *is* the visited URL.
-const canonicalPath = Astro.url.pathname.replace(/index\.html$/, '')
-const canonicalUrl = new URL(canonicalPath, Astro.site)
----
-
 <title>{title}</title>
 <meta name="description" content={metaDescription} />
 <link rel="canonical" href={canonicalUrl} />

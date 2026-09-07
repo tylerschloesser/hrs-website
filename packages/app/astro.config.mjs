@@ -6,8 +6,8 @@ import { defineConfig } from 'astro/config'
 export default defineConfig({
   site: process.env.SITE_URL ?? 'https://haitianrelief.org',
   build: {
-    // Emit `about.html` instead of `about/index.html` so `/concert.html`
-    // keeps working and S3 keys stay obvious.
+    // Emit `concert.html` instead of `concert/index.html` so it keeps
+    // working and S3 keys stay obvious.
     format: 'file',
   },
   integrations: [
