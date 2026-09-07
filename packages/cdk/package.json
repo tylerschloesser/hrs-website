@@ -3,10 +3,14 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "deploy": "cdk deploy --all --require-approval never"
+    "deploy": "cdk deploy --all --require-approval never",
+    "test": "tsx --test lambda/cms-auth/*.test.ts"
   },
   "devDependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.1127.0",
+    "@types/aws-lambda": "^8.10.163",
     "@types/node": "^26.4.1",
+    "esbuild": "^0.28.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   },

@@ -7,7 +7,7 @@
     "dev": "pnpm --filter @hrs-website/app dev",
     "build": "pnpm --filter @hrs-website/app build",
     "preview": "pnpm --filter @hrs-website/app preview",
-    "check": "prettier --check . && pnpm --filter @hrs-website/app check && tsc -b packages/cdk",
+    "check": "prettier --check . && pnpm --filter @hrs-website/app check && tsc -b packages/cdk && pnpm --filter @hrs-website/cdk test",
     "format": "prettier --write .",
     "deploy": "pnpm --filter @hrs-website/cdk deploy",
     "prepare": "husky || true"
