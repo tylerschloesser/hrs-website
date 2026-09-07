@@ -4,15 +4,15 @@ Live progress log for the migration described in `docs/migration-plan.md`.
 Each phase appends its own section. Read this plus the plan before starting a
 new phase.
 
-| Phase                                     | State       | Notes                                                   |
-| ----------------------------------------- | ----------- | ------------------------------------------------------- |
-| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                            |
-| 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live               |
-| 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06              |
-| 3.5 — photo quality pass                  | not started | **added 2026-09-06**; originals still to be asked about |
-| 4 — UI redesign                           | not started | also adds Font Awesome icons                            |
-| 5 — SEO, canary, docs                     | not started |                                                         |
-| 6 — cutover and cleanup                   | not started |                                                         |
+| Phase                                     | State       | Notes                                                  |
+| ----------------------------------------- | ----------- | ------------------------------------------------------ |
+| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                           |
+| 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live              |
+| 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06             |
+| 3.5 — photo quality pass                  | in progress | no originals survive; upscayl route confirmed by Tyler |
+| 4 — UI redesign                           | not started | also adds Font Awesome icons                           |
+| 5 — SEO, canary, docs                     | not started |                                                        |
+| 6 — cutover and cleanup                   | not started |                                                        |
 
 **Plan amended 2026-09-06** with two changes Tyler asked for after Phase 1:
 Font Awesome Pro icons (plan §2.5) and a one-off photo restoration pass
@@ -510,9 +510,8 @@ deletes them and deactivates the underlying IAM access key.
 - Phase 3's GitHub OAuth App is **done** (created 2026-09-06). Phase 5 still
   needs an SNS subscription confirmation; it is described in the plan.
 - **Phase 3 is fully closed** — OAuth sign-in verified 2026-09-06.
-- **Blocking Phase 3.5, and unanswered since Phase 2**: ask Joy Richards /
-  Jeanette Juetten for the original Galette Chambon camera files or email
-  attachments. One recovered original beats any upscaler, and 11 of the 35
-  gallery images depend on the answer.
+- ~~Ask about the original Galette Chambon camera files.~~ **Answered
+  2026-09-06: no better images exist.** Phase 3.5 therefore runs the Upscayl
+  route on the files we have; there is nothing left to recover.
 - **Needed before any board member can edit**: their GitHub usernames, so they
   can be invited as collaborators.

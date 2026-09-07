@@ -21,7 +21,7 @@ const items = await Promise.all(
   gallery.map(async (item) => {
     const full = await getImage({
       src: item.image,
-      widths: [800, 1200, 1600],
+      widths: [800, 1200, 1600, 2048],
       format: 'webp',
     })
     return { ...item, full }
