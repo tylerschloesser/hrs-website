@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "deploy": "cdk deploy --all --require-approval never",
+    "deploy": "cdk deploy --require-approval never",
     "test": "tsx --test lambda/cms-auth/*.test.ts"
   },
   "devDependencies": {
@@ -17,7 +17,6 @@
   "dependencies": {
     "aws-cdk": "^2.1112.0",
     "aws-cdk-lib": "^2.244.0",
-    "constructs": "^10.5.1",
-    "source-map-support": "^0.5.16"
+    "constructs": "^10.5.1"
   }
 }

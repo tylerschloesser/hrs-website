@@ -19,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SITE_URL: https://haitianrelief.org
-      CMS_BRANCH: main
       # Set with `gh variable set CMS_AUTH_URL`. While it is empty,
       # admin/config.yml omits `base_url` entirely and CMS sign-in breaks.
       CMS_AUTH_URL: ${{ vars.CMS_AUTH_URL }}

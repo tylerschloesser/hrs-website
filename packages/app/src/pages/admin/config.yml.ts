@@ -1,6 +1,5 @@
 export const prerender = true
 
-const branch = process.env.CMS_BRANCH ?? 'main'
 const authUrl = process.env.CMS_AUTH_URL ?? ''
 const siteUrl = process.env.SITE_URL ?? 'https://haitianrelief.org'
 
@@ -13,7 +12,7 @@ const body = `# yaml-language-server: $schema=https://unpkg.com/@sveltia/cms/sch
 backend:
   name: github
   repo: tylerschloesser/hrs-website
-  branch: ${branch}
+  branch: main
 ${authUrl ? `  base_url: ${authUrl}\n` : ''}  auth_methods: [oauth, token]
   auth_scope: public_repo
   # {{collection}} is deliberately left out: for a singleton it resolves to the

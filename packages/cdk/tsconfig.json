@@ -9,8 +9,5 @@
     "strict": true,
     "skipLibCheck": true,
     "noUncheckedIndexedAccess": true
-  },
-  "ts-node": {
-    "esm": true
   }
 }

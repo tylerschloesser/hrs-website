@@ -13,12 +13,11 @@ import { getSingleton } from '../lib/content'
 interface Props {
   title: string
   description?: string
-  ogType?: string
   /** Set true on utility pages (e.g. 404) that should stay out of search. */
   noindex?: boolean
 }
 
-const { title, description, ogType = 'website', noindex } = Astro.props
+const { title, description, noindex } = Astro.props
 
 const site = await getSingleton('site')
 const metaDescription = description ?? site.description
@@ -56,7 +55,7 @@ const canonicalUrl = new URL(canonicalPath, Astro.site)
 <meta name="theme-color" content="#172554" />
 {noindex && <meta name="robots" content="noindex" />}
 
-<meta property="og:type" content={ogType} />
+<meta property="og:type" content="website" />
 <meta property="og:site_name" content={site.name} />
 <meta property="og:title" content={title} />
 <meta property="og:description" content={metaDescription} />
