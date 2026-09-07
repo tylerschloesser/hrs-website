@@ -53,6 +53,5 @@ jobs:
           role-to-assume: arn:aws:iam::063257577013:role/hrs-website-deploy
           aws-region: us-east-1
 
-      - name: cdk deploy
-        run: pnpm --filter @hrs-website/cdk exec cdk deploy --all
-          --require-approval never
+      # `run` explicitly: pnpm has a built-in `deploy` command too.
+      - run: pnpm run deploy
