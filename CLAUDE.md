@@ -30,15 +30,26 @@ through Sveltia CMS at `/admin/`, all in a pnpm workspace.
 
 ### packages/app — the Astro site
 
-- `astro.config.mjs`: `output: static`, `build.format: 'file'` (pages emit
-  `index.html`, `concert.html`, `404.html` — this is what keeps `/concert.html`
-  working and makes the S3 keys obvious). `site` comes from `SITE_URL`.
+- `astro.config.mjs`: `build.format: 'file'` (pages emit `index.html`,
+  `concert.html`, `404.html` — this is what keeps `/concert.html` working
+  and makes the S3 keys obvious). `site` comes from `SITE_URL`, falling
+  back to `https://haitianrelief.org` when it's unset — load-bearing for
+  local builds, which don't set it.
 - `src/content.config.ts`: the content schema. **This is the contract** between
   Astro and the CMS — the Sveltia config in `src/pages/admin/config.yml.ts`
   must define exactly the same fields, or an editor's save breaks the build.
-  Change both together.
-- `src/content/`: the content itself, and the only thing carried over from the
-  old site.
+  Change both together. `og_image_alt` is required alongside `og_image`,
+  `contacts.members` must have at least one entry, and
+  `events.share.redirect_to` must start with `/` (it reaches
+  `location.replace()` in `concert.astro`, so an absolute value would be an
+  open redirect). Each of the three is deliberately a Zod constraint rather
+  than a defensive check in a component: a violation stops the build with a
+  named `InvalidContentEntryDataError` instead of crashing a component on
+  `undefined`.
+- `tsconfig.json` sets `noUncheckedIndexedAccess`, so `astro check` (part of
+  `pnpm check`) treats an unguarded array/object index as an error, not just
+  a lint warning.
+- `src/content/`: the content itself.
   - `site.yml`, `home.yml`, `events.yml`, `contacts.yml` — singletons, each its
     own single-file collection. Read them with `getSingleton()` from
     `src/lib/content.ts`.
@@ -56,8 +67,7 @@ through Sveltia CMS at `/admin/`, all in a pnpm workspace.
   Sveltia CMS loader). Anything that should be optimized belongs in
   `src/content/`, not here.
 - `src/pages/robots.txt.ts` generates robots.txt at build time so the
-  `Sitemap:` line follows whatever `site` the build was given. There is only
-  one flavour of it now that there are no stages.
+  `Sitemap:` line follows whatever `site` the build was given.
 
 Search and social metadata:
 
@@ -86,20 +96,15 @@ Search and social metadata:
   script, commit the output. `sharp` cannot write `.ico`, so the script builds
   the container by hand.
 
-Dev-only scripts under `packages/app/scripts/` (none of them run in CI):
-`axe.mjs` (accessibility audit of a URL), `shots.mjs` (screenshots at the
-review widths), `favicon.mjs` (above). `validate-cms-config.mjs` is the
-exception — `pnpm check` runs it.
+`packages/app/scripts/` holds two files: `favicon.mjs` (above, dev-only,
+never run in CI) and `validate-cms-config.mjs`, which `pnpm check` does run.
 
 ### packages/cdk — AWS infrastructure
 
 CDK in TypeScript, run with `tsx`. Account `063257577013`, us-east-1.
 
-**One stack, `HaitianReliefSite` (`src/site-stack.ts`), and no stages.** The
-`sveltia` and `staging` stages and the separate `Shared` stack were torn down
-at the 2026-09-07 cutover: `Shared` existed only to hold what the stages had
-in common, so it had nothing left to share. `src/index.ts` synthesizes the one
-stack and passes it the apex zone.
+**One stack, `HaitianReliefSite` (`src/site-stack.ts`), and no stages.**
+`src/index.ts` synthesizes the one stack and passes it the apex zone.
 
 If a test environment is ever wanted again, add it as a **separate app with
 its own domain** rather than reintroducing a `STAGE` switch through every
@@ -110,10 +115,10 @@ The stack owns the S3 bucket `org.haitianrelief`, the ACM certificate, the
 CloudFront distribution, the apex DNS record, the GitHub Actions deploy role,
 the CMS auth Lambda, and the canary and its alarm.
 
-- **The site is served from the apex only.** There is no
-  `prod.haitianrelief.org`, no per-stage hosted zone and no NS delegation, so
-  nothing has to be delegated before ACM can validate — validation happens in
-  the zone that already answers for the domain.
+- **The site is served from the apex only.** There is no NS delegation to
+  wait on, so nothing has to be delegated before ACM can validate —
+  validation happens directly in the zone that already answers for the
+  domain.
 - **The apex hosted zone is imported by id, never created**
   (`Z0010048114HS2EOWXJLC`). Creating it would mint new nameservers and take
   the domain off the internet.
@@ -148,7 +153,7 @@ behind a Lambda Function URL. Two things will break sign-in silently:
 
 - **A Function URL's hostname follows the function's _name_.** The function is
   therefore pinned to `functionName: 'hrs-cms-auth'` — an unnamed CDK function
-  is named after its stack, which is exactly how the 2026-09 rename changed the
+  is named after its stack, so a stack rename would otherwise change the
   sign-in URL. With the name pinned, a future stack rename no longer touches
   it. If the name ever does change, two things outside CloudFormation have to
   change with it: the GitHub OAuth App's callback (`<url>/callback`), and the
@@ -177,9 +182,14 @@ is emailed as well.
   runtime, never loaded by local Node. The Playwright runtimes want the handler
   at the asset root (`index.js`), not the `nodejs/node_modules/` layout the
   Puppeteer runtimes need.
-- The alarm's `.gallery img` assertion is a **contract with
-  `ProjectGallery.astro`**. Change that container class and the canary starts
-  failing at 8am, not at build time.
+- The `.gallery img` assertion is a **contract with `ProjectGallery.astro`**,
+  whose root element carries that class; `Lightbox.astro` is the only other
+  consumer of it. Change or rename that class and the canary starts failing
+  at 8am, not at build time.
+- The `h1` assertion is a **contract with `site.name`**, which is
+  CMS-editable: an editor changing the site name in `site.yml` to something
+  that doesn't contain "Haitian Relief Services" fails the canary at 8am
+  with no build-time warning, same shape as the `.gallery` contract above.
 - **A newly created canary has no datapoints**, and the alarm uses
   `treatMissingData: BREACHING` — so it is born in ALARM and stays there until
   the first 13:00 UTC run. That is correct, not a fault. To settle it
@@ -231,8 +241,3 @@ buckets behind that have to be emptied and deleted by hand.
 - `README.md` — the public front door for the repo.
 - `docs/editing.md` — the guide for the board members who edit the site. It is
   written for people with no technical background; keep it that way.
-- `docs/migration-plan.md` / `docs/migration-status.md` — the 2026-09 move
-  from the old semantic-ui site to this one. **History, not live state**: the
-  migration is complete. Useful for _why_ something is the way it is; do not
-  treat either as a description of the current stack. The old site is on the
-  `semantic-ui` branch.
