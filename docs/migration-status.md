@@ -1319,11 +1319,15 @@ Account `063257577013` / us-east-1, everything for this site:
   **Until it is done, CMS sign-in at `/admin/` fails** — the editor loads and
   the button works, but GitHub rejects the redirect. Everything else on the
   site is unaffected.
-- **Two IAM roles predate this repo's CDK and were left alone** rather than
-  deleted blind: `codebuild-hrs-website-service-role` (last used 2026-02-13)
-  and `hrs-website-lambda` (created 2017, never used). Neither is referenced
-  by `HaitianReliefSite`. Worth deleting once someone confirms what, if
-  anything, still uses the CodeBuild one.
+- ~~Two IAM roles predating this repo's CDK.~~ **Deleted 2026-09-07.**
+  `codebuild-hrs-website-service-role` and `hrs-website-lambda` (created
+  2017), plus their three orphaned customer-managed policies — two
+  `CodeBuildPolicy-hrs-website-*` and one `AWSLambdaEdgeExecutionRole-*`,
+  each attached to nothing but the role it went with. Checked first: the
+  account has **no CodeBuild projects** and no Lambda referenced
+  `hrs-website-lambda`. `AmazonSESFullAccess` is AWS-managed, so it was
+  detached and not deleted. `hrs-website-deploy` is now the only `hrs` role
+  in the account and there are no local `hrs` policies left.
 - **Lighthouse SEO has still not been re-measured on prod.** Phase 5 could not
   score it on the test domain because of the deliberate `noindex`; that cap is
   gone now.
