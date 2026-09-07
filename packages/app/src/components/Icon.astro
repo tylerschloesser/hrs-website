@@ -1,0 +1,30 @@
+---
+// Font Awesome icon definitions are just path data, so the whole integration
+// is this component: no runtime library, no FA stylesheet, and Rollup ships
+// only the icons that are actually imported. See docs/migration-plan.md §2.5.
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types'
+
+interface Props {
+  icon: IconDefinition
+  /** Give an accessible name; omit it for icons next to visible text. */
+  label?: string
+  class?: string
+}
+
+const { icon, label, class: className } = Astro.props
+const [width, height, , , path] = icon.icon
+---
+
+<svg
+  viewBox={`0 0 ${width} ${height}`}
+  width="1em"
+  height="1em"
+  fill="currentColor"
+  class={className}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+>
+  {Array.isArray(path) ? path.map((d) => <path d={d} />) : <path d={path} />}
+</svg>

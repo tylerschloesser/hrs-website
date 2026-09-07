@@ -3,6 +3,12 @@
 // `data-full-src` / `data-full-srcset` / `data-caption`; this component
 // delegates a click listener from `document` so it doesn't need to know
 // about any particular gallery ahead of time.
+import {
+  faChevronLeft,
+  faChevronRight,
+  faXmark,
+} from '@fortawesome/pro-solid-svg-icons'
+import Icon from './Icon.astro'
 ---
 
 <dialog
@@ -16,20 +22,7 @@
     aria-label="Close"
     class="absolute right-3 top-3 z-10 rounded-full bg-white/10 p-2 hover:bg-white/20"
   >
-    <svg
-      aria-hidden="true"
-      focusable="false"
-      viewBox="0 0 24 24"
-      class="h-6 w-6"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        d="M6 18 18 6M6 6l12 12"></path>
-    </svg>
+    <Icon icon={faXmark} class="text-xl" />
   </button>
 
   <div class="relative flex items-center justify-center">
@@ -39,20 +32,7 @@
       aria-label="Previous image"
       class="absolute left-0 z-10 rounded-full bg-white/10 p-2 hover:bg-white/20"
     >
-      <svg
-        aria-hidden="true"
-        focusable="false"
-        viewBox="0 0 24 24"
-        class="h-6 w-6"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M15.75 19.5 8.25 12l7.5-7.5"></path>
-      </svg>
+      <Icon icon={faChevronLeft} class="text-xl" />
     </button>
 
     <img
@@ -67,20 +47,7 @@
       aria-label="Next image"
       class="absolute right-0 z-10 rounded-full bg-white/10 p-2 hover:bg-white/20"
     >
-      <svg
-        aria-hidden="true"
-        focusable="false"
-        viewBox="0 0 24 24"
-        class="h-6 w-6"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-      >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="m8.25 4.5 7.5 7.5-7.5 7.5"></path>
-      </svg>
+      <Icon icon={faChevronRight} class="text-xl" />
     </button>
   </div>
 

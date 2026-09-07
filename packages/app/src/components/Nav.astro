@@ -1,4 +1,7 @@
 ---
+import { faBars } from '@fortawesome/pro-solid-svg-icons'
+import Icon from './Icon.astro'
+
 interface Props {
   siteName: string
 }
@@ -44,20 +47,7 @@ const links = [
         class="inline-flex items-center justify-center rounded p-2 sm:hidden"
       >
         <span class="sr-only">Menu</span>
-        <svg
-          aria-hidden="true"
-          focusable="false"
-          viewBox="0 0 24 24"
-          class="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"></path>
-        </svg>
+        <Icon icon={faBars} class="text-xl" />
       </button>
     </div>
 

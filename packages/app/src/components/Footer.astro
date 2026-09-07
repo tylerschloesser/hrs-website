@@ -1,4 +1,7 @@
 ---
+import { faGithub } from '@fortawesome/free-brands-svg-icons'
+import Icon from './Icon.astro'
+
 interface Props {
   githubUrl: string
 }
@@ -12,8 +15,9 @@ const { githubUrl } = Astro.props
       href={githubUrl}
       target="_blank"
       rel="noopener"
-      class="underline underline-offset-2 hover:text-accent"
+      class="inline-flex items-center gap-2 underline underline-offset-2 hover:text-accent"
     >
+      <Icon icon={faGithub} />
       github.com/tylerschloesser
     </a>
   </div>

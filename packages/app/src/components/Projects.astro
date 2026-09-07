@@ -1,6 +1,8 @@
 ---
 import { render } from 'astro:content'
 import type { CollectionEntry } from 'astro:content'
+import { faFileWord } from '@fortawesome/pro-solid-svg-icons'
+import Icon from './Icon.astro'
 import ProjectGallery from './ProjectGallery.astro'
 
 interface Props {
@@ -50,6 +52,7 @@ const withAttachments = sorted.filter(
                 href={attachment.file}
                 class="inline-flex items-center gap-2 text-primary underline underline-offset-2 hover:text-primary-strong"
               >
+                <Icon icon={faFileWord} />
                 {attachment.label}
               </a>
             ))

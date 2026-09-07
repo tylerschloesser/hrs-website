@@ -3,6 +3,9 @@ import type { ImageMetadata } from 'astro'
 import { Image } from 'astro:assets'
 import Markdown from './Markdown.astro'
 
+import { faYoutube } from '@fortawesome/free-brands-svg-icons'
+import Icon from './Icon.astro'
+
 interface Video {
   label: string
   url: string
@@ -34,8 +37,9 @@ const { heading, body, videos, closing, image, imageAlt } = Astro.props
               <li>
                 <a
                   href={video.url}
-                  class="text-primary underline underline-offset-2 hover:text-primary-strong"
+                  class="inline-flex items-center gap-2 text-primary underline underline-offset-2 hover:text-primary-strong"
                 >
+                  <Icon icon={faYoutube} />
                   {video.label}
                 </a>
               </li>
