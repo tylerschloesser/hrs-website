@@ -15,7 +15,9 @@ Package manager is **pnpm** (see `packageManager` in `package.json`). npm will n
 - **Build**: `pnpm build` → `packages/app/dist`
 - **Preview a build**: `pnpm preview`
 - **All checks** (what the pre-push hook and CI run): `pnpm check`
-  — `prettier --check .` + `astro check` + `tsc -b packages/cdk`
+  — `prettier --check .` + `astro check` + the CMS config schema validation in
+  `packages/app/scripts/validate-cms-config.mjs` + `tsc -b packages/cdk` + the
+  `cms-auth` unit tests.
 - **Format**: `pnpm format`
 - **Deploy**: `AWS_PROFILE=admin STAGE=<sveltia|prod> pnpm run deploy`
   (`pnpm run`, not `pnpm deploy` — pnpm has a built-in command by that name).
@@ -51,12 +53,45 @@ through Sveltia CMS at `/admin/`, all in a pnpm workspace.
 - `src/lib/markdown.ts`: renders the markdown held in singleton `richtext`
   fields. Project descriptions are markdown bodies and use Astro's own
   renderer instead.
-- `public/`: only `favicon.ico`, `documents/` and `admin/index.html` (the
-  pinned Sveltia CMS loader). Anything that should be optimized belongs in
+- `public/`: the favicon set, `documents/` and `admin/index.html` (the pinned
+  Sveltia CMS loader). Anything that should be optimized belongs in
   `src/content/`, not here.
 - `src/pages/robots.txt.ts` generates robots.txt from `STAGE`: production gets
-  the real one, every other stage gets `Disallow: /` so the test domain is
-  never indexed as a duplicate of the site. Unset `STAGE` means production.
+  the real one (with the `Sitemap:` line), every other stage gets `Disallow: /`
+  so the test domain is never indexed as a duplicate of the site. Unset
+  `STAGE` means production.
+
+Search and social metadata:
+
+- `src/components/Seo.astro` owns the whole head: title, description,
+  canonical, `theme-color`, the Open Graph set and the Twitter card. Pages get
+  it through `Base.astro`; don't add meta tags to a page directly.
+- **`build.format: 'file'` makes `Astro.url.pathname` `/index.html` on the home
+  page.** `Seo.astro` strips that back to `/` for the canonical and `og:url`.
+  Anything else deriving a public URL from the pathname needs the same
+  treatment.
+- `@astrojs/sitemap` does **not** know about `build.format: 'file'` and drops
+  the `.html` from every URL it emits, so `/concert.html` would be listed as
+  `/concert`, which 404s. The `filter` in `astro.config.mjs` excludes it (it is
+  a `noindex` redirect page anyway); a future `.html` page that does belong in
+  the sitemap needs the `serialize` option, not just `filter`.
+- `src/components/JsonLd.astro` emits schema.org `NGO` on the home page only,
+  built from `site.yml` and `contacts.yml` — no hard-coded names, addresses or
+  emails.
+- `concert.astro` deliberately does **not** use `Base`/`Seo`. It is a share
+  card with its own OG tags from `events.share` plus an immediate redirect to
+  `/#events`, and it duplicates the OG-image code on purpose.
+- The OG image is generated at build from `site.og_image`, cropped to
+  1200×630, and emitted as **JPEG** — some social scrapers still refuse WebP.
+- The favicon set is generated from `public/favicon.svg` by
+  `packages/app/scripts/favicon.mjs` (dev-only). Edit the SVG, re-run the
+  script, commit the output. `sharp` cannot write `.ico`, so the script builds
+  the container by hand.
+
+Dev-only scripts under `packages/app/scripts/` (none of them run in CI):
+`axe.mjs` (accessibility audit of a URL), `shots.mjs` (screenshots at the
+review widths), `favicon.mjs` (above). `validate-cms-config.mjs` is the
+exception — `pnpm check` runs it.
 
 ### packages/cdk — AWS infrastructure
 
@@ -68,7 +103,7 @@ stacks:
   independent. Owns the GitHub Actions OIDC deploy role `hrs-website-deploy`,
   which trusts only `refs/heads/main` and `refs/heads/sveltia` of
   `tylerschloesser/hrs-website`. It holds `AdministratorAccess`: the trust
-  policy is the control. Phase 3's CMS auth Lambda goes here.
+  policy is the control. It also owns the CMS auth Lambda (below).
 - **`OrgHaitianRelief<Stage>`** (`src/site-stack.ts`) — S3 bucket
   `org.haitianrelief.<stage>`, its own hosted zone plus an NS delegation from
   the apex zone, an ACM cert, and the CloudFront distribution. The NS record is
@@ -89,6 +124,53 @@ Things in `site-stack.ts` worth knowing before you change them:
   bucket that is destroyed with the stack.
 - Construct ids match the old single-stack `CdkStack` so the live prod stack can
   be adopted in place at cutover. Renaming one replaces a live resource.
+- There is **no CSP**, on purpose — see the comment on the response headers
+  policy. The Google Tag Manager bootstrap is inline and a static S3 origin
+  can't mint a nonce, so any policy we could ship would need `unsafe-inline`.
+
+### CMS sign-in (`shared-stack.ts`)
+
+Sveltia signs editors in through GitHub OAuth, and the code-for-token exchange
+runs in `lambda/cms-auth/index.ts` (a port of `sveltia/sveltia-cms-auth`, MIT)
+behind a Lambda Function URL. Two things will break sign-in silently:
+
+- **The Function URL is derived from the function's logical id.** Renaming the
+  `CmsAuthFunction` construct id gives a new URL, and the GitHub OAuth App's
+  registered callback (`<url>/callback`) no longer matches. If the URL ever
+  does change, update the OAuth App's callback **and** the `CMS_AUTH_URL`
+  GitHub Actions variable (`gh variable set CMS_AUTH_URL`), which is what
+  `config.yml.ts` compiles into `base_url`.
+- **`ALLOWED_DOMAINS`** (a Lambda env var) is the allow-list of sites that may
+  start the flow. A new stage domain has to be added there or sign-in fails.
+
+The client id and secret live in Secrets Manager under `hrs/cms-auth`, created
+outside CloudFormation and imported with `fromSecretNameV2`, so `cdk destroy`
+can never delete them.
+
+### Monitoring
+
+Each stage gets a daily CloudWatch Synthetics canary, `hrs-<stage>-daily`, from
+`packages/cdk/canary/index.js`. It loads `https://<stage domain>/` at 13:00 UTC
+and asserts three things: HTTP 200, an `h1` containing "Haitian Relief
+Services", and at least one `.gallery img`. Its `SuccessPercent` alarms below
+100% to the SNS topic `hrs-<stage>-alerts`, with the OK action wired too so a
+recovery is emailed as well.
+
+- `canary/index.js` is **CommonJS on purpose**, despite `packages/cdk` being
+  `"type": "module"` — it is zipped and run inside the Synthetics Lambda
+  runtime, never loaded by local Node. The Playwright runtimes want the handler
+  at the asset root (`index.js`), not the `nodejs/node_modules/` layout the
+  Puppeteer runtimes need.
+- The alarm's `.gallery img` assertion is a **contract with
+  `ProjectGallery.astro`**. Change that container class and the canary starts
+  failing at 8am, not at build time.
+- **Changing the alert email** means editing the `EmailSubscription` in
+  `site-stack.ts` and deploying. SNS then emails the new address a
+  subscription confirmation that someone has to click — until they do, alarms
+  go nowhere. A new stage means a new topic means a new confirmation.
+- `artifactsBucketLifecycleRules` on the `Canary` construct **does nothing**
+  once you pass `artifactsBucketLocation`. The 30-day expiry lives on the
+  explicit `CanaryArtifactsBucket` instead.
 
 The old `OrgHaitianReliefStaging` and `OrgHaitianReliefProd` stacks are still
 deployed and untouched by this code; `main` still deploys prod the old way until
@@ -106,3 +188,11 @@ cutover.
   **no credential**. pnpm refuses to expand env vars in registry auth from a
   committed `.npmrc`; the token lives in `~/.npmrc` locally and comes from the
   `FONTAWESOME_PACKAGE_TOKEN` repo secret in CI.
+
+## Other docs
+
+- `README.md` — the public front door for the repo.
+- `docs/editing.md` — the guide for the board members who edit the site. It is
+  written for people with no technical background; keep it that way.
+- `docs/migration-plan.md` / `docs/migration-status.md` — the migration spec
+  and its live state.

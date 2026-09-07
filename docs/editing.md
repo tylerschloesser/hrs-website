@@ -3,10 +3,6 @@
 This is the guide for the people who keep the site's words and photos up to
 date. You don't need to know anything about code.
 
-> **Draft.** Phase 5 of the migration finalizes this document. Until cutover,
-> the CMS described here edits the **test** site at
-> https://sveltia.haitianrelief.org, not the live one.
-
 ## What you need, once
 
 1. **A GitHub account.** Free — sign up at https://github.com/join if you don't
@@ -19,6 +15,12 @@ date. You don't need to know anything about code.
 That's the whole setup. There is no separate CMS password.
 
 ## Signing in
+
+Until the site officially launches, this guide points at a **test** copy:
+**https://sveltia.haitianrelief.org**. It works exactly like the real site and
+saves for real, but nobody outside this project sees it. Once the real site
+launches, everything below is the same — only the address changes, to
+**https://haitianrelief.org/admin/**.
 
 1. Go to **https://sveltia.haitianrelief.org/admin/**.
 2. Click **Sign In with GitHub**.
@@ -37,7 +39,7 @@ The left sidebar has two groups.
 
 | Item              | What lives there                                                                                                                             |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Site settings** | Organization name, tagline, the description search engines show, the donate links and mailing address                                        |
+| **Site settings** | Organization name, tagline, the description search engines show, the social share image, the donate links and mailing address                |
 | **Home page**     | The intro paragraphs, the big photo at the top, the mission statement, the "Why Our Work Matters" section                                    |
 | **Events**        | The benefit concert section: heading, description, photo, YouTube links, and the social-media preview used by the `/concert.html` share link |
 | **Contacts**      | The board list (name, role, email) and the board photo                                                                                       |
@@ -54,9 +56,15 @@ gallery, an optional file attachment, and a description.
    type Markdown directly.
 3. Click **Save**.
 
+## What happens after you save
+
 Saving publishes. The site rebuilds itself and the change is live in about
-**five minutes** — it is not instant, so don't refresh in a panic. If it's been
-much longer than that, tell Tyler.
+**2 to 5 minutes** — it is not instant, so don't refresh in a panic. If it's
+been much longer than that, tell Tyler.
+
+You don't need to watch for problems yourself. Every morning the site is
+loaded and checked automatically, and if anything is broken Tyler gets an
+email about it before anyone else notices.
 
 ## Adding or replacing a photo
 
@@ -84,6 +92,21 @@ Every image field that has an "alt text" box next to it needs one sentence
 describing what is in the picture, for people using a screen reader. Describe
 the content, not the file: "Students outside the new school building in
 Ganthier", not "school photo".
+
+### Photos and search results
+
+The site also builds a preview card — the picture and text that show up when
+someone pastes a link into Facebook, iMessage, or a text — for two places:
+
+- **Site settings → Social share image** is the picture used when the site as
+  a whole is shared.
+- **Events → Share preview → Image** is the picture used specifically when the
+  benefit-concert link (`/concert.html`) is shared.
+
+Both get cropped to a wide rectangle, so pick a wide, landscape photo rather
+than a portrait one — a tall photo will lose its top and bottom. Changing
+either picture changes what people see the moment they paste that link
+somewhere, so treat it like changing the site's cover photo.
 
 ## What not to touch
 

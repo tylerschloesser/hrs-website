@@ -169,7 +169,13 @@ function handler(event) {
             frameOption: HeadersFrameOption.DENY,
             override: true,
           },
-          // No CSP yet - Phase 5 may add one.
+          // No CSP, decided in Phase 5. Every script that matters here is
+          // inline: the Google Tag Manager bootstrap, GTM's own injected
+          // tags, and Sveltia's loader on /admin. A static S3 origin cannot
+          // mint a per-request nonce without adding Lambda@Edge, so any
+          // policy we could ship would need `unsafe-inline` for scripts -
+          // which is the one thing a CSP is worth having for. Revisit only
+          // if the inline GTM snippet goes away.
         },
         ...(isProd
           ? {}
