@@ -57,6 +57,13 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site)
     </noscript>
     <!-- End Google Tag Manager (noscript) -->
 
+    <a
+      href="#main"
+      class="sr-only rounded-lg bg-accent px-4 py-2 font-semibold text-ink focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
+    >
+      Skip to main content
+    </a>
+
     <slot />
   </body>
 </html>

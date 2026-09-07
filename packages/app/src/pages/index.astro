@@ -22,9 +22,10 @@ const projects = await getCollection('projects')
 <Base title={site.name} description={site.description}>
   <Nav siteName={site.name} />
 
-  <main>
+  <main id="main">
     <Hero
       siteName={site.name}
+      tagline={site.tagline}
       intro={home.intro}
       heroImage={home.hero_image}
       heroAlt={home.hero_alt}
@@ -55,6 +56,6 @@ const projects = await getCollection('projects')
     />
   </main>
 
-  <Footer githubUrl={site.github_url} />
+  <Footer siteName={site.name} githubUrl={site.github_url} />
   <Lightbox />
 </Base>

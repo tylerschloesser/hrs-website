@@ -11,10 +11,4 @@ const { content, class: className } = Astro.props
 const html = renderMarkdown(content)
 ---
 
-<div
-  class:list={[
-    'space-y-4 [&_p]:leading-relaxed [&_a]:text-primary [&_a]:underline [&_a]:underline-offset-2 [&_a]:hover:text-primary-strong [&_ul]:list-disc [&_ul]:space-y-1 [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:space-y-1 [&_ol]:pl-6',
-    className,
-  ]}
-  set:html={html}
-/>
+<div class:list={['prose-hrs', className]} set:html={html} />
