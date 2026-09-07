@@ -1,4 +1,4 @@
-// Daily canary for the live site (Phase 5 step 2 of docs/migration-plan.md).
+// Daily canary for the live site.
 //
 // This file is zipped by `Code.fromAsset(<this directory>)` and run inside
 // the CloudWatch Synthetics Lambda runtime, which is CommonJS - it is never

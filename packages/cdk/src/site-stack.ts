@@ -67,8 +67,7 @@ export class SiteStack extends Stack {
 
     const domainName = props.zone.zoneName
 
-    // The site is served from the apex and nowhere else. There is no
-    // `prod.haitianrelief.org` subdomain, no per-stage zone, and so no NS
+    // The site is served from the apex and nowhere else, so there is no NS
     // delegation to wait on before ACM can validate - validation happens
     // directly in the zone that already answers for the domain.
     const hostedZone = HostedZone.fromHostedZoneAttributes(
@@ -137,7 +136,7 @@ function handler(event) {
             frameOption: HeadersFrameOption.DENY,
             override: true,
           },
-          // No CSP, decided in Phase 5. Every script that matters here is
+          // No CSP, on purpose. Every script that matters here is
           // inline: the Google Tag Manager bootstrap, GTM's own injected
           // tags, and Sveltia's loader on /admin. A static S3 origin cannot
           // mint a per-request nonce without adding Lambda@Edge, so any
@@ -308,14 +307,9 @@ function handler(event) {
 
     // --- CI credentials -------------------------------------------------
     //
-    // This lives in the same stack as everything else because there is only
-    // one stack: the old `Shared` stack existed to hold the singletons that
-    // the `sveltia` and `prod` stages had in common, and with the stages
-    // gone it had nothing left to share.
-    //
-    // The consequence worth knowing: CI deploys the stack that grants CI its
-    // own credentials. If a bad change to this role ever lands, the fix is a
-    // local `AWS_PROFILE=admin pnpm run deploy`, not another push.
+    // CI deploys the stack that grants CI its own credentials. If a bad
+    // change to this role ever lands, the fix is a local
+    // `AWS_PROFILE=admin pnpm run deploy`, not another push.
 
     // GitHub OIDC provider (account-wide singleton, shared with unrelated
     // projects in this account). Imported by ARN; never created here.
@@ -323,8 +317,7 @@ function handler(event) {
 
     // AdministratorAccess is a deliberate tradeoff: the trust policy (which
     // repo and branch may assume this role) is the actual control, not the
-    // permission set. Only `main` deploys - the migration-era `sveltia`
-    // branch was removed from this list at cutover.
+    // permission set. Only `main` deploys.
     const deployRole = new iam.Role(this, 'DeployRole', {
       roleName: 'hrs-website-deploy',
       assumedBy: new iam.WebIdentityPrincipal(oidcProviderArn, {
@@ -384,9 +377,8 @@ function handler(event) {
         retention: RetentionDays.ONE_MONTH,
       }),
       environment: {
-        // The allow-list of sites that may start the sign-in flow. One
-        // domain now that the test stage is gone; a new one has to be added
-        // here or sign-in fails.
+        // The allow-list of sites that may start the sign-in flow. A new
+        // domain has to be added here or sign-in fails.
         ALLOWED_DOMAINS: domainName,
         CMS_AUTH_SECRET_NAME: 'hrs/cms-auth',
       },

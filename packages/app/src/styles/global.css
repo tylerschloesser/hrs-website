@@ -1,18 +1,17 @@
 @import 'tailwindcss';
 
 /*
- * Palette and type per docs/migration-plan.md §2.4. Every colour is a
- * Tailwind v4 built-in scale value, so there is no bespoke palette to
- * maintain — the names below are the vocabulary the components use.
+ * Every colour is a Tailwind v4 built-in scale value, so there is no bespoke
+ * palette to maintain — the names below are the vocabulary the components
+ * use.
  */
 @theme {
   --color-ink: #0f172a; /* slate-900  headings, text on light  */
   --color-body: #334155; /* slate-700  paragraph text           */
   /*
-   * §2.4 specifies slate-500 here, but slate-500 on the blue-50 band is
-   * 4.37:1 — axe flags every caption sitting on `surface-alt`. Slate-600
-   * is 6.9:1 there and 7.5:1 on white, and still reads clearly secondary
-   * to the slate-700 body text.
+   * Slate-500 on the blue-50 band is 4.37:1 — axe flags every caption
+   * sitting on `surface-alt`. Slate-600 is 6.9:1 there and 7.5:1 on white,
+   * and still reads clearly secondary to the slate-700 body text.
    */
   --color-muted: #475569; /* slate-600  captions, meta           */
   --color-surface: #ffffff; /* white      page background          */

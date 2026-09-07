@@ -36,7 +36,7 @@ jobs:
 
       - name: authenticate to the font awesome registry
         # The token cannot live in the committed .npmrc — pnpm will not expand
-        # it there. See docs/migration-plan.md section 2.5.
+        # it there.
         run: pnpm config set "//npm.fontawesome.com/:_authToken" "${{
           secrets.FONTAWESOME_PACKAGE_TOKEN }}" --location=user
 
