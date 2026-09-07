@@ -2,28 +2,26 @@ name: deploy
 
 on:
   push:
-    branches: [main, sveltia]
+    branches: [main]
 
 permissions:
   id-token: write
   contents: read
 
 concurrency:
-  # One deploy at a time per branch. Never cancel: a half-applied
-  # CloudFormation change set is worse than a queued run.
-  group: deploy-${{ github.ref_name }}
+  # One deploy at a time. Never cancel: a half-applied CloudFormation change
+  # set is worse than a queued run.
+  group: deploy
   cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      STAGE: ${{ github.ref_name == 'main' && 'prod' || 'sveltia' }}
-      SITE_URL: ${{ github.ref_name == 'main' && 'https://haitianrelief.org' ||
-        'https://sveltia.haitianrelief.org' }}
-      CMS_BRANCH: ${{ github.ref_name }}
-      # Set in phase 3 with `gh variable set CMS_AUTH_URL`. While it is empty,
-      # admin/config.yml omits `base_url` entirely.
+      SITE_URL: https://haitianrelief.org
+      CMS_BRANCH: main
+      # Set with `gh variable set CMS_AUTH_URL`. While it is empty,
+      # admin/config.yml omits `base_url` entirely and CMS sign-in breaks.
       CMS_AUTH_URL: ${{ vars.CMS_AUTH_URL }}
     steps:
       - uses: actions/checkout@v4

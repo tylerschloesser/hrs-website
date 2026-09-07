@@ -1,28 +1,23 @@
 import * as cdk from 'aws-cdk-lib'
-import { SharedStack } from './shared-stack.js'
 import { SiteStack } from './site-stack.js'
 
-const STAGES = ['sveltia', 'prod'] as const
-type Stage = (typeof STAGES)[number]
-
-const stage = process.env.STAGE?.toLowerCase()
-if (!stage || !STAGES.includes(stage as Stage)) {
-  throw Error(
-    `STAGE must be set to one of ${STAGES.join(' | ')}, got: ${stage}`
-  )
-}
-
-function capitalize(str: string) {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
-
+// One site, one domain, one stack, no stages.
+//
+// The `sveltia` and `staging` stages existed only to carry the 2026-09
+// migration and were torn down at cutover; the separate `Shared` stack
+// existed only to hold what those stages had in common, and went with them.
+// If a test environment is ever wanted again, add it as a *separate app*
+// with its own domain rather than reintroducing a `STAGE` switch through
+// every construct - the stage conditionals were the single biggest source of
+// accidental complexity in the old stack.
 const env = { account: '063257577013', region: 'us-east-1' }
 
-const app = new cdk.App()
+// The apex zone is imported, never created: it predates this repo and holds
+// the domain's registration. Creating it would mint new nameservers and take
+// the domain off the internet.
+const zone = {
+  hostedZoneId: 'Z0010048114HS2EOWXJLC',
+  zoneName: 'haitianrelief.org',
+}
 
-new SharedStack(app, 'OrgHaitianReliefShared', { env })
-
-new SiteStack(app, `OrgHaitianRelief${capitalize(stage)}`, {
-  env,
-  stage,
-})
+new SiteStack(new cdk.App(), 'HaitianReliefSite', { env, zone })

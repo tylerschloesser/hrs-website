@@ -1,10 +1,4 @@
-import {
-  CfnOutput,
-  Duration,
-  RemovalPolicy,
-  Stack,
-  StackProps,
-} from 'aws-cdk-lib'
+import { CfnOutput, Duration, Fn, Stack, StackProps } from 'aws-cdk-lib'
 import {
   Certificate,
   CertificateValidation,
@@ -21,6 +15,11 @@ import {
   ViewerProtocolPolicy,
 } from 'aws-cdk-lib/aws-cloudfront'
 import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins'
+import * as iam from 'aws-cdk-lib/aws-iam'
+import * as lambda from 'aws-cdk-lib/aws-lambda'
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs'
+import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs'
+import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager'
 import {
   Alarm,
   ComparisonOperator,
@@ -29,10 +28,9 @@ import {
 import { SnsAction } from 'aws-cdk-lib/aws-cloudwatch-actions'
 import {
   ARecord,
-  PublicHostedZone,
-  RecordSet,
+  HostedZone,
+  HostedZoneAttributes,
   RecordTarget,
-  RecordType,
 } from 'aws-cdk-lib/aws-route53'
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets'
 import { Bucket } from 'aws-cdk-lib/aws-s3'
@@ -59,64 +57,34 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const DIST_PATH = '../app/dist'
 
 export interface SiteStackProps extends StackProps {
-  stage: string
+  /** The apex zone, imported by attributes - never created. */
+  zone: HostedZoneAttributes
 }
 
 export class SiteStack extends Stack {
   constructor(scope: Construct, id: string, props: SiteStackProps) {
     super(scope, id, props)
 
-    const { stage } = props
-    const isProd = stage === 'prod'
-    const domainName = `${stage}.haitianrelief.org`
+    const domainName = props.zone.zoneName
+
+    // The site is served from the apex and nowhere else. There is no
+    // `prod.haitianrelief.org` subdomain, no per-stage zone, and so no NS
+    // delegation to wait on before ACM can validate - validation happens
+    // directly in the zone that already answers for the domain.
+    const hostedZone = HostedZone.fromHostedZoneAttributes(
+      this,
+      'HostedZone',
+      props.zone
+    )
 
     const bucket = new Bucket(this, 'Bucket', {
       bucketName: domainName.split('.').reverse().join('.'),
-      ...(isProd
-        ? {}
-        : {
-            removalPolicy: RemovalPolicy.DESTROY,
-            autoDeleteObjects: true,
-          }),
     })
 
-    const hostedZone = new PublicHostedZone(this, 'HostedZone', {
-      zoneName: domainName,
+    const certificate = new Certificate(this, 'Certificate', {
+      domainName,
+      validation: CertificateValidation.fromDns(hostedZone),
     })
-
-    const rootHostedZone = PublicHostedZone.fromLookup(this, 'RootHostedZone', {
-      domainName: 'haitianrelief.org',
-    })
-
-    // Delegate the stage subdomain from the apex zone. ACM's DNS validation
-    // resolves its CNAME over public DNS, so this has to exist first or the
-    // certificate sits pending for the better part of an hour.
-    const nsRecord = new RecordSet(this, 'NsRecord', {
-      recordName: hostedZone.zoneName,
-      recordType: RecordType.NS,
-      target: RecordTarget.fromValues(...hostedZone.hostedZoneNameServers!),
-      zone: rootHostedZone,
-    })
-
-    const certificate = isProd
-      ? new Certificate(this, 'Certificate', {
-          domainName,
-          subjectAlternativeNames: ['haitianrelief.org'],
-          validation: CertificateValidation.fromDnsMultiZone({
-            [domainName]: hostedZone,
-            'haitianrelief.org': rootHostedZone,
-          }),
-        })
-      : new Certificate(this, 'Certificate', {
-          domainName,
-          validation: CertificateValidation.fromDns(hostedZone),
-        })
-
-    certificate.node.addDependency(nsRecord)
-
-    const domainNames = isProd
-      ? [domainName, 'haitianrelief.org']
-      : [domainName]
 
     // Astro builds with `build.format: 'file'`, so pages are emitted as
     // `<name>.html` and almost every URL already carries an extension. This
@@ -152,7 +120,7 @@ function handler(event) {
       this,
       'ResponseHeadersPolicy',
       {
-        responseHeadersPolicyName: `hrs-website-security-headers-${stage}`,
+        responseHeadersPolicyName: 'hrs-website-security-headers',
         securityHeadersBehavior: {
           strictTransportSecurity: {
             accessControlMaxAge: Duration.days(365),
@@ -177,21 +145,6 @@ function handler(event) {
           // which is the one thing a CSP is worth having for. Revisit only
           // if the inline GTM snippet goes away.
         },
-        ...(isProd
-          ? {}
-          : {
-              // Belt-and-suspenders alongside robots.txt: make sure the
-              // test domain can never be indexed.
-              customHeadersBehavior: {
-                customHeaders: [
-                  {
-                    header: 'X-Robots-Tag',
-                    value: 'noindex, nofollow',
-                    override: true,
-                  },
-                ],
-              },
-            }),
       }
     )
 
@@ -208,7 +161,7 @@ function handler(event) {
         responseHeadersPolicy,
       },
       defaultRootObject: 'index.html',
-      domainNames,
+      domainNames: [domainName],
       certificate,
       errorResponses: [
         {
@@ -228,13 +181,6 @@ function handler(event) {
       zone: hostedZone,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     })
-
-    if (isProd) {
-      new ARecord(this, 'RootAliasRecord', {
-        zone: rootHostedZone,
-        target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
-      })
-    }
 
     // Hashed, immutable assets go first so that by the time the HTML
     // deployment lands (and invalidates the distribution), every asset the
@@ -269,45 +215,37 @@ function handler(event) {
 
     htmlDeployment.node.addDependency(assetsDeployment)
 
-    // Daily canary (Phase 5 step 2). One topic per stage - an SNS email
-    // subscription has to be confirmed by clicking a link in a "Subscription
-    // Confirmation" email, once per topic. So standing up a new stage always
-    // means a new confirmation email, and until someone clicks it that
-    // stage's alarm emails go nowhere. This lands again at prod cutover.
+    // An SNS email subscription has to be confirmed by clicking a link in a
+    // "Subscription Confirmation" email, once per topic. Recreating this
+    // topic - including renaming the stack it lives in - means a new
+    // confirmation email, and until someone clicks it the alarm below emails
+    // nobody. `aws sns list-subscriptions` shows `PendingConfirmation` until
+    // then; it is worth checking after any change here.
     const alertsTopic = new Topic(this, 'AlertsTopic', {
-      topicName: `hrs-${stage}-alerts`,
-      displayName: `HRS ${stage} alerts`,
+      topicName: 'hrs-alerts',
+      displayName: 'HRS alerts',
     })
     alertsTopic.addSubscription(
       new EmailSubscription('tylerschloesser@gmail.com')
     )
 
     // The `Canary` construct's default artifacts bucket has no
-    // `removalPolicy`, which means CDK's S3 default (RETAIN) applies: it
-    // wouldn't block `cdk destroy`, but it would orphan a bucket on every
-    // non-prod teardown (Phase 6 destroys this whole stack for `sveltia`).
-    // Build it explicitly instead, mirroring the site `bucket` above, so
-    // non-prod cleans up completely and prod keeps its run history.
+    // `removalPolicy`, which means CDK's S3 default (RETAIN) applies. Build
+    // it explicitly instead so the 30-day expiration below is actually
+    // attached to something we control.
     //
-    // The 30-day expiration lives here, not in the canary's own
-    // `artifactsBucketLifecycleRules` prop below: that prop is documented as
-    // "has no effect if a bucket is passed to `artifactsBucketLocation`",
-    // which this does, so the lifecycle rule has to go directly on the
-    // bucket or it is silently dropped.
+    // That expiration lives here, not in the canary's own
+    // `artifactsBucketLifecycleRules` prop: that prop is documented as "has
+    // no effect if a bucket is passed to `artifactsBucketLocation`", which
+    // this does, so the lifecycle rule has to go directly on the bucket or it
+    // is silently dropped.
     const canaryArtifactsBucket = new Bucket(this, 'CanaryArtifactsBucket', {
       lifecycleRules: [{ expiration: Duration.days(30) }],
-      ...(isProd
-        ? {}
-        : {
-            removalPolicy: RemovalPolicy.DESTROY,
-            autoDeleteObjects: true,
-          }),
     })
 
-    // `canaryName` must be lowercase letters/numbers/hyphens, <=21 chars:
-    // `hrs-sveltia-daily` is 17, `hrs-prod-daily` is 14.
+    // `canaryName` must be lowercase letters/numbers/hyphens, <=21 chars.
     const canary = new Canary(this, 'Canary', {
-      canaryName: `hrs-${stage}-daily`,
+      canaryName: 'hrs-daily',
       // Newest Playwright runtime aws-cdk-lib 2.268.0 exposes. The account
       // supports newer (syn-nodejs-playwright-8.0), but CDK can only select
       // a runtime it has an enum value for.
@@ -343,9 +281,16 @@ function handler(event) {
       statistic: 'Average',
     })
 
+    // Note that a freshly created canary has no datapoints until its first
+    // scheduled run, and `BREACHING` means "no data is a failure" - so this
+    // alarm is born in ALARM and stays there until 13:00 UTC. That is
+    // correct behaviour, not a fault. To settle it immediately, force one
+    // run: stop the canary, `update-canary --schedule
+    // Expression='rate(0 minute)'`, start it, then restore
+    // `cron(0 13 * * ? *)` with `DurationInSeconds=0`.
     const canaryAlarm = new Alarm(this, 'CanaryAlarm', {
-      alarmName: `hrs-${stage}-daily-canary`,
-      alarmDescription: `The ${domainName} daily canary (hrs-${stage}-daily) failed, or didn't run. Check its latest run in the CloudWatch Synthetics console before assuming the site itself is down.`,
+      alarmName: 'hrs-daily-canary',
+      alarmDescription: `The ${domainName} daily canary (hrs-daily) failed, or didn't run. Check its latest run in the CloudWatch Synthetics console before assuming the site itself is down.`,
       metric: canarySuccessMetric,
       threshold: 100,
       comparisonOperator: ComparisonOperator.LESS_THAN_THRESHOLD,
@@ -360,6 +305,121 @@ function handler(event) {
     // Both directions go to the same topic so a recovery is emailed too -
     // otherwise the only way to know it's fixed is to go check.
     canaryAlarm.addOkAction(new SnsAction(alertsTopic))
+
+    // --- CI credentials -------------------------------------------------
+    //
+    // This lives in the same stack as everything else because there is only
+    // one stack: the old `Shared` stack existed to hold the singletons that
+    // the `sveltia` and `prod` stages had in common, and with the stages
+    // gone it had nothing left to share.
+    //
+    // The consequence worth knowing: CI deploys the stack that grants CI its
+    // own credentials. If a bad change to this role ever lands, the fix is a
+    // local `AWS_PROFILE=admin pnpm run deploy`, not another push.
+
+    // GitHub OIDC provider (account-wide singleton, shared with unrelated
+    // projects in this account). Imported by ARN; never created here.
+    const oidcProviderArn = `arn:aws:iam::${this.account}:oidc-provider/token.actions.githubusercontent.com`
+
+    // AdministratorAccess is a deliberate tradeoff: the trust policy (which
+    // repo and branch may assume this role) is the actual control, not the
+    // permission set. Only `main` deploys - the migration-era `sveltia`
+    // branch was removed from this list at cutover.
+    const deployRole = new iam.Role(this, 'DeployRole', {
+      roleName: 'hrs-website-deploy',
+      assumedBy: new iam.WebIdentityPrincipal(oidcProviderArn, {
+        StringEquals: {
+          'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+        },
+        StringLike: {
+          'token.actions.githubusercontent.com:sub':
+            'repo:tylerschloesser/hrs-website:ref:refs/heads/main',
+        },
+      }),
+      managedPolicies: [
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AdministratorAccess'),
+      ],
+    })
+
+    // --- Sveltia CMS sign-in ---------------------------------------------
+    //
+    // Handles the CMS's GitHub OAuth code-for-token exchange. See
+    // packages/cdk/lambda/cms-auth/index.ts, a port of
+    // https://github.com/sveltia/sveltia-cms-auth (MIT).
+    //
+    // The secret is created outside CloudFormation (by Tyler, via
+    // `aws secretsmanager create-secret --name hrs/cms-auth ...`), so it is
+    // imported here and `cdk destroy` can never delete it.
+    const cmsAuthSecret = secretsmanager.Secret.fromSecretNameV2(
+      this,
+      'CmsAuthSecret',
+      'hrs/cms-auth'
+    )
+
+    // `functionName` is pinned on purpose. A Function URL's hostname is
+    // derived from the function's *name*, and an unnamed CDK function is
+    // named after the stack that holds it - so the 2026-09 stack rename
+    // would have silently changed the sign-in URL, and every future rename
+    // would do it again. Pinning the name decouples the URL from the stack.
+    //
+    // If this name ever does change, two things outside CloudFormation have
+    // to change with it or sign-in breaks with no error in any AWS log:
+    // the GitHub OAuth App's callback (`<url>/callback`), and the
+    // `CMS_AUTH_URL` Actions variable (`gh variable set CMS_AUTH_URL`),
+    // which is what `config.yml.ts` compiles into `base_url`.
+    const cmsAuthFunction = new NodejsFunction(this, 'CmsAuthFunction', {
+      functionName: 'hrs-cms-auth',
+      entry: join(__dirname, '../lambda/cms-auth/index.ts'),
+      runtime: lambda.Runtime.NODEJS_22_X,
+      handler: 'handler',
+      architecture: lambda.Architecture.ARM_64,
+      depsLockFilePath: join(__dirname, '../../../pnpm-lock.yaml'),
+      bundling: {
+        minify: true,
+        sourceMap: false,
+      },
+      timeout: Duration.seconds(10),
+      memorySize: 256,
+      logGroup: new LogGroup(this, 'CmsAuthFunctionLogs', {
+        retention: RetentionDays.ONE_MONTH,
+      }),
+      environment: {
+        // The allow-list of sites that may start the sign-in flow. One
+        // domain now that the test stage is gone; a new one has to be added
+        // here or sign-in fails.
+        ALLOWED_DOMAINS: domainName,
+        CMS_AUTH_SECRET_NAME: 'hrs/cms-auth',
+      },
+    })
+
+    cmsAuthSecret.grantRead(cmsAuthFunction)
+
+    const cmsAuthFunctionUrl = cmsAuthFunction.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+      // No CORS: the flow is top-level redirects and postMessage, not XHR.
+    })
+
+    // The GitHub OAuth App's callback URL must be `<CmsAuthUrl>/callback`.
+    // Function URLs always end in a trailing slash, but Sveltia builds
+    // `${base_url}/auth`, so strip it here rather than at every call site.
+    // `.url` is a CloudFormation token (an opaque placeholder string
+    // resolved only at deploy time), so ordinary JS string methods like
+    // `.replace()` would silently corrupt it; `Fn.select`/`Fn.split` are
+    // token-safe intrinsic-function calls that CloudFormation itself
+    // evaluates on the resolved value.
+    const cmsAuthUrl = `https://${Fn.select(0, Fn.split('/', Fn.select(1, Fn.split('//', cmsAuthFunctionUrl.url))))}`
+
+    new CfnOutput(this, 'DeployRoleArn', {
+      value: deployRole.roleArn,
+    })
+
+    new CfnOutput(this, 'CmsAuthUrl', {
+      value: cmsAuthUrl,
+    })
+
+    new CfnOutput(this, 'SiteUrl', {
+      value: `https://${domainName}`,
+    })
 
     new CfnOutput(this, 'CanaryName', {
       value: canary.canaryName,
