@@ -897,9 +897,12 @@ calendar day — CloudWatch's own state reason named the window as
 flap at midnight UTC waiting for the 13:00 run. A single successful run keeps
 the trailing window populated all day.
 
-The consequence to know about: after a real failure the alarm clears when the
-failing datapoint ages out of that 24-hour window, so **the recovery email
-lands with the next successful daily run**, not immediately.
+The consequence to know about: with `Average` and a `< 100` threshold, **one
+failed run holds the alarm for a full 24 hours** no matter how many successful
+runs follow it — the average only returns to 100 once the failing datapoint
+ages out of the window entirely. For a canary that runs once a day that is the
+intended shape (one datapoint per window); it only looks odd if you force
+several runs close together, as the test below did.
 
 ### Verification actually run
 
@@ -972,3 +975,10 @@ Against **https://sveltia.haitianrelief.org** and the real AWS resources.
   were exercised) is proven by the next morning's run.
 - **Prod will need its own SNS confirmation click** at cutover. Phase 6 step 5
   already lists it.
+- **The forced-failure test left the sveltia alarm in ALARM**, and that is
+  expected rather than a fault. Once the one-day window was restored it saw
+  the three test runs together (100, 0, 100 → 66.7%) and re-alarmed at 15:23
+  UTC. The `0` ages out of the rolling window around **15:20 UTC on
+  2026-09-08**, at which point the alarm returns to OK on its own and sends
+  the recovery email. Tomorrow's 13:00 run does not clear it early — it just
+  adds another 100 alongside the 0. Nothing to do; do not "fix" it by hand.
