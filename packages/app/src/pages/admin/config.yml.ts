@@ -15,20 +15,32 @@ backend:
   repo: tylerschloesser/hrs-website
   branch: ${branch}
 ${authUrl ? `  base_url: ${authUrl}\n` : ''}  auth_methods: [oauth, token]
+  auth_scope: public_repo
+  commit_messages:
+    create: 'add {{collection}} "{{slug}}"'
+    update: 'update {{collection}} "{{slug}}"'
+    delete: 'remove {{collection}} "{{slug}}"'
+    uploadMedia: 'add "{{path}}"'
+    deleteMedia: 'remove "{{path}}"'
 site_url: ${siteUrl}
 display_url: ${siteUrl}
-logo_url: /favicon.ico
+logo:
+  src: /favicon.ico
+output:
+  omit_empty_optional_fields: true
 media_folder: packages/app/src/content/media
 public_folder: /packages/app/src/content/media
 media_libraries:
-  default:
-    config:
-      transformations:
-        raster_image:
-          format: webp
-          quality: 85
-          width: 2048
-          height: 2048
+  all:
+    transformations:
+      raster_image:
+        format: webp
+        quality: 85
+        width: 2048
+        height: 2048
+      svg:
+        optimize: true
+    slugify_filename: true
 
 singletons:
   - name: site
@@ -46,12 +58,19 @@ singletons:
         widget: image
         media_folder: /packages/app/src/content/media
         public_folder: media
+        hint: Shown as the preview image when the site is shared on social media.
       - label: Donate
         name: donate
         widget: object
         fields:
-          - { label: PayPal URL, name: paypal_url, widget: string }
-          - { label: Venmo URL, name: venmo_url, widget: string }
+          - label: PayPal URL
+            name: paypal_url
+            widget: string
+            hint: 'Full URL, e.g. https://paypal.me/yourorg'
+          - label: Venmo URL
+            name: venmo_url
+            widget: string
+            hint: 'Full URL, e.g. https://venmo.com/yourorg'
           - label: Mail-in donations
             name: mail
             widget: object
@@ -59,7 +78,10 @@ singletons:
               - { label: Attn, name: attn, widget: string }
               - { label: Street address, name: street, widget: string }
               - { label: 'City, state, ZIP', name: city_state_zip, widget: string }
-      - { label: GitHub URL, name: github_url, widget: string }
+      - label: GitHub URL
+        name: github_url
+        widget: string
+        hint: 'Full URL, e.g. https://github.com/yourorg'
       - label: Google Tag Manager ID
         name: gtm_id
         widget: string
@@ -111,7 +133,10 @@ ${richtext('        ')}
         widget: list
         fields:
           - { label: Label, name: label, widget: string }
-          - { label: URL, name: url, widget: string }
+          - label: URL
+            name: url
+            widget: string
+            hint: Full URL to the video (e.g. a YouTube link).
       - { label: Closing, name: closing, widget: string }
       - label: Share preview
         name: share
@@ -140,7 +165,10 @@ ${richtext('        ')}
         fields:
           - { label: Name, name: name, widget: string }
           - { label: Role, name: role, widget: string }
-          - { label: Email, name: email, widget: string }
+          - label: Email
+            name: email
+            widget: string
+            hint: A valid email address.
       - label: Photo
         name: photo
         widget: image
@@ -151,12 +179,14 @@ ${richtext('        ')}
 collections:
   - name: projects
     label: Projects
+    label_singular: Project
     folder: packages/app/src/content/projects
     path: '{{slug}}/index'
     media_folder: images
     public_folder: images
     create: true
     delete: false
+    summary: '{{title}}'
     sortable_fields: [order, title]
     fields:
       - { label: Title, name: title, widget: string }
@@ -167,7 +197,9 @@ collections:
       - label: Gallery
         name: gallery
         widget: list
+        required: false
         thumbnail: image
+        hint: Photos shown in this project's image gallery.
         fields:
           - { label: Image, name: image, widget: image }
           - { label: Caption, name: caption, widget: string }
@@ -175,6 +207,7 @@ collections:
         name: attachments
         widget: list
         required: false
+        hint: Optional downloads offered alongside the project (PDFs, Word docs).
         fields:
           - { label: Label, name: label, widget: string }
           - label: File
