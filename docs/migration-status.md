@@ -10,7 +10,7 @@ new phase.
 | 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live         |
 | 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06        |
 | 3.5 — photo quality pass                  | **done**    | 21 photos upscaled 2x; 14 deliberately left alone |
-| 4 — UI redesign                           | **done**    | axe clean; Lighthouse mobile 95/100/100 + SEO n/a |
+| 4 — UI redesign                           | **done**    | axe clean; Lighthouse mobile 96-100/100/100       |
 | 5 — SEO, canary, docs                     | not started |                                                   |
 | 6 — cutover and cleanup                   | not started |                                                   |
 
@@ -725,8 +725,11 @@ Against **https://sveltia.haitianrelief.org** unless noted.
   pnpm --filter @hrs-website/app exec node scripts/axe.mjs <url>
   ```
 
-- **Lighthouse mobile**: Performance **95**, Accessibility **100**, Best
-  Practices **100**, SEO **69**. FCP 1.4s, TBT 0ms, CLS 0, total 409 KiB.
+- **Lighthouse mobile**, five runs against the live test domain:
+  Performance **96–100**, Accessibility **100**, Best Practices **100**,
+  SEO **69**. FCP 0.9–1.0s, LCP 1.8–2.8s, TBT 0ms, CLS 0, total 409 KiB.
+  (The first two runs read 94/95 with a **839ms** TTFB — a cold CloudFront
+  edge. Warm, TTFB is ~245ms. Measure twice before believing a low score.)
   **The SEO score is entirely `is-crawlable`** — the test domain deliberately
   serves `Disallow: /` plus `X-Robots-Tag: noindex, nofollow` (Phase 2), so it
   cannot score above ~70 there and no other SEO audit fails. Re-measure on
