@@ -4,22 +4,24 @@ Live progress log for the migration described in `docs/migration-plan.md`.
 Each phase appends its own section. Read this plus the plan before starting a
 new phase.
 
-| Phase                                     | State       | Notes                                             |
-| ----------------------------------------- | ----------- | ------------------------------------------------- |
-| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                      |
-| 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live         |
-| 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06        |
-| 3.5 — photo quality pass                  | **done**    | 21 photos upscaled 2x; 14 deliberately left alone |
-| 4 — UI redesign                           | **done**    | axe clean; Lighthouse mobile 96-100/100/100       |
-| 5 — SEO, canary, docs                     | **done**    | canary green; forced failure emailed 2026-09-07   |
-| 6 — cutover and cleanup                   | not started |                                                   |
+| Phase                                     | State    | Notes                                             |
+| ----------------------------------------- | -------- | ------------------------------------------------- |
+| 1 — repo reset, pnpm, Astro, content port | **done** | local only, nothing deployed                      |
+| 2 — infra and pipeline, test domain       | **done** | https://sveltia.haitianrelief.org is live         |
+| 3 — Sveltia CMS auth and round-trip       | **done** | oauth sign-in verified by Tyler 2026-09-06        |
+| 3.5 — photo quality pass                  | **done** | 21 photos upscaled 2x; 14 deliberately left alone |
+| 4 — UI redesign                           | **done** | axe clean; Lighthouse mobile 96-100/100/100       |
+| 5 — SEO, canary, docs                     | **done** | canary green; forced failure emailed 2026-09-07   |
+| 6 — cutover and cleanup                   | **live** | prod cut over 2026-09-07; cleanup partly gated    |
 
 **Plan amended 2026-09-06** with two changes Tyler asked for after Phase 1:
 Font Awesome Pro icons (plan §2.5) and a one-off photo restoration pass
 (§2.6, new Phase 3.5). Both were researched and the toolchain validated before
 the plan was written — see "Amendments" below.
 
-Branch: `sveltia` (never commit to `main` before Phase 6).
+Branch: `main`. The migration is merged (`72dae25`) and `main` deploys prod.
+`sveltia` still exists and still deploys the test domain; both are removed in
+the remaining Phase 6 cleanup. `semantic-ui` holds the old site.
 
 ## Commands
 
@@ -601,6 +603,14 @@ deletes them and deactivates the underlying IAM access key.
 
 ## Manual steps for Tyler
 
+**Open right now, after the 2026-09-07 cutover** (details under "Phase 6"):
+
+1. **Confirm the prod SNS subscription** — AWS emailed
+   `tylerschloesser@gmail.com` a confirmation for `hrs-prod-alerts`. Until it
+   is clicked, canary alarms on the live site go nowhere.
+2. **Make one real edit at https://haitianrelief.org/admin/** and check it goes
+   live. This is Phase 6 step 6, and the rest of the cleanup is gated on it.
+
 - **Still open, and the longest lead time in the whole migration**: ask Joy
   Richards / Jeanette Juetten whether the original camera files or the original
   email attachments survive for the Galette Chambon orphanage and health-centre
@@ -982,3 +992,191 @@ Against **https://sveltia.haitianrelief.org** and the real AWS resources.
   2026-09-08**, at which point the alarm returns to OK on its own and sends
   the recovery email. Tomorrow's 13:00 run does not clear it early — it just
   adds another 100 alongside the 0. Nothing to do; do not "fix" it by hand.
+
+## Phase 6 — what was done
+
+Cutover ran 2026-09-07. `https://haitianrelief.org` now serves the Astro +
+Sveltia site from `main`. Steps 1–5 of the plan are complete and verified
+against the live site; step 6 (Tyler's own CMS edit on prod) and most of step
+7 are still open — see "Still open from Phase 6".
+
+- **Pre-flight** (step 1): `pnpm check` exit 0, working tree clean, the last
+  three `sveltia` Actions runs green, `https://sveltia.haitianrelief.org`
+  serving 200 with the expected `h1`.
+- **Backup** (step 2): `semantic-ui` branched from `main` at `c6de798` and
+  pushed. Verified on GitHub that the remote branch points at that exact sha.
+  This is the old semantic-ui site, and the rollback path.
+- **Prod diff reviewed** (step 3): see "The cutover diff, and the one thing
+  worth checking" below. Nothing replaced destructively.
+- **Merge** (step 4): `git merge --no-ff sveltia` → `72dae25`, pushed to
+  `main`. The resulting tree is identical to `sveltia` (`git diff main sveltia`
+  is empty). Actions run 34139231107 deployed prod green in ~2 minutes.
+- **Prod verified** (step 5): every check below was run against the live
+  domain after the deploy, not against a local build.
+
+### The cutover diff, and the one thing worth checking
+
+`cdk diff OrgHaitianReliefProd` was run against a `STAGE=prod` build before
+merging. The shared stack diffed clean (no changes at all). The prod stack
+added the CloudFront Function, the response headers policy, the split
+`AssetsDeployment`/`HtmlDeployment`, the SNS topic and subscription, the
+canary and its artifacts bucket and alarm, and flipped `DefaultRootObject`
+from the webpack-hashed `index.aafca6952075b4b5d562.html` to `index.html`.
+
+- **The bucket did not appear in the diff at all** and the distribution was a
+  `[~]` config-only update — no replacement, which was the gate on this step.
+- The certificate showed only an added `DependsOn`, which is template
+  metadata and produces no resource action.
+- **The old `BucketDeployment` custom resource is deleted by this update, and
+  that is safe** — but it is the one thing that looks alarming and is worth
+  understanding. CDK's `retainOnDelete` defaults to `true`, and the deployed
+  prod template omitted the property, so the delete is a no-op rather than a
+  purge of the bucket the new deployments just wrote to. Had that old
+  deployment been created with `retainOnDelete: false`, CloudFormation's
+  create-new-then-delete-old ordering would have uploaded the new site and
+  then deleted the very same keys. Check this before ever swapping a
+  `BucketDeployment` construct id again.
+- **The old site's files were pruned, on purpose.** The prod bucket held 86
+  objects: `index.<hash>.html`, `index.<hash>.js`, `concert.html`, and 83
+  under `public/`. `HtmlDeployment` prunes everything outside `_astro/*`, so
+  all of it is gone. Every one of those images now ships through the Astro
+  pipeline instead. The practical consequence: deep links to old asset URLs
+  such as `/public/2026-itav-og.jpg` now 404. Nothing on the new site links to
+  them, but an already-scraped social card pointing at the old OG image will
+  lose its picture. Accepted.
+
+### Verification actually run against prod
+
+- `https://haitianrelief.org/` and `https://prod.haitianrelief.org/` both 200
+  with the new `h1`.
+- `robots.txt` is the production one — `Allow: /`, `Disallow: /admin/`, and
+  the `Sitemap:` line. No `X-Robots-Tag` on prod responses (the test stage's
+  `noindex` header is correctly absent).
+- `sitemap-index.xml` 200; `sitemap-0.xml` lists `https://haitianrelief.org/`
+  and nothing with a stripped `.html`.
+- Canonical and `og:url` are `https://haitianrelief.org/`, i.e. the
+  `build.format: 'file'` `/index.html` fixup is working on prod.
+- `concert.html` 200, carries `noindex`, its own OG/Twitter block with the
+  1200×630 JPEG, a `<meta http-equiv="refresh">` **and** a JS
+  `location.replace` to `/#events`.
+- Cache headers: HTML `public, max-age=0, must-revalidate`; `/_astro/*`
+  `public, max-age=31536000, immutable`. Security headers present
+  (`x-frame-options`, `x-content-type-options`, `referrer-policy`, HSTS).
+- 200 on `/favicon.svg`, `/favicon.ico`, `/apple-touch-icon.png`,
+  `/documents/growin-proposal.docx`, `/admin`, `/admin/` and
+  `/admin/config.yml`. `/does-not-exist` returns a real 404 with the custom
+  page. `/admin` (no slash) working proves the URL-rewrite CloudFront Function
+  is attached.
+- `/admin/config.yml` on prod has `branch: main`, the `base_url` Function URL,
+  and `site_url`/`display_url` on the apex.
+- The Sveltia login screen renders on prod with **zero console errors** — a
+  config validation failure would surface there. The only console line is
+  Sveltia's "a new version is available" notice against our pinned 0.206.1,
+  which is expected.
+- Playwright snapshot of the home page: nav, hero, events, mission, all eight
+  project articles, contacts, donate and footer all present; 0 console errors.
+- `scripts/axe.mjs` against `https://haitianrelief.org/`: **0 violations** at
+  375/768/1280px, including nav-open and lightbox-open states.
+
+### The prod canary was run once by hand, and why
+
+The prod alarm `hrs-prod-daily-canary` was created **in ALARM**. That is not a
+fault: it uses `treatMissingData: breaching` with one evaluation period, and a
+brand-new canary has no datapoints until its first scheduled run at 13:00 UTC.
+Left alone it would have sat in ALARM overnight and fired an alert the moment
+Tyler confirmed the SNS subscription.
+
+So the canary was forced through a single run: `stop-canary`, `update-canary
+--schedule Expression='rate(0 minute)'`, `start-canary`. **The run PASSED** —
+which also proves the three assertions (HTTP 200, the `h1`, at least one
+`.gallery img`) hold against the real prod site, not just against sveltia. The
+alarm went to `OK`.
+
+The schedule was then restored to `cron(0 13 * * ? *)` with
+`DurationInSeconds=0` and `MaxRetries=0`, and the canary restarted. A
+follow-up `cdk diff` shows **no canary or alarm drift** — the only remaining
+diff is the `BucketDeployment` asset hash, because the local build lacks
+`CMS_AUTH_URL` and so produces a slightly different `admin/config.yml` than
+CI's. Deploying from CI is the source of truth; do not "fix" that hash locally.
+
+Note for next time: `aws synthetics get-canary-runs` returns the runs under
+`CanaryRuns`, not `CanaryRunsStatus`. Querying the wrong key returns `None`
+rather than an error, which looks exactly like "the canary never ran".
+
+### The 2021 AWS keys were already dead
+
+The plan said to delete the `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` repo
+secrets **and** deactivate the underlying IAM access key. The secrets are
+deleted. There was no IAM key to deactivate: account 063257577013 has
+`Users: 0` and `AccountAccessKeysPresent: 0`, so the IAM user those 2021
+credentials belonged to was removed at some point and the secrets had been
+inert for a while. Nothing further to do in IAM.
+
+### Resource inventory after cutover
+
+For this site, in account `063257577013` / us-east-1:
+
+| Thing               | Value                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| Stacks (keep)       | `OrgHaitianReliefProd`, `OrgHaitianReliefShared`, `CDKToolkit`                                       |
+| Stacks (to destroy) | `OrgHaitianReliefSveltia`, `OrgHaitianReliefStaging`                                                 |
+| Bucket              | `org.haitianrelief.prod`                                                                             |
+| Deploy role         | `hrs-website-deploy` (OIDC; `hrs-github-actions-deploy` is the old one, dies with the staging stack) |
+| CMS auth            | Lambda Function URL `https://7fxcmotv2d3aaxnnfkrba4ikpq0ryofm.lambda-url.us-east-1.on.aws`           |
+| CMS secret          | Secrets Manager `hrs/cms-auth` (created outside CFN; `cdk destroy` cannot delete it)                 |
+| Canary              | `hrs-prod-daily`, `cron(0 13 * * ? *)`, runtime `syn-nodejs-playwright-6.0`                          |
+| Alarm               | `hrs-prod-daily-canary` → `arn:aws:sns:us-east-1:063257577013:hrs-prod-alerts`                       |
+| OAuth App           | GitHub OAuth App created 2026-09-06; callback is `<function url>/callback`                           |
+| Repo secret         | `FONTAWESOME_PACKAGE_TOKEN` only                                                                     |
+| Repo variable       | `CMS_AUTH_URL`                                                                                       |
+
+`CDKToolkit` is shared with unrelated projects in the same account
+(`CdkCore*`, `Yahn*`, `ThaiLer*`, `LerDev-*`). Do not touch those.
+`codebuild-hrs-website-service-role` is a leftover IAM role from an even older
+CodeBuild setup — unused, not referenced by any stack in this repo, and left
+alone rather than deleted blind.
+
+### Cleanup log
+
+Done:
+
+- Deleted repo secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+- Deleted the stale `dependabot/*` remote branches.
+
+Not done — deliberately gated on step 6 (Tyler's CMS edit on prod), because
+each item removes either the rollback path or the ability to test a CMS change
+somewhere other than the live site:
+
+- `cdk destroy OrgHaitianReliefSveltia`, then confirm the `sveltia` NS record
+  is gone from the apex zone. (CloudFront disable takes ~15 minutes.)
+- Destroy `OrgHaitianReliefStaging` — via a `semantic-ui` worktree, or by
+  emptying `org.haitianrelief.staging` and deleting the stack directly. This
+  also removes the old `hrs-github-actions-deploy` role. Confirm the `staging`
+  NS record is gone.
+- Remove `refs/heads/sveltia` from the `hrs-website-deploy` trust policy and
+  `sveltia.haitianrelief.org` from the CMS auth Lambda's `ALLOWED_DOMAINS`,
+  then push (deploys via `main`).
+- Delete branch `sveltia` locally and on GitHub; delete the `static` remote
+  branch and the local `v3` branch. **Keep `semantic-ui`.**
+- Update the GitHub OAuth App homepage/description if it names the test
+  domain. The callback must not change.
+- Drop the migration-in-progress banner from `CLAUDE.md`.
+
+### Still open from Phase 6
+
+- **Tyler must confirm the prod SNS subscription.** It is
+  `PendingConfirmation` on `hrs-prod-alerts`; until the email is clicked,
+  canary alarms go nowhere. This is a new topic, so the Phase 5 confirmation
+  does not carry over.
+- **Tyler must do step 6**: one real edit at `https://haitianrelief.org/admin/`,
+  confirmed live. Sign-in itself is already unblocked — `haitianrelief.org` is
+  in `ALLOWED_DOMAINS` and the config points at `main`.
+- **`prod.haitianrelief.org` is not in `ALLOWED_DOMAINS`**, so `/admin/` on
+  that hostname cannot complete OAuth. The apex is the canonical admin URL and
+  works; this is only a note in case someone bookmarks the wrong one.
+- **Lighthouse SEO has not been re-measured on prod.** Phase 5 could not score
+  it on the test domain because of the deliberate `noindex`. Prod no longer
+  has that cap, so the number should now be real.
+- **The sveltia alarm is still in ALARM** from Phase 5's forced-failure test
+  and clears itself around 15:20 UTC on 2026-09-08 — unless the stack is
+  destroyed first, which makes it moot.
