@@ -4,14 +4,20 @@ Live progress log for the migration described in `docs/migration-plan.md`.
 Each phase appends its own section. Read this plus the plan before starting a
 new phase.
 
-| Phase                                     | State       | Notes                        |
-| ----------------------------------------- | ----------- | ---------------------------- |
-| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed |
-| 2 — infra and pipeline, test domain       | not started |                              |
-| 3 — Sveltia CMS auth and round-trip       | not started |                              |
-| 4 — UI redesign                           | not started |                              |
-| 5 — SEO, canary, docs                     | not started |                              |
-| 6 — cutover and cleanup                   | not started |                              |
+| Phase                                     | State       | Notes                                                    |
+| ----------------------------------------- | ----------- | -------------------------------------------------------- |
+| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                             |
+| 2 — infra and pipeline, test domain       | not started | also does the Font Awesome registry plumbing             |
+| 3 — Sveltia CMS auth and round-trip       | not started |                                                          |
+| 3.5 — photo quality pass                  | not started | **added 2026-09-06**; ask about originals during Phase 2 |
+| 4 — UI redesign                           | not started | also adds Font Awesome icons                             |
+| 5 — SEO, canary, docs                     | not started |                                                          |
+| 6 — cutover and cleanup                   | not started |                                                          |
+
+**Plan amended 2026-09-06** with two changes Tyler asked for after Phase 1:
+Font Awesome Pro icons (plan §2.5) and a one-off photo restoration pass
+(§2.6, new Phase 3.5). Both were researched and the toolchain validated before
+the plan was written — see "Amendments" below.
 
 Branch: `sveltia` (never commit to `main` before Phase 6).
 
@@ -195,7 +201,64 @@ file is the hero. The other 34 are not.
   `public_folder: /documents`, matching the `/documents/growin-proposal.docx`
   value in `clean-oil-farming`.
 
+## Amendments (2026-09-06, after Phase 1)
+
+### Font Awesome Pro — validated, with one trap
+
+The token in `$FONTAWESOME_PACKAGE_TOKEN` resolves **Font Awesome 7.3.1 Pro**
+against `npm.fontawesome.com` (checked live). `faPaypal`, `faVenmo`,
+`faGithub` and `faYoutube` all exist in
+`@fortawesome/free-brands-svg-icons@7.3.1` (brands ship free even for Pro
+subscribers), and every UI icon the redesign needs exists in `pro-solid`. All
+are single-path, so no duotone handling is needed. Both packages are
+`sideEffects: false` ESM with per-icon deep imports, so tree-shaking will work.
+
+**The trap, verified end-to-end:** Font Awesome's docs tell you to put
+`//npm.fontawesome.com/:_authToken=${FONTAWESOME_PACKAGE_TOKEN}` in the project
+`.npmrc`. **pnpm 11 refuses to expand it** — deliberately, because that file is
+committed and a malicious edit could redirect the token to an attacker's
+registry. You get a warning and then `ERR_PNPM_FETCH_401`. The repo `.npmrc`
+must carry the registry mapping only; the credential has to come from the
+user-level config (`~/.npmrc`, which Tyler already has) or from
+`pnpm config set "//npm.fontawesome.com/:_authToken" <token> --location=user`,
+which on macOS writes `~/Library/Preferences/pnpm/auth.ini`. The CI form is in
+plan §2.5 and was tested with an isolated `HOME` and no `~/.npmrc`.
+
+Consequence: the repo is public, and once `@fortawesome/*` is in the lockfile,
+`pnpm install` 401s for anyone without a Pro token. Accepted and reversible.
+
+### Photo quality — measured, and worse than "the images are small"
+
+The 35 gallery images are two populations, not one (plan §2.6): 24 are 858px
+wide and cleanly compressed (0.22–0.60 bytes/px), while 11 are _larger_
+(1069–1080px) but severely JPEG-damaged (**0.07–0.13 bytes/px**) — all ten
+`galette-chambon-orphanage-*` plus `hs1`, `hs2`, `pc4` and `mr2`. That second
+group cannot simply be upscaled; the artifacts scale up with it. A 1080px cap
+plus that compression level is the signature of a messaging app, so those
+photos were most likely received over WhatsApp from Haiti.
+
+Recommendation: hunt for originals first (free, best result, needs human lead
+time — **start asking during Phase 2**), then Upscayl at 2× (free, local,
+macOS; 2× is the range where it matches paid tools, and keeping photographs of
+children off third-party cloud services matters here on its own), and only if
+that falls short, one month of Topaz Gigapixel at $29 — it is subscription-only
+now, so do not buy the year. No generative upscalers on documentary photos of
+identifiable people. Realistic budget $0, worst case $29.
+
+### Also noticed
+
+The repo still carries GitHub secrets `AWS_ACCESS_KEY_ID` and
+`AWS_SECRET_ACCESS_KEY` from 2021-06-26 — long-lived static AWS credentials on
+a public repo, superseded by OIDC and unused by the new workflow. Phase 6 now
+deletes them and deactivates the underlying IAM access key.
+
 ## Manual steps for Tyler
 
-None for Phase 1. Phase 3 needs a GitHub OAuth App and Phase 5 needs an SNS
-subscription confirmation; both are described in the plan.
+- **During Phase 2** (long lead time, do not wait for Phase 3.5): ask Joy
+  Richards / Jeanette Juetten whether the original camera files or the original
+  email attachments survive for the Galette Chambon orphanage and health-centre
+  photos.
+- **Phase 3.5**: approve the before/after upscaling samples before the batch
+  runs.
+- Phase 3 needs a GitHub OAuth App and Phase 5 needs an SNS subscription
+  confirmation; both are described in the plan.
