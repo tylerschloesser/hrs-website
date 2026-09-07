@@ -16,12 +16,16 @@ backend:
   branch: ${branch}
 ${authUrl ? `  base_url: ${authUrl}\n` : ''}  auth_methods: [oauth, token]
   auth_scope: public_repo
+  # {{collection}} is deliberately left out: for a singleton it resolves to the
+  # group label ("Files"), so an edit to home.yml committed as
+  # 'update Files "home"'. {{slug}} alone gives 'update home' and
+  # 'update ezekiel-village-water-cistern', which is the repo's convention.
   commit_messages:
-    create: 'add {{collection}} "{{slug}}"'
-    update: 'update {{collection}} "{{slug}}"'
-    delete: 'remove {{collection}} "{{slug}}"'
-    uploadMedia: 'add "{{path}}"'
-    deleteMedia: 'remove "{{path}}"'
+    create: 'add {{slug}}'
+    update: 'update {{slug}}'
+    delete: 'remove {{slug}}'
+    uploadMedia: 'add {{path}}'
+    deleteMedia: 'remove {{path}}'
 site_url: ${siteUrl}
 display_url: ${siteUrl}
 logo:

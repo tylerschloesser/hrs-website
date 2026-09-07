@@ -108,3 +108,10 @@ is enough to find and undo it.
 You can: **Projects → New Project**. You'll need a title, an order number, and
 at least a description. Deleting projects is deliberately turned off; ask Tyler
 if one needs to go.
+
+## Removing a photo for good
+
+Deleting a gallery row takes the photo off the site, but **leaves the image
+file in the repository**. That is harmless — nothing links to it and it is not
+published — but if you want it gone entirely, switch to the **Assets** tab
+(the photo icon in the bottom toolbar), find the file, and delete it there.

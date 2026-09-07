@@ -8,7 +8,7 @@ new phase.
 | ----------------------------------------- | ----------- | ------------------------------------------------------- |
 | 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                            |
 | 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live               |
-| 3 — Sveltia CMS auth and round-trip       | not started |                                                         |
+| 3 — Sveltia CMS auth and round-trip       | **done**    | one manual OAuth sign-in still to confirm — see below   |
 | 3.5 — photo quality pass                  | not started | **added 2026-09-06**; originals still to be asked about |
 | 4 — UI redesign                           | not started | also adds Font Awesome icons                            |
 | 5 — SEO, canary, docs                     | not started |                                                         |
@@ -286,31 +286,166 @@ immutable`; HSTS `max-age=31536000; includeSubDomains`, `nosniff`,
   phase that has room to retest — `configure-aws-credentials@v5` changed inputs
   — rather than as a drive-by.
 
-## For Phase 3
+## Phase 3 — what was done
 
-- The CMS auth Lambda + Function URL go in `packages/cdk/src/shared-stack.ts`,
-  at the marked placeholder. Once it exists, publish its URL with
-  `gh variable set CMS_AUTH_URL` — the workflow already passes
-  `vars.CMS_AUTH_URL` into the build, and `admin/config.yml` starts emitting
-  `base_url` the moment it is non-empty. No workflow change is needed.
-- Sveltia's `richtext` widget takes `modes: [rich_text, raw]` — _not_
-  `rich-text`/`markdown`, which the plan suggested. The valid `buttons` values
-  used are `bold, italic, link, bulleted-list, heading-three`, and the list
-  widget's image preview key is `thumbnail`, not `field`. These were read out
-  of the JSON schema bundled in `@sveltia/cms@0.206.1` rather than guessed, but
-  they are unverified against a real editing session.
-- **Unverified assumption**: that Sveltia treats the field named `body` in the
-  `projects` collection as the markdown entry body. Confirm this before
-  trusting it; if it instead writes `body:` into frontmatter, every project
-  breaks. The local-repository mode (`/admin/` → "Work with Local Repository",
-  Chrome only) is the fastest way to test config changes without deploying.
-- Add real JSON-schema validation of `admin/config.yml` to
-  `packages/app/scripts/validate-cms-config.mjs`.
-- `logo_url` points at `/favicon.ico`, which Sveltia renders blurry. Phase 5
-  adds `favicon.svg`; repoint it then.
-- The attachment file widget writes to `/packages/app/public/documents` with
-  `public_folder: /documents`, matching the `/documents/growin-proposal.docx`
-  value in `clean-oil-farming`.
+Editors can sign in at https://sveltia.haitianrelief.org/admin/, edit anything,
+and see it live about **2m20s** later (measured, save → deployed).
+
+- **`packages/cdk/lambda/cms-auth/index.ts`** — the GitHub half of
+  [`sveltia/sveltia-cms-auth`](https://github.com/sveltia/sveltia-cms-auth)
+  (MIT, Kohei Yoshino) ported to a Node 22 Lambda Function URL. GitLab was
+  dropped. The `/auth` + `/callback` protocol, the CSRF cookie scheme and the
+  `postMessage` handshake are preserved exactly — that handshake is what
+  Sveltia's client expects, so do not "clean it up".
+- **`packages/cdk/src/shared-stack.ts`** — `NodejsFunction` (ARM64, 256 MB,
+  10s, one-month log retention) + Function URL (`authType: NONE`, no CORS),
+  reading `hrs/cms-auth` from Secrets Manager.
+- **`packages/cdk/lambda/cms-auth/index.test.ts`** — 12 `node:test` cases, run
+  by `pnpm check` via `pnpm --filter @hrs-website/cdk test`.
+- **`src/pages/admin/config.yml.ts`** — finished config (see the fixes below).
+- **`scripts/validate-cms-config.mjs`** — now also validates the generated
+  config against the JSON schema bundled in `@sveltia/cms`.
+- **`docs/editing.md`** — first draft of the editor guide. Phase 5 finalizes it.
+
+### The auth setup, and the one thing that must not change
+
+| Thing              | Value                                                                        |
+| ------------------ | ---------------------------------------------------------------------------- |
+| Function URL       | `https://7fxcmotv2d3aaxnnfkrba4ikpq0ryofm.lambda-url.us-east-1.on.aws`       |
+| OAuth App callback | `<that URL>/callback`                                                        |
+| OAuth App owner    | Tyler (GitHub → Settings → Developer settings → OAuth Apps)                  |
+| Client id/secret   | Secrets Manager `hrs/cms-auth`, us-east-1, JSON `{client_id, client_secret}` |
+| Published to CI as | `gh variable set CMS_AUTH_URL` (already set)                                 |
+| `ALLOWED_DOMAINS`  | `haitianrelief.org,sveltia.haitianrelief.org` (Lambda env var)               |
+
+**The Function URL is derived from the function's logical id.** Renaming the
+`CmsAuthFunction` construct id gives you a new URL and silently breaks the
+OAuth App's registered callback. The secret is created outside CloudFormation
+and imported with `fromSecretNameV2`, so `cdk destroy` can never delete it.
+
+### Config fixes that were actually wrong before
+
+Found by reading the bundled JSON schema and the docs, not from memory:
+
+- **`type="module"` on the CMS script tag** — Sveltia is not distributed as an
+  ES module. It logs a warning and says the attribute "may lead to unexpected
+  behavior when using the JavaScript API". Removed.
+- **`logo_url`** is deprecated in favour of `logo.src`.
+- **`media_libraries.default.config`** is the backward-compatible form;
+  `media_libraries.all` is current. Also added `svg.optimize` and
+  `slugify_filename: true`.
+- **`output.omit_empty_optional_fields: true`** — without it Sveltia writes
+  `attachments: null`/`[]` for empty optional fields and Astro's Zod schema
+  rejects the result. This is the single most likely way a CMS save breaks the
+  build.
+- **`auth_scope: public_repo`** — the default `repo` scope hands the OAuth app
+  access to every private repository the signing-in editor owns. The repo is
+  public, so `public_repo` is enough. Sveltia actually requests
+  `public_repo,user`; the Lambda's allow-list passes both through.
+- **`gallery: required: false`** — `clean-oil-farming` has no gallery, so
+  without this an editor could not save that entry at all.
+- **`commit_messages` without `{{collection}}`** — for a singleton
+  `{{collection}}` resolves to the group label, giving
+  `update Files "home"`. `{{slug}}` alone gives `update home` and
+  `update ezekiel-village-water-cistern`, which matches the repo convention.
+  (The commits already in the branch history predate this fix.)
+
+### Round-trip verification actually run
+
+Against the live test domain, signed in as Tyler:
+
+- The sign-in screen loads with **zero config validation errors** — that is
+  Sveltia validating the whole config against the schema for the version it is
+  running, which is a stronger check than the offline one in `pnpm check`.
+- **Project entry**: edited a caption, added a gallery row, uploaded a
+  3200×2100 JPEG. It became `images/phase3-upload-test.webp` at exactly
+  **2048px** — the transformations config works. The commit touched only
+  content files, was authored as Tyler, and GitHub reports it **GPG-verified**
+  (Sveltia signs commits; no configuration needed).
+- **The diff was surgical**: only the changed caption line changed. No
+  reformatting, no `attachments: []` inserted, markdown body untouched.
+- **The `body` assumption from Phase 2 is confirmed**, both in the docs and in
+  practice: a `richtext` field named `body` is written outside the front
+  matter. Nothing else needs `body_field`.
+- Astro then generated 5 responsive `_astro/phase3-upload-test.*.webp`
+  variants; the live page went from 35 gallery thumbnails to 36, no broken
+  images, and the lightbox opened the new photo as a real `:modal` with its
+  caption.
+- **Singleton + richtext**: edited `home.intro` through the Lexical editor and
+  saved. Text survived byte-for-byte — no `_italic_` rewriting, no re-wrapping,
+  curly quotes intact. See the one-time `|-` change below.
+- Everything was reverted afterwards; `git diff` against the pre-test tree is
+  empty apart from that `|-` change.
+
+### Gotchas found in Phase 3
+
+**The first CMS save of a singleton rewrites `|` to `|-` on every one of its
+richtext fields.** Sveltia strips trailing whitespace from text values, so the
+block scalar loses its trailing newline. It is one-time, permanent, harmless
+(`marked` renders identically) — but it means the first commit an editor makes
+to `home.yml` touches three fields when they edited one. Already absorbed for
+`home.yml`; `events.yml` and `contacts.yml` will do it on their first save.
+
+**Removing a gallery row does not delete the image file.** Sveltia only
+auto-deletes entry-relative assets when the whole _entry_ is deleted. Removing
+a list item leaves the file orphaned in the repo. Harmless — Astro never builds
+an unreferenced image — but they accumulate. Editors can delete them from the
+**Assets** tab; `docs/editing.md` says so.
+
+**Existing repo images show a generic file icon instead of a thumbnail** in the
+entry editor and the "Select Image" dialog. A freshly uploaded image previews
+fine (blob URL), so this only affects assets already committed. The _values_
+are correct and saving does not damage them — this is cosmetic — but it makes
+"which photo is this?" hard for an editor. Worth reporting upstream or
+re-testing on a newer `@sveltia/cms`.
+
+**A list item can render with no subfields after a reload.** After returning to
+an entry whose gallery had just grown, the third row rendered as bare controls
+with no Image/Caption inside, while the list header still said "3" and
+Sveltia's own file cache held all three items. Data was never at risk, and the
+row could still be removed. Looks like a Sveltia rendering glitch; if you see a
+blank row, reload before assuming content was lost.
+
+**`esbuild` must be a direct devDependency of `packages/cdk`.** Under pnpm's
+strict `node_modules`, `NodejsFunction`'s local-bundling detection resolves
+`esbuild` starting from inside `aws-cdk-lib`'s own directory — which reaches
+`packages/cdk/node_modules`. Without it CDK silently falls back to a much
+slower Docker build.
+
+**JSON-schema validation cannot catch a misspelled `widget`.** The schema
+accepts any unknown widget name as a custom field type, because Sveltia lets
+you register your own. A typo'd _option_ name is caught; a typo'd widget is
+not. Widget names have to be checked against the docs by hand. This is noted in
+the script.
+
+**PKCE is still not an option for GitHub.** Sveltia's docs have the PKCE
+instructions written and commented out: GitHub put client-side PKCE for SPAs on
+hold, so the authorization-code flow plus our own OAuth client is the only
+path. Revisit if GitHub ships it — it would let us delete the Lambda, the
+secret and the OAuth App outright.
+
+### Still open from Phase 3
+
+- **One manual OAuth sign-in.** Tyler chose to authenticate the round-trip with
+  a `gh auth token` rather than the OAuth popup, so `/auth` is proven live but
+  `/callback` — the code-for-token exchange and the `postMessage` handshake —
+  has only been proven by unit tests. Sign in once at
+  `/admin/` with **Sign In with GitHub** to close this out. If it fails, the
+  Lambda's CloudWatch log group has the reason.
+- That token now lives in the test site's `localStorage`. Sign out from the CMS
+  (bottom toolbar → Menu) when done, and rotate it if you would rather not
+  leave a `repo`-scoped token there.
+- Board members still need GitHub accounts and collaborator invitations before
+  they can use the CMS at all.
+
+## For Phase 3.5
+
+- The photo-quality work is unchanged by Phase 3, but note that **new** photos
+  uploaded through the CMS are capped at 2048px and converted to WebP in the
+  browser before they are committed. Originals are never stored, so uploading a
+  large original does not preserve it — the 2048px WebP is what the repo gets.
+  That is the right trade for the web, but if archival copies matter, they need
+  to live somewhere other than this repo.
 
 ## Amendments (2026-09-06, after Phase 1)
 
@@ -372,5 +507,7 @@ deletes them and deactivates the underlying IAM access key.
   much cheaper if the originals turn up, so ask now rather than at Phase 3.5.
 - **Phase 3.5**: approve the before/after upscaling samples before the batch
   runs.
-- Phase 3 needs a GitHub OAuth App and Phase 5 needs an SNS subscription
-  confirmation; both are described in the plan.
+- Phase 3's GitHub OAuth App is **done** (created 2026-09-06). Phase 5 still
+  needs an SNS subscription confirmation; it is described in the plan.
+- **Phase 3, one thing left**: sign in at `/admin/` once with "Sign In with
+  GitHub" to prove the OAuth callback end to end. See "Still open from Phase 3".
