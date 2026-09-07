@@ -9,6 +9,7 @@ import '../styles/global.css'
 import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url'
 import loraLatin from '@fontsource-variable/lora/files/lora-latin-wght-normal.woff2?url'
 import { getSingleton } from '../lib/content'
+import Seo from '../components/Seo.astro'
 
 interface Props {
   title: string
@@ -20,8 +21,6 @@ interface Props {
 const { title, description, noindex } = Astro.props
 
 const site = await getSingleton('site')
-
-const canonicalUrl = new URL(Astro.url.pathname, Astro.site)
 ---
 
 <!doctype html>
@@ -29,9 +28,10 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site)
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    <meta name="description" content={description ?? site.description} />
-    <link rel="icon" href="/favicon.ico" />
+    <Seo title={title} description={description} noindex={noindex} />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link
       rel="preload"
       href={interLatin}
@@ -46,8 +46,6 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site)
       type="font/woff2"
       crossorigin
     />
-    <link rel="canonical" href={canonicalUrl} />
-    {noindex && <meta name="robots" content="noindex" />}
 
     <!-- Google Tag Manager -->
     <script is:inline define:vars={{ gtmId: site.gtm_id }}>
