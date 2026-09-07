@@ -1,45 +1,58 @@
-name: Deploy
-on: [push]
+name: deploy
+
+on:
+  push:
+    branches: [main, sveltia]
+
 permissions:
   id-token: write
   contents: read
+
+concurrency:
+  # One deploy at a time per branch. Never cancel: a half-applied
+  # CloudFormation change set is worse than a queued run.
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
-  staging:
+  deploy:
     runs-on: ubuntu-latest
+    env:
+      STAGE: ${{ github.ref_name == 'main' && 'prod' || 'sveltia' }}
+      SITE_URL: ${{ github.ref_name == 'main' && 'https://haitianrelief.org' ||
+        'https://sveltia.haitianrelief.org' }}
+      CMS_BRANCH: ${{ github.ref_name }}
+      # Set in phase 3 with `gh variable set CMS_AUTH_URL`. While it is empty,
+      # admin/config.yml omits `base_url` entirely.
+      CMS_AUTH_URL: ${{ vars.CMS_AUTH_URL }}
     steps:
       - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::063257577013:role/hrs-github-actions-deploy
-          aws-region: us-east-1
+
+      # version comes from `packageManager` in package.json
+      - uses: pnpm/action-setup@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22.x
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - run: STAGE=staging npm run deploy
-  staging-cypress:
-    runs-on: ubuntu-22.04
-    needs: staging
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cypress-io/github-action@v6
-        with:
-          working-directory: packages/cypress-tests
-  prod:
-    runs-on: ubuntu-latest
-    needs: staging-cypress
-    steps:
-      - uses: actions/checkout@v4
+          cache: pnpm
+
+      - name: authenticate to the font awesome registry
+        # The token cannot live in the committed .npmrc — pnpm will not expand
+        # it there. See docs/migration-plan.md section 2.5.
+        run: pnpm config set "//npm.fontawesome.com/:_authToken" "${{
+          secrets.FONTAWESOME_PACKAGE_TOKEN }}" --location=user
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm check
+
+      - run: pnpm build
+
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::063257577013:role/hrs-github-actions-deploy
+          role-to-assume: arn:aws:iam::063257577013:role/hrs-website-deploy
           aws-region: us-east-1
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-      - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - run: STAGE=prod npm run deploy
+
+      - name: cdk deploy
+        run: pnpm --filter @hrs-website/cdk exec cdk deploy --all
+          --require-approval never
