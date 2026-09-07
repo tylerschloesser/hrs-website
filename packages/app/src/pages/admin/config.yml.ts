@@ -138,6 +138,7 @@ ${richtext('        ')}
       - label: Videos
         name: videos
         widget: list
+        hint: The first video in this list is also played on the page, so keep the newest concert at the top.
         fields:
           - { label: Label, name: label, widget: string }
           - label: URL

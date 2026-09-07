@@ -31,12 +31,12 @@ The left sidebar has two groups.
 
 **Singletons** — the one-of-a-kind pages and settings:
 
-| Item              | What lives there                                                                                                                             |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Site settings** | Organization name, tagline, the description search engines show, the social share image, the donate links and mailing address                |
-| **Home page**     | The intro paragraphs, the big photo at the top, the mission statement, the "Why Our Work Matters" section                                    |
-| **Events**        | The benefit concert section: heading, description, photo, YouTube links, and the social-media preview used by the `/concert.html` share link |
-| **Contacts**      | The board list (name, role, email) and the board photo                                                                                       |
+| Item              | What lives there                                                                                                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Site settings** | Organization name, tagline, the description search engines show, the social share image, the donate links and mailing address                                                                 |
+| **Home page**     | The intro paragraphs, the big photo at the top, the mission statement, the "Why Our Work Matters" section                                                                                     |
+| **Events**        | The benefit concert section: heading, description, photo, YouTube links (the top one in the list also plays on the page), and the social-media preview used by the `/concert.html` share link |
+| **Contacts**      | The board list (name, role, email) and the board photo                                                                                                                                        |
 
 **Projects** — one entry per project, in the order they appear on the page.
 Each has a title, an **Order** number (lower numbers come first), a photo
