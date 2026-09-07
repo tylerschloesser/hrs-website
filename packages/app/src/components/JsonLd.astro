@@ -1,0 +1,59 @@
+---
+// schema.org NGO structured data for the home page. Every value is read
+// from content (site.yml / contacts.yml) rather than hard-coded, so an
+// editor updating the CMS keeps this in sync automatically.
+import { getImage } from 'astro:assets'
+import { getSingleton } from '../lib/content'
+
+const site = await getSingleton('site')
+const contacts = await getSingleton('contacts')
+
+const OG_IMAGE_WIDTH = 1200
+const OG_IMAGE_HEIGHT = 630
+
+// Same generated social image as Seo.astro (getImage is cached by Astro's
+// asset pipeline, so this doesn't re-encode it).
+const ogImage = await getImage({
+  src: site.og_image,
+  width: OG_IMAGE_WIDTH,
+  height: OG_IMAGE_HEIGHT,
+  fit: 'cover',
+  format: 'jpg',
+})
+const imageUrl = new URL(ogImage.src, Astro.site).toString()
+
+// favicon.svg is the real logo mark (vector, always crisp); the apple-touch
+// icon is just a flattened PNG derived from it for iOS home-screen use.
+const logoUrl = new URL('/favicon.svg', Astro.site).toString()
+
+const president =
+  contacts.members.find((m) => m.role === 'President') ?? contacts.members[0]
+
+// site.donate.mail.city_state_zip is "City, ST 12345".
+const [addressLocality, regionZip] = site.donate.mail.city_state_zip
+  .split(',')
+  .map((s) => s.trim())
+const [addressRegion, postalCode] = regionZip.split(/\s+/)
+
+const data = {
+  '@context': 'https://schema.org',
+  '@type': 'NGO',
+  name: site.name,
+  description: site.description,
+  url: Astro.site,
+  logo: logoUrl,
+  image: imageUrl,
+  email: president.email,
+  address: {
+    '@type': 'PostalAddress',
+    streetAddress: site.donate.mail.street,
+    addressLocality,
+    addressRegion,
+    postalCode,
+  },
+  foundingDate: '1997',
+  nonprofitStatus: 'Nonprofit501c3',
+}
+---
+
+<script type="application/ld+json" is:inline set:html={JSON.stringify(data)} />

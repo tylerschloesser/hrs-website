@@ -1,0 +1,10 @@
+packages:
+  - 'packages/*'
+
+# pnpm 11 takes a map here (pnpm 10 used the `onlyBuiltDependencies` list).
+allowBuilds:
+  esbuild: true
+  sharp: true
+
+minimumReleaseAgeExclude:
+  - '@sveltia/cms@0.206.1'

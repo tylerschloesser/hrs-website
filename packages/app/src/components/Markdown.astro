@@ -1,0 +1,14 @@
+---
+import { renderMarkdown } from '../lib/markdown'
+
+interface Props {
+  content: string
+  class?: string
+}
+
+const { content, class: className } = Astro.props
+
+const html = renderMarkdown(content)
+---
+
+<div class:list={['prose-hrs', className]} set:html={html} />

@@ -1,0 +1,33 @@
+---
+import Markdown from './Markdown.astro'
+
+interface Props {
+  mission: string
+  whyHeading: string
+  why: string
+}
+
+const { mission, whyHeading, why } = Astro.props
+---
+
+<section class="band bg-surface-alt">
+  <div class="shell">
+    <header>
+      <h2 id="mission-statement" class="text-3xl font-semibold sm:text-4xl">
+        Our Mission
+      </h2>
+      <span class="rule"></span>
+    </header>
+    <div class="mt-8 max-w-3xl">
+      <Markdown content={mission} />
+    </div>
+    <div
+      class="mt-12 max-w-3xl rounded-xl border border-border bg-surface p-6 sm:p-8 lg:p-10"
+    >
+      <h3 class="text-xl font-semibold sm:text-2xl">{whyHeading}</h3>
+      <div class="mt-4">
+        <Markdown content={why} />
+      </div>
+    </div>
+  </div>
+</section>

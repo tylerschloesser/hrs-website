@@ -1,0 +1,87 @@
+---
+import '@fontsource-variable/inter'
+import '@fontsource-variable/lora'
+import '../styles/global.css'
+// The hero paragraph is the LCP element, and with `font-display: swap` the
+// swap to Inter repaints it and becomes a second, later LCP candidate.
+// Preloading the two latin subsets the page actually starts with collapses
+// that back into the first paint. `?url` gives the hashed build path.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url'
+import loraLatin from '@fontsource-variable/lora/files/lora-latin-wght-normal.woff2?url'
+import { getSingleton } from '../lib/content'
+import Seo from '../components/Seo.astro'
+
+interface Props {
+  title: string
+  description?: string
+  /** Set true on /admin-ish or utility pages that should stay out of search. */
+  noindex?: boolean
+}
+
+const { title, description, noindex } = Astro.props
+
+const site = await getSingleton('site')
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <Seo title={title} description={description} noindex={noindex} />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link
+      rel="preload"
+      href={interLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={loraLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Google Tag Manager -->
+    <script is:inline define:vars={{ gtmId: site.gtm_id }}>
+      ;(function (w, d, s, l, i) {
+        w[l] = w[l] || []
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' })
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : ''
+        j.async = true
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl
+        f.parentNode.insertBefore(j, f)
+      })(window, document, 'script', 'dataLayer', gtmId)
+    </script>
+    <!-- End Google Tag Manager -->
+
+    <slot name="head" />
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src={`https://www.googletagmanager.com/ns.html?id=${site.gtm_id}`}
+        height="0"
+        width="0"
+        style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    <a
+      href="#main"
+      class="sr-only rounded-lg bg-accent px-4 py-2 font-semibold text-ink focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
+    >
+      Skip to main content
+    </a>
+
+    <slot />
+  </body>
+</html>

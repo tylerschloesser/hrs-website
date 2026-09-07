@@ -1,0 +1,63 @@
+---
+import { getCollection } from 'astro:content'
+import Base from '../layouts/Base.astro'
+import { getSingleton } from '../lib/content'
+import Nav from '../components/Nav.astro'
+import Hero from '../components/Hero.astro'
+import Events from '../components/Events.astro'
+import Mission from '../components/Mission.astro'
+import Projects from '../components/Projects.astro'
+import Contacts from '../components/Contacts.astro'
+import Donate from '../components/Donate.astro'
+import Footer from '../components/Footer.astro'
+import Lightbox from '../components/Lightbox.astro'
+import JsonLd from '../components/JsonLd.astro'
+
+const site = await getSingleton('site')
+const home = await getSingleton('home')
+const events = await getSingleton('events')
+const contacts = await getSingleton('contacts')
+const projects = await getCollection('projects')
+---
+
+<Base title={site.name} description={site.description}>
+  <JsonLd slot="head" />
+  <Nav siteName={site.name} />
+
+  <main id="main">
+    <Hero
+      siteName={site.name}
+      tagline={site.tagline}
+      intro={home.intro}
+      heroImage={home.hero_image}
+      heroAlt={home.hero_alt}
+    />
+    <Events
+      heading={events.heading}
+      body={events.body}
+      videos={events.videos}
+      closing={events.closing}
+      image={events.image}
+      imageAlt={events.image_alt}
+    />
+    <Mission
+      mission={home.mission}
+      whyHeading={home.why_heading}
+      why={home.why}
+    />
+    <Projects projects={projects} />
+    <Contacts
+      members={contacts.members}
+      photo={contacts.photo}
+      photoCaption={contacts.photo_caption}
+    />
+    <Donate
+      paypalUrl={site.donate.paypal_url}
+      venmoUrl={site.donate.venmo_url}
+      mail={site.donate.mail}
+    />
+  </main>
+
+  <Footer siteName={site.name} githubUrl={site.github_url} />
+  <Lightbox />
+</Base>

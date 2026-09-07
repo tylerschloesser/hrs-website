@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+
+/*
+ * Palette and type per docs/migration-plan.md §2.4. Every colour is a
+ * Tailwind v4 built-in scale value, so there is no bespoke palette to
+ * maintain — the names below are the vocabulary the components use.
+ */
+@theme {
+  --color-ink: #0f172a; /* slate-900  headings, text on light  */
+  --color-body: #334155; /* slate-700  paragraph text           */
+  /*
+   * §2.4 specifies slate-500 here, but slate-500 on the blue-50 band is
+   * 4.37:1 — axe flags every caption sitting on `surface-alt`. Slate-600
+   * is 6.9:1 there and 7.5:1 on white, and still reads clearly secondary
+   * to the slate-700 body text.
+   */
+  --color-muted: #475569; /* slate-600  captions, meta           */
+  --color-surface: #ffffff; /* white      page background          */
+  --color-surface-alt: #eff6ff; /* blue-50    alternating bands, cards */
+  --color-border: #e2e8f0; /* slate-200  rules, card borders      */
+  --color-primary: #1d4ed8; /* blue-700   links, primary buttons   */
+  --color-primary-strong: #1e40af; /* blue-800   hover/active             */
+  --color-brand-dark: #172554; /* blue-950   header, hero, footer     */
+  --color-accent: #fbbf24; /* amber-400  donate CTA, section rule */
+
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Lora Variable', ui-serif, Georgia, serif;
+}
+
+@layer base {
+  :root {
+    /*
+     * Focus rings have to contrast with whatever they sit on. Blue-700 is
+     * invisible on the blue-950 bands, so dark sections carry `.on-dark`
+     * and swap the ring to amber.
+     */
+    --focus-ring: var(--color-primary);
+  }
+
+  .on-dark {
+    --focus-ring: var(--color-accent);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    font-size: 1.0625rem; /* 17px; 18px from lg up */
+    line-height: 1.7;
+    color: var(--color-body);
+    background-color: var(--color-surface);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @media (min-width: 64rem) {
+    body {
+      font-size: 1.125rem;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-serif);
+    color: var(--color-ink);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  [id] {
+    scroll-margin-top: 6rem;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+@layer components {
+  /* The one horizontal measure every band shares. */
+  .shell {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  /* Vertical rhythm for a top-level section band. */
+  .band {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+
+  /*
+   * The recurring mark: a short amber rule under every section heading.
+   * It is the only decorative element in the design, so it earns its keep
+   * by appearing in exactly one place and nowhere else.
+   */
+  .rule {
+    @apply mt-5 block h-1 w-12 rounded-full bg-accent;
+  }
+
+  /* Rendered markdown (singleton richtext fields and project bodies). */
+  .prose-hrs {
+    @apply space-y-5;
+  }
+  .prose-hrs p {
+    @apply leading-relaxed;
+  }
+  .prose-hrs a {
+    @apply text-primary underline decoration-1 underline-offset-2 hover:text-primary-strong;
+  }
+  .on-dark .prose-hrs a {
+    @apply text-accent hover:text-white;
+  }
+  .prose-hrs ul {
+    @apply list-disc space-y-1 pl-6;
+  }
+  .prose-hrs ol {
+    @apply list-decimal space-y-1 pl-6;
+  }
+  .prose-hrs strong {
+    @apply font-semibold text-ink;
+  }
+  .on-dark .prose-hrs strong {
+    @apply text-white;
+  }
+
+  /* Buttons. `btn-accent` is the donate CTA; `btn-primary` is everything else. */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-base font-semibold transition-colors;
+  }
+  .btn-accent {
+    @apply bg-accent text-ink hover:bg-amber-300;
+  }
+  .btn-primary {
+    @apply bg-primary text-white hover:bg-primary-strong;
+  }
+}

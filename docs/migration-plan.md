@@ -10,6 +10,9 @@ Each phase below is designed to run in a **fresh Claude Code session** with no m
 2. Claude reads this plan and `docs/migration-status.md`, does the phase, delegates as much as possible to `sonnet` sub-agents, verifies, commits and pushes often, and finishes by updating `docs/migration-status.md` and reporting what Tyler needs to check.
 3. Tyler verifies the phase's **Deliverables** (checklist), does any **Manual steps** listed, then starts the next phase.
 
+Phase 3.5 was inserted on 2026-09-06 (photo quality); the other phase numbers
+are unchanged so existing kickoff prompts still resolve.
+
 Rules that apply to every phase (Claude must follow these):
 
 - Work on branch `sveltia` (created in Phase 1). Never commit to `main` until Phase 6.
@@ -33,7 +36,7 @@ Everything below is being replaced except **content and images**.
 - **Infra** (`packages/cdk`): one stack per `STAGE` (`OrgHaitianReliefStaging`, `OrgHaitianReliefProd`): S3 bucket (`org.haitianrelief.<stage>`), CloudFront + OAC, per-stage hosted zone `<stage>.haitianrelief.org` delegated from the apex zone `haitianrelief.org` (`Z0010048114HS2EOWXJLC`), ACM cert, `BucketDeployment`. **The staging stack also owns the GitHub OIDC deploy role `hrs-github-actions-deploy`** (trusts only `refs/heads/main`, AdministratorAccess). The account-level OIDC provider for `token.actions.githubusercontent.com` already exists and is not managed by any stack.
 - **CI**: `.github/workflows/deploy.yml` on every push: prettier → build → deploy staging → Cypress smoke test against staging → deploy prod. The Cypress "suite" is one `cy.contains('Haitian Relief Services')`.
 - **Account**: `063257577013`, us-east-1. AWS SSO profile `admin` works locally. Repo `tylerschloesser/hrs-website` is **public**.
-- **Leftovers**: a local, unpushed `v3` branch (March 2026, Astro 5 + Tailwind v4 rewrite in `packages/app`). It is reference material only (mobile menu, OG image script); do not merge it. It uses paid FontAwesome Pro icons, which the new site must not. The `v2` branch and its `HaitianReliefServices` stack (v2.haitianrelief.org) were deleted on 2026-09-06.
+- **Leftovers**: a local, unpushed `v3` branch (March 2026, Astro 5 + Tailwind v4 rewrite in `packages/app`). It is reference material only (mobile menu, OG image script); do not merge it. It uses paid Font Awesome Pro icons; **as of 2026-09-06 the new site does too** (see §2.5), so its icon usage is now fair reference. The `v2` branch and its `HaitianReliefServices` stack (v2.haitianrelief.org) were deleted on 2026-09-06.
 
 ## 2. Target architecture (decisions)
 
@@ -44,6 +47,8 @@ Everything below is being replaced except **content and images**.
 | CMS auth        | **GitHub OAuth** via a small **Lambda Function URL** (port of `sveltia-cms-auth`, MIT) in CDK. Keep `auth_methods: [oauth, token]` so a personal access token works as a fallback.                                                                                      | "Sign in with GitHub" is the only non-technical option. Sveltia's official proxy is Cloudflare-only; the protocol is two routes and easy to port. Keeps everything in CDK/AWS.                                                                         |
 | Package manager | **pnpm 10** workspace: `packages/app` (Astro), `packages/cdk`                                                                                                                                                                                                           | The ask. `sharp`/`esbuild` need `pnpm-workspace.yaml` `onlyBuiltDependencies`.                                                                                                                                                                         |
 | Styling         | **Tailwind CSS v4** via `@tailwindcss/vite`, tokens in `@theme`, self-hosted fonts via `@fontsource-variable/*`                                                                                                                                                         | Sonnet writes Tailwind reliably; the palette lives in one `@theme` block; no runtime CSS framework, no CDN, no Google Fonts request. (Alternative considered: scoped CSS + Open Props. Fine too, but Tailwind is the better fit for agent-written UI.) |
+| Icons           | **Font Awesome Pro 7**, icon definitions from npm rendered as **inline SVG at build time** by a local `<Icon>` component. No `fontawesome-svg-core`, no FA CSS, no client JS.                                                                                           | Tyler holds a Pro licence. Rendering the path data directly keeps the zero-JS goal, ships only the icons actually used, and leaves full control of the SVG's a11y attributes. See §2.5.                                                                |
+| Photos          | Source photos are too small and partly over-compressed; fixed by a one-off **local, faithful upscale** (Upscayl), not by a CMS feature. See §2.6.                                                                                                                       | 35 gallery images are 809–1080px, and a third of them are heavily JPEG-damaged. The redesign cannot look good against them.                                                                                                                            |
 | Gallery         | Thumbnails via `<Image width={400}>`; full-size via `getImage({ width: 1600, widths: [800, 1200, 1600] })` emitted as `data-*` attrs; **native `<dialog>` lightbox** (no library) that sets `src`/`srcset` only on open, with prev/next, keyboard, swipe, focus restore | PhotoSwipe and GLightbox are both effectively unmaintained. `<dialog>` gives focus trap, Esc, and top-layer for free. Preserves "thumbnails on page, full image on open".                                                                              |
 | Images in CMS   | Images live **next to their content** under `src/content/...` (entry-relative `media_folder`), so Astro's `image()` schema helper optimizes every CMS-uploaded image at build. Sveltia also converts uploads to **WebP, max 2048px** client-side.                       | Removes all manual resizing. Any image an editor uploads is optimized twice: once on upload (size cap), once at build (responsive variants).                                                                                                           |
 | Hosting         | Same S3 + CloudFront + Route53 pattern, plus a CloudFront Function that rewrites `/` and `/admin` to `index.html`, and two `BucketDeployment`s (immutable cache for `_astro/*`, `must-revalidate` for the rest)                                                         | Keep CDK. `BucketDeployment` can't do per-path cache headers in one construct.                                                                                                                                                                         |
@@ -60,7 +65,8 @@ Everything below is being replaced except **content and images**.
 ├── CLAUDE.md                      # rewritten for the new stack (Phase 1, kept current)
 ├── docs/                          # migration-prompt.md, migration-plan.md, migration-status.md, editing.md (Phase 5)
 ├── package.json                   # root scripts: build, check, format, deploy
-├── pnpm-workspace.yaml            # packages: packages/*; onlyBuiltDependencies: [sharp, esbuild]
+├── pnpm-workspace.yaml            # packages: packages/*; allowBuilds: {sharp: true, esbuild: true}
+├── .npmrc                         # @fortawesome registry mapping ONLY, never the token (§2.5)
 ├── .prettierrc.yaml               # + prettier-plugin-astro
 └── packages/
     ├── app/                       # Astro site
@@ -81,7 +87,7 @@ Everything below is being replaced except **content and images**.
     │       │   └── projects/<slug>/index.md + images/   # folder collection, one folder per project
     │       ├── pages/index.astro, concert.astro, 404.astro, admin/config.yml.ts
     │       ├── layouts/Base.astro
-    │       ├── components/        # Nav, Hero, Events, Mission, Projects, ProjectGallery, Lightbox, Contacts, Donate, Footer, Seo, JsonLd
+    │       ├── components/        # Icon, Nav, Hero, Events, Mission, Projects, ProjectGallery, Lightbox, Contacts, Donate, Footer, Seo, JsonLd
     │       └── styles/global.css  # @import "tailwindcss"; @theme { ... palette/fonts ... }
     └── cdk/
         ├── cdk.json, tsconfig.json, package.json
@@ -183,7 +189,149 @@ Typography: `Inter Variable` (body/UI) and `Lora Variable` (headings) from `@fon
 
 Structure and copy stay exactly as today (same section order, same anchors `#events`, `#mission-statement`, `#projects`, `#contact`, `#donate`, same wording). Only the look changes.
 
-### 2.5 Cost
+### 2.5 Icons (Font Awesome Pro)
+
+Added 2026-09-06, replacing the original "no icon library" position. Tyler holds
+a Font Awesome Pro subscription; the token is in `$FONTAWESOME_PACKAGE_TOKEN`
+locally. Verified against the live registry on 2026-09-06: the token resolves
+**Font Awesome 7.3.1 Pro**.
+
+**Approach — inline SVG at build time, no runtime.** An icon definition is just
+path data, so a ~10-line `src/components/Icon.astro` is the whole integration:
+
+```astro
+---
+import type { IconDefinition } from '@fortawesome/fontawesome-common-types'
+interface Props {
+  icon: IconDefinition
+  label?: string
+  class?: string
+}
+const { icon, label, class: className } = Astro.props
+const [width, height, , , path] = icon.icon
+---
+
+<svg
+  viewBox={`0 0 ${width} ${height}`}
+  width="1em"
+  height="1em"
+  fill="currentColor"
+  class={className}
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+>
+  {Array.isArray(path) ? path.map((d) => <path d={d} />) : <path d={path} />}
+</svg>
+```
+
+Do **not** use `@fortawesome/fontawesome-svg-core`'s `icon().html`. It works,
+but it needs FA's `.svg-inline--fa` stylesheet, adds a dependency, and emits
+markup we then have to fight for accessible naming. The array branch above is
+only needed if a duotone icon is ever used; every icon in §2.5's list is a
+single path.
+
+**Packages** (all `7.3.1`, all `sideEffects: false` with an ESM `index.mjs` and
+per-icon deep imports, so Rollup ships only what is imported):
+
+- `@fortawesome/pro-solid-svg-icons` — plus `pro-regular` / `pro-light` if
+  Phase 4 prefers a lighter weight. Picking the weight is a Phase 4 call.
+- `@fortawesome/free-brands-svg-icons` — brands are not part of Pro; they ship
+  in the free package. `faPaypal`, `faVenmo`, `faGithub`, `faYoutube` all
+  confirmed present in 7.3.1.
+
+**Registry auth — the part that will waste an afternoon if skipped.** The repo
+`.npmrc` must contain the registry mapping and _nothing else_:
+
+```
+@fortawesome:registry=https://npm.fontawesome.com/
+```
+
+Font Awesome's own docs tell you to add
+`//npm.fontawesome.com/:_authToken=${FONTAWESOME_PACKAGE_TOKEN}` next to it.
+**That does not work under pnpm 11.** pnpm deliberately refuses to expand
+environment variables in registry credentials that come from a project-level
+`.npmrc`, on the grounds that the file is committed and a malicious edit could
+redirect the token to an attacker's registry. You get a warning and then
+`ERR_PNPM_FETCH_401`. Verified 2026-09-06.
+
+The credential has to come from a source pnpm trusts:
+
+- **Locally**: Tyler's `~/.npmrc` already carries it, so local installs work
+  today. `pnpm config set "//npm.fontawesome.com/:_authToken" <token>` also
+  works and writes to `~/Library/Preferences/pnpm/auth.ini` on macOS.
+- **In CI**: before `pnpm install`, run
+  `pnpm config set "//npm.fontawesome.com/:_authToken" "${{ secrets.FONTAWESOME_PACKAGE_TOKEN }}" --location=user`.
+  Verified end-to-end with an isolated `HOME` and no `~/.npmrc`.
+
+**Consequence worth accepting deliberately**: `tylerschloesser/hrs-website` is
+public. Once `@fortawesome/*` is in the lockfile, `pnpm install` fails with a
+401 for anyone without a Pro token — the repo stops being buildable by
+outsiders. That is fine for a site only Tyler maintains, and it is reversible:
+switch to the `@fortawesome/free-*` packages and delete `.npmrc`.
+
+**Icons to adopt.** Restores what Semantic UI used to provide, plus what the
+redesign needs: PayPal, Venmo, GitHub, Word-document, envelope; hamburger,
+close, chevron-left/right for the lightbox, external-link. Adopting `faVenmo`
+lets `Donate.astro` drop the hand-pasted inline Venmo SVG carried over from the
+old site.
+
+### 2.6 Photo quality (one-off restoration pass)
+
+Added 2026-09-06. Measured on the ported content, not estimated. The 35 gallery
+images split into two populations:
+
+| Group                        | Count | Size             | Bytes/pixel   | Files                                                                  |
+| ---------------------------- | ----- | ---------------- | ------------- | ---------------------------------------------------------------------- |
+| A — small but clean          | 24    | 858px wide       | 0.22–0.60     | `ev*`, `gs*`, `ws*`, `pc1–3`, `mr1`, `mr3–5`                           |
+| B — larger but badly damaged | 11    | 1069–1080px wide | **0.07–0.13** | all 10 `galette-chambon-orphanage-*`, `hs1`, `hs2` (plus `pc4`, `mr2`) |
+
+Group B is the trap: those files are _bigger_ than Group A and _much worse_.
+0.07 bytes/pixel is severe JPEG damage — upscaling them without removing the
+artifacts first just makes the blocking and ringing bigger. A 1080px cap with
+that much compression is the signature of a messaging app, so the orphanage and
+health-centre photos were most likely received over WhatsApp from Haiti.
+
+**Priority 1 — find the originals. Free, best possible result, longest lead
+time, so start it immediately rather than waiting for Phase 3.5.** If anyone
+(Joy Richards, Jeanette Juetten, whoever travelled) still has the camera files
+or the original email attachments for the Galette Chambon photos, one recovered
+original beats anything an upscaler can do. Note that `2025-board.jpg` is
+4032×3024, so full-resolution originals clearly do exist for _some_ photos.
+
+**Priority 2 — Upscayl (free, open source, local, macOS) at 2×.** The default
+recommendation, for three reasons:
+
+- 2× is exactly the factor needed (858→1716, 1080→2160), and that is the range
+  where Upscayl is reported to be on par with paid tools; the gap only opens up
+  at 4×.
+- It runs **entirely on the machine**. These are photographs of children in an
+  orphanage — not handing them to a third-party cloud service is worth
+  something on its own, independent of price.
+- Free, batch mode. For Group B, run a de-artifact/restoration model first.
+
+**Priority 3 — Topaz Gigapixel, one month at $29, only if Upscayl falls short
+on the worst Group B images.** Topaz is subscription-only now ($29/month,
+$149/year). For a one-off batch, buy a single month and cancel. Do not buy the
+year.
+
+**Do not use generative "creative" upscalers (Magnific, Krea) here.** They
+invent detail — skin texture, facial features, apparent age. On documentary
+photographs of identifiable children and named board members that is both
+factually wrong and a dignity problem. Faithful reconstruction only.
+
+**Workflow.** Upscale, overwrite the file in `src/content/**` keeping the exact
+same filename, rebuild. Astro regenerates every derivative; no caption, config
+or component changes. Git keeps the originals in history, so it is revertible.
+Do not hand-make thumbnails — removing that chore is the point of the
+migration. Acceptance is by eye at 100% in the lightbox on a retina screen,
+against the original: **if a face looks _different_, keep the original.**
+Slightly soft but true beats sharp but wrong.
+
+**Budget: realistically $0, worst case $29.**
+
+### 2.7 Cost
 
 Everything new is inside free tiers or cents: Synthetics ~30 runs/month (first 100 free) plus a few cents of S3/Logs; Lambda Function URL auth calls are a handful per month; one more CloudFront distribution and hosted zone ($0.50/month) only while the test stack exists.
 
@@ -237,10 +385,11 @@ Steps:
    - `site-stack.ts`: bucket `org.haitianrelief.<stage>` with `removalPolicy: DESTROY` + `autoDeleteObjects: true` for non-prod; hosted zone `<stage>.haitianrelief.org` + NS delegation in the apex zone (lookup, already cached in `cdk.context.json`); ACM cert (prod also covers apex, as today); CloudFront Function (JS 2.0, viewer-request) rewriting `uri` ending in `/` → `+index.html` and extension-less → `+/index.html`; `defaultRootObject: 'index.html'`; `errorResponses` 403/404 → `/404.html` (404); security headers via `ResponseHeadersPolicy.SECURITY_HEADERS` or a custom policy (HSTS, nosniff, referrer-policy; no CSP yet); two `BucketDeployment`s from `../app/dist` (`_astro/*` immutable + `prune: false`; everything else `public, max-age=0, must-revalidate` + `prune: true` + `distributionPaths: ['/*']`); A record(s). Phase 5 adds the canary here.
    - Remove `webpack-manifest.ts` and the old inline OIDC block. `tsx` stays as the CDK app runner.
 2. Deploy `SharedStack` locally first (`AWS_PROFILE=admin STAGE=sveltia pnpm --filter cdk exec cdk deploy OrgHaitianReliefShared`), then `OrgHaitianReliefSveltia` locally once (`SITE_URL=https://sveltia.haitianrelief.org CMS_BRANCH=sveltia pnpm build` first). Expect 10–20 minutes for cert validation + CloudFront.
-3. Workflow rewrite (`.github/workflows/deploy.yml`): trigger on push to `main` and `sveltia`; `pnpm/action-setup` (version from `packageManager`) → `actions/setup-node@v4` (node 22, `cache: pnpm`) → `pnpm install --frozen-lockfile` → `pnpm check` → build with `STAGE`/`SITE_URL`/`CMS_BRANCH` derived from `github.ref_name` (`sveltia` → sveltia stage, `main` → prod) → `aws-actions/configure-aws-credentials@v4` with the **new** role ARN → `cdk deploy --all --require-approval never`. Concurrency group per branch. `CMS_AUTH_URL` comes from a repo variable (`gh variable set CMS_AUTH_URL`) set in Phase 3.
-4. Push, watch the run (`gh run watch`), fix until green. Verify live with Playwright: `https://sveltia.haitianrelief.org/`, `/admin` (loads the Sveltia UI shell; sign-in will fail until Phase 3), `/concert.html` redirect, `/nope` → 404 page, `curl -I` shows `cache-control` immutable for an `_astro` asset and `must-revalidate` for `index.html`, HTTPS redirect, response headers policy present.
-5. Do **not** touch `OrgHaitianReliefStaging` or `OrgHaitianReliefProd` yet. `main`'s old workflow keeps working for prod hotfixes until Phase 6.
-6. Update `CLAUDE.md` (deploy commands, stack names) and `docs/migration-status.md` (include the new role ARN, stack names, how to deploy locally, and how long CloudFront changes take).
+3. Font Awesome registry plumbing (do it here, with the other CI secrets, so Phase 4 cannot trip over it — a `.npmrc` registry mapping is inert until the packages are added). Create `.npmrc` at the repo root containing only `@fortawesome:registry=https://npm.fontawesome.com/`; set the repo secret with `gh secret set FONTAWESOME_PACKAGE_TOKEN --body "$FONTAWESOME_PACKAGE_TOKEN"`. See §2.5 for why the token must not go in `.npmrc`.
+4. Workflow rewrite (`.github/workflows/deploy.yml`): trigger on push to `main` and `sveltia`; `pnpm/action-setup` (version from `packageManager`) → `actions/setup-node@v4` (node 22, `cache: pnpm`) → `pnpm config set "//npm.fontawesome.com/:_authToken" "${{ secrets.FONTAWESOME_PACKAGE_TOKEN }}" --location=user` → `pnpm install --frozen-lockfile` → `pnpm check` → build with `STAGE`/`SITE_URL`/`CMS_BRANCH` derived from `github.ref_name` (`sveltia` → sveltia stage, `main` → prod) → `aws-actions/configure-aws-credentials@v4` with the **new** role ARN → `cdk deploy --all --require-approval never`. Concurrency group per branch. `CMS_AUTH_URL` comes from a repo variable (`gh variable set CMS_AUTH_URL`) set in Phase 3.
+5. Push, watch the run (`gh run watch`), fix until green. Verify live with Playwright: `https://sveltia.haitianrelief.org/`, `/admin` (loads the Sveltia UI shell; sign-in will fail until Phase 3), `/concert.html` redirect, `/nope` → 404 page, `curl -I` shows `cache-control` immutable for an `_astro` asset and `must-revalidate` for `index.html`, HTTPS redirect, response headers policy present.
+6. Do **not** touch `OrgHaitianReliefStaging` or `OrgHaitianReliefProd` yet. `main`'s old workflow keeps working for prod hotfixes until Phase 6.
+7. Update `CLAUDE.md` (deploy commands, stack names) and `docs/migration-status.md` (include the new role ARN, stack names, how to deploy locally, and how long CloudFront changes take).
 
 Deliverables:
 
@@ -277,6 +426,61 @@ Deliverables:
 - [ ] Auth Lambda rejects unknown `site_id` domains and bad state (tests pass).
 - [ ] `pnpm check` validates the CMS config against the schema.
 
+### Phase 3.5 — Photo quality pass
+
+**Goal**: The gallery images are as good as they are ever going to get, so that
+Phase 4's redesign is judged against final assets rather than placeholders.
+Added 2026-09-06; see §2.6 for the measurements behind it.
+
+Sequenced here because the CMS works by now (so replacing an image is easy
+either way) and because Phase 4's screenshots, Lighthouse run and design
+decisions are only meaningful against the real photos.
+
+Manual step for Tyler — **start this during Phase 2, not here**: ask whoever
+travelled to Haiti (Joy Richards, Jeanette Juetten) whether the original camera
+files or original email attachments still exist for the Galette Chambon
+orphanage and health-centre photos. This has human lead time and is worth more
+than any amount of upscaling.
+
+Kickoff prompt:
+
+```
+Read docs/migration-plan.md (especially §2.6) and docs/migration-status.md. Execute Phase 3.5 as written. Work on branch `sveltia`. Do the upscaling locally, compare before/after at 100% yourself before committing anything, and stop and ask me about any image where a face changes. Commit and push, then update docs/migration-status.md.
+```
+
+Steps:
+
+1. Take stock: re-run the measurement in §2.6 against the current content (it
+   may have changed if originals turned up). Any photo for which an original
+   was recovered is simply dropped in — no upscaling, and it leaves Group A/B
+   entirely.
+2. Install Upscayl (`brew install --cask upscayl`). Trial on **three** images
+   spanning the range — one Group A (`gs1.jpg`, clean 858px), one Group B
+   (`galette-chambon-orphanage-5.jpg`, the worst at 0.07 B/px) and one portrait
+   with faces (`pc1.jpg`). Try a faithful 2× model, and for Group B a
+   de-artifact pass first. Save the comparisons to the scratchpad.
+3. Show Tyler the three before/after pairs and get a go/no-go on the model
+   choice before batching. Do not batch on your own judgment — the acceptance
+   test in §2.6 is subjective by design.
+4. Batch the approved set at 2×. Overwrite in place under `src/content/**`,
+   same filenames. Do not touch captions, frontmatter or components.
+5. Verify: `pnpm build` succeeds; every gallery still has its original count
+   (4/8/2/4/5/10/2/0); no image got _smaller_; spot-check several in the
+   lightbox at 100% on a retina screen. Compare total `dist/` size and the
+   page's transferred weight before and after — bigger sources must not blow up
+   the page budget, since Astro serves the responsive variants either way.
+6. Once sources support it, widen the gallery's full-size `widths` (§2.4 uses
+   `[800, 1200, 1600]`) to include 2400, and re-check page weight.
+7. Record in the status doc: which tool and model, which images were replaced,
+   which were left alone and why, and the before/after size totals.
+
+Deliverables:
+
+- [ ] Tyler has seen and approved the before/after samples.
+- [ ] Gallery images are 2× larger where it helped, unchanged where it did not,
+      and no face looks like a different person.
+- [ ] `pnpm build` green; gallery counts unchanged; page weight still sane.
+
 ### Phase 4 — UI redesign: layout, nav, gallery, palette, a11y
 
 **Goal**: Modern look and feel per §2.4 with identical structure and copy; excellent mobile nav; polished gallery/lightbox; accessible.
@@ -289,14 +493,15 @@ Read docs/migration-plan.md (especially §2.4) and docs/migration-status.md. Exe
 
 Steps:
 
-1. Design tokens and base (`global.css` `@theme`, fonts, prose styles for richtext output, focus-visible rings, reduced-motion). Use the `frontend-design` skill for direction if available; keep it restrained and warm, not templated.
-2. Components, in parallel sub-agents with fixed contracts:
+1. Font Awesome (§2.5): add `@fortawesome/pro-solid-svg-icons` (and/or `pro-regular`/`pro-light` — pick the weight that suits the design) and `@fortawesome/free-brands-svg-icons`, write `src/components/Icon.astro`, and use it for PayPal, Venmo, GitHub, the Word document link, the hamburger, the lightbox close and chevrons, and external links. Deleting the hand-pasted inline Venmo SVG from `Donate.astro` is the check that this landed. `.npmrc` and the CI secret already exist from Phase 2; confirm the first CI build after adding the packages is green before building on top of it, and confirm in the built output that only the imported icons shipped.
+2. Design tokens and base (`global.css` `@theme`, fonts, prose styles for richtext output, focus-visible rings, reduced-motion). Use the `frontend-design` skill for direction if available; keep it restrained and warm, not templated.
+3. Components, in parallel sub-agents with fixed contracts:
    - `Nav`: sticky, `brand-dark`, org name/wordmark left, links (Events, Our Mission, Our Impact, Contact) + accent Donate button right; mobile hamburger disclosure (`<button aria-expanded aria-controls>`, `hidden` toggling, Esc closes and focuses the button, closes on link click), smooth scroll with `scroll-margin-top` on section headings, current-section highlighting optional.
    - `Hero`/intro, `Events` (two-column, image right), `Mission`, `Projects` + `ProjectGallery` (responsive thumbnail grid, captions on hover/under, each thumb a `<button>` with the caption as accessible name), `Lightbox` (`<dialog>`: loads full `src`/`srcset`/`sizes` only on open, caption, prev/next buttons, arrow keys, swipe via pointer events, close button, backdrop click, focus restore, `aria-label`s; prefetch neighbors after open), `Contacts` (cards + board photo with caption), `Donate` (three cards; PayPal, Venmo icon inline SVG, Mail address block), `Footer`.
-3. Responsiveness: mobile-first; no horizontal scroll at 320px; images use `sizes` that match layout widths; hero uses `loading="eager"` + `fetchpriority="high"`, everything else lazy.
-4. Accessibility: run axe (Playwright + `@axe-core/playwright` as a dev script, not a test suite) with zero serious/critical violations; keyboard-only walkthrough of nav, gallery, lightbox; heading order h1→h2→h3; alt text from captions; color contrast per §2.4; `prefers-reduced-motion` respected.
-5. Performance sanity: Lighthouse (via Playwright/Chrome or `npx lighthouse`) on the live test domain ≥ 90 on all four categories on mobile; page weight of the initial load well under 1 MB.
-6. Update status doc with the final token values, any deviations from §2.4 and why, and screenshots' paths (save them under the scratchpad, not the repo).
+4. Responsiveness: mobile-first; no horizontal scroll at 320px; images use `sizes` that match layout widths; hero uses `loading="eager"` + `fetchpriority="high"`, everything else lazy.
+5. Accessibility: run axe (Playwright + `@axe-core/playwright` as a dev script, not a test suite) with zero serious/critical violations; keyboard-only walkthrough of nav, gallery, lightbox; heading order h1→h2→h3; alt text from captions; color contrast per §2.4; `prefers-reduced-motion` respected.
+6. Performance sanity: Lighthouse (via Playwright/Chrome or `npx lighthouse`) on the live test domain ≥ 90 on all four categories on mobile; page weight of the initial load well under 1 MB.
+7. Update status doc with the final token values, any deviations from §2.4 and why, and screenshots' paths (save them under the scratchpad, not the repo).
 
 Deliverables:
 
@@ -352,6 +557,7 @@ Steps (in order; the orchestrator does these itself, sub-agents only for small e
    - Remove `refs/heads/sveltia` from the deploy role trust and `sveltia.haitianrelief.org` from `ALLOWED_DOMAINS`; push (deploys via `main`).
    - Delete branch `sveltia` locally and on GitHub; delete the stale `dependabot/*` and `static` remote branches and the local `v3` branch (all superseded). Keep `semantic-ui`.
    - Update the GitHub OAuth App homepage/description if it mentions the test domain (callback stays the same).
+   - Delete the repo secrets `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` (created 2021-06-26). They are long-lived static AWS keys on a public repo, superseded by OIDC and unused by the new workflow. Deactivate the underlying IAM access key in the account too, not just the secret.
    - Final `docs/migration-status.md`: "migration complete" with a resource inventory (stacks, role, secret, OAuth App, canary, SNS topic) and the cleanup log. Update `CLAUDE.md` to drop any migration-era notes.
 
 Deliverables:
@@ -378,6 +584,9 @@ Deliverables:
 - **Public repo, admin emails already public.** Nothing new is exposed. Never commit the client secret; it lives only in Secrets Manager.
 - **Every CMS save deploys (~5 min).** Acceptable for this site. If it becomes noisy, Sveltia's editorial workflow (`publish_mode: editorial_workflow`, PR-based) can be enabled later without code changes.
 - **Prod stack updated in place at cutover.** `cdk diff` review in Phase 6 step 3 is mandatory; the `semantic-ui` branch plus the old stack code can redeploy the old site if needed.
+- **Font Awesome makes a public repo unbuildable without a licence.** Accepted (§2.5). If it ever matters, the escape hatch is the `@fortawesome/free-*` packages plus deleting `.npmrc` — the `<Icon>` component itself does not change.
+- **The Font Awesome token is a credential in CI on a public repo.** It reaches the runner only as a secret, never as a repo variable and never in `.npmrc`. Pull requests from forks must not be given it.
+- **Upscaling can quietly falsify a photograph.** Faithful models only, and Tyler approves samples before any batch (§2.6). If in doubt, keep the original.
 - **CloudFront propagation and cert validation are slow** (10–20 minutes). Sessions should use `gh run watch` and background waits rather than assuming failure.
 
 ## 6. Open items Tyler may want to decide (defaults chosen)
@@ -386,3 +595,6 @@ Deliverables:
 - Whether editors should be able to add new projects (default: yes, `create: true`) and delete them (default: no, `delete: false`).
 - Alert email: `tylerschloesser@gmail.com` (default).
 - Keep unused legacy photos in CMS media (default: yes, they cost nothing and editors may want them).
+- Font Awesome weight for the redesign: `pro-solid` vs `pro-regular` vs `pro-light` (§2.5; default: decided in Phase 4 against the actual design).
+- Whether making the repo unbuildable without a Font Awesome Pro token is acceptable (§2.5; default: yes).
+- Photo upscaling tool and model (§2.6; default: Upscayl at 2×, free — with Tyler approving the samples before the batch).

@@ -1,0 +1,63 @@
+---
+import { render } from 'astro:content'
+import type { CollectionEntry } from 'astro:content'
+import { faFileWord } from '@fortawesome/pro-solid-svg-icons'
+import Icon from './Icon.astro'
+import ProjectGallery from './ProjectGallery.astro'
+
+interface Props {
+  projects: CollectionEntry<'projects'>[]
+}
+
+const { projects } = Astro.props
+
+const sorted = [...projects].sort((a, b) => a.data.order - b.data.order)
+
+const rendered = await Promise.all(
+  sorted.map(async (project) => {
+    const { Content } = await render(project)
+    return { project, Content }
+  })
+)
+---
+
+<section class="band bg-surface">
+  <div class="shell">
+    <header>
+      <h2 id="projects" class="text-3xl font-semibold sm:text-4xl">
+        Our Impact
+      </h2>
+      <span class="rule"></span>
+    </header>
+
+    <div class="mt-14 space-y-14 lg:mt-20 lg:space-y-20">
+      {
+        rendered.map(({ project, Content }, index) => (
+          <article
+            class={index > 0 ? 'border-t border-border pt-14 lg:pt-20' : ''}
+          >
+            <h3 class="text-xl font-semibold sm:text-2xl">
+              {project.data.title}
+            </h3>
+            <div class="prose-hrs mt-4 max-w-3xl">
+              <Content />
+            </div>
+            {project.data.gallery.length > 0 && (
+              <ProjectGallery gallery={project.data.gallery} />
+            )}
+            {project.data.attachments.length > 0 && (
+              <div class="mt-8 flex flex-wrap gap-4">
+                {project.data.attachments.map((attachment) => (
+                  <a href={attachment.file} class="btn btn-primary">
+                    <Icon icon={faFileWord} />
+                    {attachment.label}
+                  </a>
+                ))}
+              </div>
+            )}
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

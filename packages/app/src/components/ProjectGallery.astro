@@ -1,0 +1,65 @@
+---
+import type { ImageMetadata } from 'astro'
+import { Image, getImage } from 'astro:assets'
+import { faMagnifyingGlassPlus } from '@fortawesome/pro-solid-svg-icons'
+import Icon from './Icon.astro'
+
+interface GalleryItem {
+  image: ImageMetadata
+  caption: string
+}
+
+interface Props {
+  gallery: GalleryItem[]
+}
+
+const { gallery } = Astro.props
+
+// Thumbnails are eager-ish small images rendered on the page (`<Image>`
+// below); the full-size version is only ever needed once the lightbox
+// opens, so it's produced at build time here but attached to the button as
+// data attributes rather than an `<img src>` the browser would fetch now.
+const items = await Promise.all(
+  gallery.map(async (item) => {
+    const full = await getImage({
+      src: item.image,
+      widths: [800, 1200, 1600, 2048],
+      format: 'webp',
+    })
+    return { ...item, full }
+  })
+)
+---
+
+<div
+  class="gallery mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4"
+>
+  {
+    items.map((item) => (
+      <button
+        type="button"
+        class="group block w-full text-left"
+        data-full-src={item.full.src}
+        data-full-srcset={item.full.srcSet.attribute}
+        data-caption={item.caption}
+      >
+        <div class="relative aspect-[4/3] overflow-hidden rounded-lg border border-border">
+          <Image
+            src={item.image}
+            alt=""
+            loading="lazy"
+            widths={[240, 360, 560]}
+            sizes="(min-width: 1024px) 17rem, (min-width: 640px) calc((100vw - 6.5rem) / 3), calc((100vw - 3.5rem) / 2)"
+            class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+          <div class="absolute inset-0 flex items-center justify-center bg-ink/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+            <Icon icon={faMagnifyingGlassPlus} class="text-2xl text-white" />
+          </div>
+        </div>
+        <span class="mt-2 block text-sm leading-snug text-muted">
+          {item.caption}
+        </span>
+      </button>
+    ))
+  }
+</div>

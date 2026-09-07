@@ -1,0 +1,59 @@
+---
+// A share/preview page whose only job is to carry Open Graph tags for the
+// concert and then bounce to `#events`. Written standalone (not using
+// `Base`) so the OG/Twitter head is the only thing in <head> and the
+// redirect works with or without JS.
+import { getImage } from 'astro:assets'
+import { getSingleton } from '../lib/content'
+
+const site = await getSingleton('site')
+const events = await getSingleton('events')
+const { share } = events
+
+const OG_IMAGE_WIDTH = 1200
+const OG_IMAGE_HEIGHT = 630
+
+// JPEG rather than WebP: some social scrapers still refuse WebP previews.
+const ogImage = await getImage({
+  src: share.image,
+  width: OG_IMAGE_WIDTH,
+  height: OG_IMAGE_HEIGHT,
+  fit: 'cover',
+  format: 'jpg',
+})
+const ogImageUrl = new URL(ogImage.src, Astro.site).toString()
+const pageUrl = new URL('/concert.html', Astro.site).toString()
+const redirectTo = share.redirect_to
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{share.title} - {site.name}</title>
+    <meta name="robots" content="noindex" />
+
+    <meta property="og:title" content={share.title} />
+    <meta property="og:description" content={share.description} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:width" content={String(OG_IMAGE_WIDTH)} />
+    <meta property="og:image:height" content={String(OG_IMAGE_HEIGHT)} />
+    <meta property="og:url" content={pageUrl} />
+    <meta property="og:type" content="website" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={share.title} />
+    <meta name="twitter:description" content={share.description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <meta http-equiv="refresh" content={`0; url=${redirectTo}`} />
+    <script is:inline define:vars={{ redirectTo }}>
+      window.location.replace(redirectTo)
+    </script>
+  </head>
+  <body>
+    <p>
+      Redirecting&hellip; <a href={redirectTo}>Click here</a> if not redirected.
+    </p>
+  </body>
+</html>

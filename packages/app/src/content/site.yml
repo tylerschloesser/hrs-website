@@ -1,0 +1,13 @@
+name: Haitian Relief Services
+tagline: Serving the people of Haiti since 1997
+description: Haitian Relief Services is an all-volunteer 501(c)(3) nonprofit that has supported education, healthcare, and safe housing in the Ganthier region of Haiti since 1997.
+og_image: media/pc2.jpg
+donate:
+  paypal_url: https://www.paypal.com/paypalme/haitianrelief
+  venmo_url: https://account.venmo.com/u/haitianrelief
+  mail:
+    attn: Jeanette Juetten
+    street: W12009 850th Ave
+    city_state_zip: River Falls, WI 54022
+github_url: https://github.com/tylerschloesser
+gtm_id: GTM-K4B3P5D

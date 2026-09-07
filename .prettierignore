@@ -1,4 +1,10 @@
 cdk.out
 dist
+.astro
 .claude
 .playwright-cli
+pnpm-lock.yaml
+
+# Written by Sveltia CMS; leave formatting to the CMS so its commits never
+# fail `pnpm check`.
+packages/app/src/content

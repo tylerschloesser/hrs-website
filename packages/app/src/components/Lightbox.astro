@@ -1,0 +1,227 @@
+---
+// Rendered once per page. Every `ProjectGallery` thumbnail button carries
+// `data-full-src` / `data-full-srcset` / `data-caption`; this component
+// delegates a click listener from `document` so it doesn't need to know
+// about any particular gallery ahead of time.
+import {
+  faChevronLeft,
+  faChevronRight,
+  faXmark,
+} from '@fortawesome/pro-solid-svg-icons'
+import Icon from './Icon.astro'
+---
+
+<dialog
+  id="lightbox"
+  aria-label="Image viewer"
+  class="on-dark fixed inset-0 m-auto max-h-[92dvh] w-[calc(100%-1.5rem)] max-w-6xl rounded-xl border-0 bg-ink p-3 text-white sm:w-[calc(100%-4rem)] sm:p-5"
+>
+  <button
+    type="button"
+    data-lightbox-close
+    aria-label="Close"
+    class="absolute right-3 top-3 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-white/10 p-3 backdrop-blur hover:bg-white/20"
+  >
+    <Icon icon={faXmark} class="text-xl" />
+  </button>
+
+  <div class="relative flex items-center justify-center">
+    <button
+      type="button"
+      data-lightbox-prev
+      aria-label="Previous image"
+      class="absolute left-2 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-white/10 p-3 backdrop-blur hover:bg-white/20"
+    >
+      <Icon icon={faChevronLeft} class="text-xl" />
+    </button>
+
+    <img
+      data-lightbox-img
+      alt=""
+      class="mx-auto max-h-[72dvh] w-auto rounded-lg object-contain"
+    />
+
+    <button
+      type="button"
+      data-lightbox-next
+      aria-label="Next image"
+      class="absolute right-2 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-white/10 p-3 backdrop-blur hover:bg-white/20"
+    >
+      <Icon icon={faChevronRight} class="text-xl" />
+    </button>
+  </div>
+
+  <p class="mt-4 text-center text-sm text-white/80">
+    <span data-lightbox-caption></span>
+    <span data-lightbox-position class="ml-2 text-white/50"></span>
+  </p>
+</dialog>
+
+<style>
+  #lightbox::backdrop {
+    background-color: color-mix(in srgb, var(--color-ink) 90%, transparent);
+  }
+</style>
+
+<script>
+  const dialog = document.getElementById('lightbox')
+  const imgEl = dialog?.querySelector('[data-lightbox-img]')
+  const captionEl = dialog?.querySelector('[data-lightbox-caption]')
+  const positionEl = dialog?.querySelector('[data-lightbox-position]')
+  const closeBtn = dialog?.querySelector('[data-lightbox-close]')
+  const prevBtn = dialog?.querySelector('[data-lightbox-prev]')
+  const nextBtn = dialog?.querySelector('[data-lightbox-next]')
+
+  if (
+    dialog instanceof HTMLDialogElement &&
+    imgEl instanceof HTMLImageElement &&
+    captionEl instanceof HTMLElement &&
+    positionEl instanceof HTMLElement &&
+    closeBtn instanceof HTMLButtonElement &&
+    prevBtn instanceof HTMLButtonElement &&
+    nextBtn instanceof HTMLButtonElement
+  ) {
+    let currentGroup: HTMLButtonElement[] = []
+    let currentIndex = 0
+    let openerButton: HTMLButtonElement | null = null
+    let previousHtmlOverflow = ''
+    let prefetchedButtons = new WeakSet<HTMLButtonElement>()
+
+    const getGroup = (button: HTMLButtonElement): HTMLButtonElement[] => {
+      const container = button.closest('.gallery') ?? document
+      return Array.from(
+        container.querySelectorAll('button[data-full-src]')
+      ).filter((el): el is HTMLButtonElement => el instanceof HTMLButtonElement)
+    }
+
+    const prefetch = (button: HTMLButtonElement | undefined) => {
+      if (!button || prefetchedButtons.has(button)) return
+      prefetchedButtons.add(button)
+      const image = new Image()
+      image.srcset = button.dataset.fullSrcset ?? ''
+      image.sizes = '100vw'
+      image.src = button.dataset.fullSrc ?? ''
+    }
+
+    const scheduleNeighbourPrefetch = () => {
+      if (currentGroup.length <= 1) return
+      const prevIndex =
+        (currentIndex - 1 + currentGroup.length) % currentGroup.length
+      const nextIndex = (currentIndex + 1) % currentGroup.length
+
+      const run = () => {
+        prefetch(currentGroup[prevIndex])
+        prefetch(currentGroup[nextIndex])
+      }
+
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(run)
+      } else {
+        setTimeout(run, 200)
+      }
+    }
+
+    const updatePosition = () => {
+      if (currentGroup.length > 1) {
+        positionEl.textContent = `${currentIndex + 1} / ${currentGroup.length}`
+      } else {
+        positionEl.textContent = ''
+      }
+    }
+
+    const updateNavVisibility = () => {
+      const hasMultiple = currentGroup.length > 1
+      prevBtn.classList.toggle('hidden', !hasMultiple)
+      nextBtn.classList.toggle('hidden', !hasMultiple)
+    }
+
+    const show = (button: HTMLButtonElement) => {
+      imgEl.src = button.dataset.fullSrc ?? ''
+      imgEl.srcset = button.dataset.fullSrcset ?? ''
+      imgEl.sizes = '100vw'
+      imgEl.alt = button.dataset.caption ?? ''
+      captionEl.textContent = button.dataset.caption ?? ''
+      updatePosition()
+
+      const schedule = () => scheduleNeighbourPrefetch()
+      if (imgEl.complete) {
+        schedule()
+      } else {
+        imgEl.addEventListener('load', schedule, { once: true })
+      }
+    }
+
+    const move = (delta: number) => {
+      if (currentGroup.length === 0) return
+      currentIndex =
+        (currentIndex + delta + currentGroup.length) % currentGroup.length
+      const next = currentGroup[currentIndex]
+      if (next) show(next)
+    }
+
+    const openFrom = (button: HTMLButtonElement) => {
+      currentGroup = getGroup(button)
+      currentIndex = currentGroup.indexOf(button)
+      openerButton = button
+      prefetchedButtons = new WeakSet<HTMLButtonElement>()
+      updateNavVisibility()
+      show(button)
+      dialog.showModal()
+      previousHtmlOverflow = document.documentElement.style.overflow
+      document.documentElement.style.overflow = 'hidden'
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target
+      const button =
+        target instanceof HTMLElement
+          ? target.closest('button[data-full-src]')
+          : null
+      if (button instanceof HTMLButtonElement) {
+        openFrom(button)
+      }
+    })
+
+    closeBtn.addEventListener('click', () => dialog.close())
+    prevBtn.addEventListener('click', () => move(-1))
+    nextBtn.addEventListener('click', () => move(1))
+
+    // Clicking the dialog's own box (its padding, or the backdrop outside
+    // it) closes it; clicking the image, caption, or the nav buttons does
+    // not, since those are separate elements and won't be `event.target`.
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close()
+    })
+
+    dialog.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowLeft') move(-1)
+      if (event.key === 'ArrowRight') move(1)
+    })
+
+    dialog.addEventListener('close', () => {
+      imgEl.src = ''
+      imgEl.srcset = ''
+      imgEl.alt = ''
+      captionEl.textContent = ''
+      positionEl.textContent = ''
+      currentGroup = []
+      document.documentElement.style.overflow = previousHtmlOverflow
+      openerButton?.focus()
+      openerButton = null
+    })
+
+    // Basic touch swipe support.
+    let touchStartX: number | null = null
+    dialog.addEventListener('pointerdown', (event) => {
+      touchStartX = event.clientX
+    })
+    dialog.addEventListener('pointerup', (event) => {
+      if (touchStartX === null) return
+      const delta = event.clientX - touchStartX
+      touchStartX = null
+      if (Math.abs(delta) > 50) {
+        move(delta > 0 ? -1 : 1)
+      }
+    })
+  }
+</script>
