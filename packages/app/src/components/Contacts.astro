@@ -51,7 +51,7 @@ const { members, photo, photoCaption } = Astro.props
           src={photo}
           alt={photoCaption}
           widths={[400, 600, 900]}
-          sizes="(min-width: 1024px) 32rem, 100vw"
+          sizes="(min-width: 1024px) 32rem, (min-width: 640px) calc(100vw - 4rem), calc(100vw - 2.5rem)"
           loading="lazy"
           class="w-full rounded-xl"
         />

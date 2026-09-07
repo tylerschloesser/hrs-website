@@ -68,7 +68,7 @@ const { heading, body, videos, closing, image, imageAlt } = Astro.props
         src={image}
         alt={imageAlt}
         widths={[400, 600, 900]}
-        sizes="(min-width: 1024px) 26rem, 100vw"
+        sizes="(min-width: 1024px) 26rem, (min-width: 640px) calc(100vw - 4rem), calc(100vw - 2.5rem)"
         loading="lazy"
         class="w-full rounded-xl lg:sticky lg:top-28"
       />

@@ -38,8 +38,8 @@ const { siteName, tagline, heroImage, heroAlt, intro } = Astro.props
         alt={heroAlt}
         loading="eager"
         fetchpriority="high"
-        widths={[640, 960, 1280]}
-        sizes="(min-width: 1024px) 40rem, 100vw"
+        widths={[420, 640, 960, 1280]}
+        sizes="(min-width: 1024px) 40rem, (min-width: 640px) calc(100vw - 4rem), calc(100vw - 2.5rem)"
         class="aspect-[4/3] w-full rounded-xl object-cover ring-1 ring-white/15"
       />
     </div>

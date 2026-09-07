@@ -2,6 +2,12 @@
 import '@fontsource-variable/inter'
 import '@fontsource-variable/lora'
 import '../styles/global.css'
+// The hero paragraph is the LCP element, and with `font-display: swap` the
+// swap to Inter repaints it and becomes a second, later LCP candidate.
+// Preloading the two latin subsets the page actually starts with collapses
+// that back into the first paint. `?url` gives the hashed build path.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url'
+import loraLatin from '@fontsource-variable/lora/files/lora-latin-wght-normal.woff2?url'
 import { getSingleton } from '../lib/content'
 
 interface Props {
@@ -26,6 +32,20 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site)
     <title>{title}</title>
     <meta name="description" content={description ?? site.description} />
     <link rel="icon" href="/favicon.ico" />
+    <link
+      rel="preload"
+      href={interLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href={loraLatin}
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex" />}
 

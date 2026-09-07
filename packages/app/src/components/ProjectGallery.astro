@@ -49,7 +49,7 @@ const items = await Promise.all(
             alt=""
             loading="lazy"
             widths={[240, 360, 560]}
-            sizes="(min-width: 1024px) 17rem, (min-width: 640px) 30vw, 44vw"
+            sizes="(min-width: 1024px) 17rem, (min-width: 640px) calc((100vw - 6.5rem) / 3), calc((100vw - 3.5rem) / 2)"
             class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
           <div class="absolute inset-0 flex items-center justify-center bg-ink/40 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
