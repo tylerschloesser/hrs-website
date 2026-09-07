@@ -4,15 +4,15 @@ Live progress log for the migration described in `docs/migration-plan.md`.
 Each phase appends its own section. Read this plus the plan before starting a
 new phase.
 
-| Phase                                     | State       | Notes                                                  |
-| ----------------------------------------- | ----------- | ------------------------------------------------------ |
-| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                           |
-| 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live              |
-| 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06             |
-| 3.5 — photo quality pass                  | in progress | no originals survive; upscayl route confirmed by Tyler |
-| 4 — UI redesign                           | not started | also adds Font Awesome icons                           |
-| 5 — SEO, canary, docs                     | not started |                                                        |
-| 6 — cutover and cleanup                   | not started |                                                        |
+| Phase                                     | State       | Notes                                             |
+| ----------------------------------------- | ----------- | ------------------------------------------------- |
+| 1 — repo reset, pnpm, Astro, content port | **done**    | local only, nothing deployed                      |
+| 2 — infra and pipeline, test domain       | **done**    | https://sveltia.haitianrelief.org is live         |
+| 3 — Sveltia CMS auth and round-trip       | **done**    | oauth sign-in verified by Tyler 2026-09-06        |
+| 3.5 — photo quality pass                  | **done**    | 21 photos upscaled 2x; 14 deliberately left alone |
+| 4 — UI redesign                           | not started | also adds Font Awesome icons                      |
+| 5 — SEO, canary, docs                     | not started |                                                   |
+| 6 — cutover and cleanup                   | not started |                                                   |
 
 **Plan amended 2026-09-06** with two changes Tyler asked for after Phase 1:
 Font Awesome Pro icons (plan §2.5) and a one-off photo restoration pass
@@ -438,14 +438,115 @@ secret and the OAuth App outright.
   they can use the CMS at all. That is the gating step for anyone but Tyler
   editing the site, and it has human lead time.
 
-## For Phase 3.5
+## Phase 3.5 — what was done
 
-- The photo-quality work is unchanged by Phase 3, but note that **new** photos
-  uploaded through the CMS are capped at 2048px and converted to WebP in the
-  browser before they are committed. Originals are never stored, so uploading a
-  large original does not preserve it — the 2048px WebP is what the repo gets.
-  That is the right trade for the web, but if archival copies matter, they need
-  to live somewhere other than this repo.
+**21 of the 35 gallery photographs were upscaled 2x. The other 14 were
+deliberately left alone.** Tyler reviewed the samples and agreed to both halves
+on 2026-09-06.
+
+Tool: **Upscayl 2.15.0**, model **`remacri-4x`**, run through its bundled CLI at
+`/Applications/Upscayl.app/Contents/Resources/bin/upscayl-bin` with
+`-s 2` — the 4x model output downsampled to 2x, which supersamples. Output was
+re-encoded in place as mozjpeg q92, same filenames, so Git holds every original
+and the whole batch is one revert.
+
+### The measurement, corrected
+
+Re-running §2.6's measurement against the current content gives **21 clean /
+14 damaged**, not the 24/11 the plan's prose claims. The plan's own file list
+was right and its counts were wrong: 10 `galette-chambon-orphanage-*` plus
+`hs1`, `hs2`, `pc4` and `mr2` is 14, and 21 + 14 = 35.
+
+### Why 14 photos were not touched
+
+This is the part the plan got wrong, and it is worth not re-litigating later.
+§2.6 assumed Group B was merely over-compressed and that a de-artifacting pass
+would fix it. Those files are **also out of focus** — camera blur, not just
+JPEG damage. No faithful upscaler can invent focus, so instead of recovering
+detail the restoration models smooth what little is there:
+
+- `high-fidelity-4x` turns a child's face into a smooth wax mask and the
+  background into brushstrokes.
+- A median-deblock pass before `high-fidelity-4x` — the plan's own suggestion —
+  was the **worst** of the four results tested.
+- `remacri-4x` was the only restrained one, but on these files it buys almost
+  nothing while roughly doubling their bytes.
+
+The plan's acceptance test settles it: slightly soft but true beats sharp but
+wrong. If someone later wants to revisit this, the answer is not a better
+model — it is a sharper original, and Tyler has confirmed none exists.
+
+### Model comparison (the trial that produced the decision)
+
+| Model                                | On clean files                        | On damaged files                 |
+| ------------------------------------ | ------------------------------------- | -------------------------------- |
+| **`remacri-4x`**                     | resolves real detail; faces unchanged | restrained; invents nothing      |
+| `upscayl-standard-4x`                | cleaner, but fabric goes mushy        | smooths faces noticeably         |
+| `high-fidelity-4x`                   | pleasant, softer than remacri         | waxy faces, painterly background |
+| median deblock -> `high-fidelity-4x` | not needed                            | worst of the four                |
+
+Samples were published as an artifact for review, with 100% crops and a
+hold-to-compare against the original.
+
+### Two files outside the gallery were included, on purpose
+
+- **`media/pc2.jpg`** — the home page hero. It is byte-identical to
+  `projects/pillowcase-dress-project/images/pc2.jpg` and Astro dedupes them to
+  one optimized asset (Phase 1 noted this). Upscaling only one side would break
+  the dedupe and produce two assets, so both were processed and verified
+  byte-identical afterwards (`md5` matches). **If you ever touch one of these,
+  touch both.**
+- **`media/2026-mass-choir.jpg`** — 806px and cleanly compressed, i.e. Group A
+  by every measure, and it is the live Events image.
+
+**`media/2026-itav-og.jpg` was deliberately left at 1200x630.** That is the
+size social scrapers expect from an Open Graph image; making it bigger would be
+a regression, not an improvement. `2025-board.jpg` (4032px) and
+`2025-mass-choir.jpg` (2452px) are already large and were skipped.
+
+### The srcset rungs were previously dead
+
+`ProjectGallery.astro` asked for `widths: [800, 1200, 1600]`, but Astro never
+upscales — against an 858px source **every one of those rungs collapsed to
+858**. The lightbox has been serving 858px images this whole time no matter
+what the srcset said. With 1716px sources the ladder finally resolves:
+`800w 1200w 1600w 1716w`.
+
+A `2048` rung was added rather than the plan's `2400`: 2400 exceeds every
+source we have, whereas 2048 is exactly the cap the CMS applies to uploads, so
+it is the real ceiling for any photo an editor adds from now on. Astro clamps
+it per image — 1716 for the upscaled files, 1080 for the untouched ones.
+
+### Before / after
+
+|                               | before     | after                  |
+| ----------------------------- | ---------- | ---------------------- |
+| Gallery sources               | 858px wide | 1716px wide (21 of 35) |
+| `src/content` on disk         | 13 MB      | 18 MB                  |
+| `dist/` build output          | 11 MB      | 22 MB                  |
+| **Initial page image weight** | **971 KB** | **1053 KB** (+8%)      |
+| One lightbox open, avg        | 85 KB      | 172 KB                 |
+
+The number that matters is the initial page weight, and it barely moved: the
+thumbnails are `width={400}` either way and only got slightly heavier from
+being downsampled off a sharper source. The lightbox doubles in bytes for **4x
+the pixels**, and only on open. `dist/` doubling is build output, not
+transferred weight.
+
+Gallery counts verified unchanged: 4/8/2/4/5/10/2/0.
+
+## For Phase 4
+
+- The photos are final. Judge the redesign against them.
+- **Wide screens are now worth designing for.** The Phase 1 note that a gallery
+  "full size" is often ~858px is obsolete for 21 of the 35 images; they are
+  1716px. The 14 orphanage and health-centre photos are still 1080px and always
+  will be, so the gallery layout has to look right with a mix — do not assume a
+  uniform maximum.
+- New photos uploaded through the CMS are capped at 2048px and converted to
+  WebP in the browser before they are committed. Originals are never stored, so
+  uploading a large original does not preserve it. If archival copies matter,
+  they need to live somewhere other than this repo.
 
 ## Amendments (2026-09-06, after Phase 1)
 
