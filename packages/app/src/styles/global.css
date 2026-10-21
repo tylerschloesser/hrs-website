@@ -93,8 +93,13 @@
     border-radius: 2px;
   }
 
-  [id] {
-    scroll-margin-top: 6rem;
+  /* The sticky header's height plus its 1px bottom border (see Nav.astro). */
+  html {
+    scroll-padding-top: calc(4rem + 1px);
+
+    @variant lg {
+      scroll-padding-top: calc(5rem + 1px);
+    }
   }
 
   @media (prefers-reduced-motion: no-preference) {
