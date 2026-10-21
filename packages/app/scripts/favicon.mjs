@@ -5,8 +5,9 @@
  *   pnpm --filter @hrs-website/app exec node scripts/favicon.mjs
  *
  * Writes:
- *   - public/apple-touch-icon.png  180x180, flattened onto brand-dark
- *     (iOS ignores transparency, so this can't be left alpha).
+ *   - public/apple-touch-icon.png  180x180, the mark at 148px centred on
+ *     white (iOS ignores transparency and rounds the corners itself, so it
+ *     needs an opaque background and some padding to clear the mask).
  *   - public/favicon.ico           16x16 + 32x32 + 48x48, PNG-compressed
  *     entries in a hand-built ICO container. `sharp` can only write raster
  *     image formats, not .ico, so the ICONDIR/ICONDIRENTRY headers below
@@ -18,18 +19,26 @@ import sharp from 'sharp'
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url))
 const SVG_PATH = `${ROOT}/public/favicon.svg`
-const BRAND_DARK = '#172554'
+const APPLE_TOUCH_BG = '#ffffff'
 
-// `favicon.svg` has a 64x64 viewBox and no width/height, so sharp's default
-// rasterization is 64x64. Resizing that raster up for the larger sizes below
+// `favicon.svg` has a 1024x1024 viewBox and no width/height, so sharp's
+// default rasterization is 1024x1024. Resizing that raster up for the larger sizes below
 // would upscale a bitmap instead of rendering the vector — rasterize
 // straight from the SVG at each target size instead.
 const rasterize = (size) =>
-  sharp(SVG_PATH, { density: (72 * size) / 64 }).resize(size, size)
+  sharp(SVG_PATH, { density: (72 * size) / 1024 }).resize(size, size)
 
-// apple-touch-icon.png: 180x180, opaque (flattened onto brand-dark).
-const appleTouchIcon = await rasterize(180)
-  .flatten({ background: BRAND_DARK })
+// apple-touch-icon.png: 180x180, opaque, the 148px mark padded out to 180.
+const APPLE_TOUCH_PAD = (180 - 148) / 2
+const appleTouchIcon = await rasterize(148)
+  .extend({
+    top: APPLE_TOUCH_PAD,
+    bottom: APPLE_TOUCH_PAD,
+    left: APPLE_TOUCH_PAD,
+    right: APPLE_TOUCH_PAD,
+    background: APPLE_TOUCH_BG,
+  })
+  .flatten({ background: APPLE_TOUCH_BG })
   .png()
   .toBuffer()
 await writeFile(`${ROOT}/public/apple-touch-icon.png`, appleTouchIcon)
