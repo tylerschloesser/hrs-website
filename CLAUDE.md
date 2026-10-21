@@ -92,9 +92,25 @@ Search and social metadata:
 - The OG image is generated at build from `site.og_image`, cropped to
   1200×630, and emitted as **JPEG** — some social scrapers still refuse WebP.
 - The favicon set is generated from `public/favicon.svg` by
-  `packages/app/scripts/favicon.mjs` (dev-only). Edit the SVG, re-run the
-  script, commit the output. `sharp` cannot write `.ico`, so the script builds
-  the container by hand.
+  `packages/app/scripts/favicon.mjs` (dev-only). Re-run the script after
+  the SVG changes and commit the output. `sharp` cannot write `.ico`, so the
+  script builds the container by hand.
+
+Logo and palette:
+
+- The logo exists only as the 500×500 JPEG a board member sent, kept as
+  `brand/logo-original.jpg` at the repo root. `brand/` holds the master
+  files and is not used by the site: `logo.svg` (the full logo, with the
+  emblem nudged to sit concentric with the text arc) and `logo-square.svg`.
+- `src/assets/brand/emblem.svg` (the header mark) and `public/favicon.svg`
+  (the same paths on a white disc) are **potrace output**: the JPEG upscaled
+  4×, split into one mask per figure and per shade tone, traced, and run
+  through svgo. Re-trace from `brand/` rather than hand-editing the paths.
+  Their `viewBox` is in those 4× source pixels.
+- The colours in `global.css` are derived from the logo — the comment on
+  `@theme` explains which hue does which job. `cta` (the red) is for
+  donate buttons and the skip link only, and `highlight` (the green) is never
+  text on white.
 
 `packages/app/scripts/` holds two files: `favicon.mjs` (above, dev-only,
 never run in CI) and `validate-cms-config.mjs`, which `pnpm check` does run.

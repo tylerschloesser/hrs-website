@@ -1,9 +1,17 @@
 @import 'tailwindcss';
 
 /*
- * Every colour is a Tailwind v4 built-in scale value, so there is no bespoke
- * palette to maintain — the names below are the vocabulary the components
- * use.
+ * The palette is derived from the logo (`brand/logo-original.jpg`), one job
+ * per logo hue so the page never reads as primary-colour soup:
+ *
+ *   - blue (the wordmark) is structure and interaction,
+ *   - red is giving, and nothing else,
+ *   - green is the small decorative mark.
+ *
+ * Brand moments use the logo's own values; interaction states only move
+ * OKLCH lightness at the same hue. The slate neutrals and blue-50 are
+ * Tailwind built-ins that already sit at hue ~257°, within a few degrees of
+ * the logo blue, so they stay.
  */
 @theme {
   --color-ink: #0f172a; /* slate-900  headings, text on light  */
@@ -17,10 +25,22 @@
   --color-surface: #ffffff; /* white      page background          */
   --color-surface-alt: #eff6ff; /* blue-50    alternating bands, cards */
   --color-border: #e2e8f0; /* slate-200  rules, card borders      */
-  --color-primary: #1d4ed8; /* blue-700   links, primary buttons   */
-  --color-primary-strong: #1e40af; /* blue-800   hover/active             */
-  --color-brand-dark: #172554; /* blue-950   header, hero, footer     */
-  --color-accent: #fbbf24; /* amber-400  donate CTA, section rule */
+  /* Wordmark blue, exact. 8.73:1 on white. */
+  --color-primary: #0a489a; /* links, primary buttons, site name   */
+  --color-primary-strong: #043574; /* wordmark hue, L -8: hover/active */
+  --color-brand-dark: #04295c; /* wordmark hue, L 29%: hero, donate, footer */
+  /*
+   * The red figure's two tones. `cta` is for Donate buttons and the skip
+   * link only; white text on it is 5.46:1, on `cta-strong` 6.87:1.
+   */
+  --color-cta: #d40523;
+  --color-cta-strong: #b6082b;
+  /*
+   * The green figure's light tone: the section rule, the Events quote
+   * border, and text, links and focus rings on the dark bands (6.73:1 on
+   * brand-dark). Never text on white — it is 2.1:1 there.
+   */
+  --color-highlight: #7ac62e;
 
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
   --font-serif: 'Lora Variable', ui-serif, Georgia, serif;
@@ -29,15 +49,15 @@
 @layer base {
   :root {
     /*
-     * Focus rings have to contrast with whatever they sit on. Blue-700 is
-     * invisible on the blue-950 bands, so dark sections carry `.on-dark`
-     * and swap the ring to amber.
+     * Focus rings have to contrast with whatever they sit on. Primary is
+     * invisible on the brand-dark bands, so dark sections carry `.on-dark`
+     * and swap the ring to the green highlight.
      */
     --focus-ring: var(--color-primary);
   }
 
   .on-dark {
-    --focus-ring: var(--color-accent);
+    --focus-ring: var(--color-highlight);
   }
 
   body {
@@ -107,12 +127,12 @@
   }
 
   /*
-   * The recurring mark: a short amber rule under every section heading.
+   * The recurring mark: a short green rule under every section heading.
    * It is the only decorative element in the design, so it earns its keep
    * by appearing in exactly one place and nowhere else.
    */
   .rule {
-    @apply mt-5 block h-1 w-12 rounded-full bg-accent;
+    @apply mt-5 block h-1 w-12 rounded-full bg-highlight;
   }
 
   /* Rendered markdown (singleton richtext fields and project bodies). */
@@ -126,7 +146,7 @@
     @apply text-primary underline decoration-1 underline-offset-2 hover:text-primary-strong;
   }
   .on-dark .prose-hrs a {
-    @apply text-accent hover:text-white;
+    @apply text-highlight hover:text-white;
   }
   .prose-hrs ul {
     @apply list-disc space-y-1 pl-6;
@@ -147,12 +167,12 @@
     @apply text-white;
   }
 
-  /* Buttons. `btn-accent` is the donate CTA; `btn-primary` is everything else. */
+  /* Buttons. `btn-cta` is the donate CTA; `btn-primary` is everything else. */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-base font-semibold transition-colors;
   }
-  .btn-accent {
-    @apply bg-accent text-ink hover:bg-amber-300;
+  .btn-cta {
+    @apply bg-cta text-white hover:bg-cta-strong;
   }
   .btn-primary {
     @apply bg-primary text-white hover:bg-primary-strong;

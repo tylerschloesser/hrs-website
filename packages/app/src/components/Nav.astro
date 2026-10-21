@@ -1,5 +1,7 @@
 ---
 import { faBars, faXmark } from '@fortawesome/pro-solid-svg-icons'
+import { Image } from 'astro:assets'
+import emblem from '../assets/brand/emblem.svg'
 import Icon from './Icon.astro'
 
 interface Props {
@@ -16,14 +18,15 @@ const links = [
 ]
 ---
 
-<header class="on-dark sticky top-0 z-50 bg-brand-dark text-white">
+<header class="sticky top-0 z-50 border-b border-border bg-surface">
   <div class="shell">
     <div class="flex h-16 items-center justify-between gap-4 lg:h-20">
       <a
         href="/"
-        class="min-w-0 truncate font-serif text-base leading-tight font-semibold text-white transition-colors hover:text-accent sm:text-lg lg:text-xl"
+        class="flex min-w-0 items-center gap-3 font-serif text-base leading-tight font-semibold text-primary transition-colors hover:text-primary-strong sm:text-lg lg:text-xl"
       >
-        {siteName}
+        <Image src={emblem} alt="" class="size-10 shrink-0 lg:size-12" />
+        <span class="truncate">{siteName}</span>
       </a>
 
       <nav aria-label="Primary" class="hidden items-center gap-6 md:flex">
@@ -32,7 +35,7 @@ const links = [
             <a
               href={link.href}
               data-nav-link
-              class="nav-link relative py-2 text-sm text-white transition-colors hover:text-accent lg:text-base"
+              class="nav-link relative py-2 text-sm text-body transition-colors hover:text-primary lg:text-base"
             >
               {link.label}
             </a>
@@ -41,7 +44,7 @@ const links = [
         <a
           href="#donate"
           data-nav-link
-          class="btn btn-accent px-4 py-2 text-sm lg:text-base"
+          class="btn btn-cta px-4 py-2 text-sm lg:text-base"
         >
           Donate
         </a>
@@ -52,7 +55,7 @@ const links = [
         id="nav-toggle"
         aria-expanded="false"
         aria-controls="nav-panel"
-        class="inline-flex items-center justify-center rounded-lg p-2 text-white md:hidden"
+        class="inline-flex items-center justify-center rounded-lg p-2 text-ink md:hidden"
       >
         <span class="sr-only">Menu</span>
         <span id="nav-icon-open"><Icon icon={faBars} class="text-xl" /></span>
@@ -66,14 +69,14 @@ const links = [
       id="nav-panel"
       aria-label="Primary"
       hidden
-      class="flex flex-col gap-1 border-t border-white/10 pb-4 md:hidden"
+      class="flex flex-col gap-1 border-t border-border pb-4 md:hidden"
     >
       {
         links.map((link) => (
           <a
             href={link.href}
             data-nav-link
-            class="nav-link relative flex min-h-11 items-center rounded-lg px-2 py-2 text-white hover:bg-white/10"
+            class="nav-link relative flex min-h-11 items-center rounded-lg px-2 py-2 text-body hover:bg-surface-alt"
           >
             {link.label}
           </a>
@@ -82,7 +85,7 @@ const links = [
       <a
         href="#donate"
         data-nav-link
-        class="btn btn-accent mt-2 w-full px-4 py-2 text-center"
+        class="btn btn-cta mt-2 w-full px-4 py-2 text-center"
       >
         Donate
       </a>
@@ -99,7 +102,7 @@ const links = [
     bottom: 0;
     height: 2px;
     border-radius: 9999px;
-    background-color: var(--color-accent);
+    background-color: var(--color-primary);
     opacity: 0;
     transition: opacity 0.15s ease;
   }
@@ -118,8 +121,8 @@ const links = [
   }
 
   #nav-panel .nav-link[aria-current] {
-    background-color: rgb(255 255 255 / 0.1);
-    color: var(--color-accent);
+    background-color: var(--color-surface-alt);
+    color: var(--color-primary);
   }
 </style>
 
