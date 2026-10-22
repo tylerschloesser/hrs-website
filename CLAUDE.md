@@ -131,10 +131,12 @@ The stack owns the S3 bucket `org.haitianrelief`, the ACM certificate, the
 CloudFront distribution, the apex DNS record, the GitHub Actions deploy role,
 the CMS auth Lambda, and the canary and its alarm.
 
-- **The site is served from the apex only.** There is no NS delegation to
-  wait on, so nothing has to be delegated before ACM can validate —
-  validation happens directly in the zone that already answers for the
-  domain.
+- **The site is served from the apex only.** `www` exists only as a 301 to
+  the apex (same path and query), issued by the viewer-request CloudFront
+  Function before its index.html rewrite; the cert and distribution carry
+  `www` as an extra name. There is no NS delegation to wait on, so nothing
+  has to be delegated before ACM can validate — validation happens directly
+  in the zone that already answers for the domain.
 - **The apex hosted zone is imported by id, never created**
   (`Z0010048114HS2EOWXJLC`). Creating it would mint new nameservers and take
   the domain off the internet.

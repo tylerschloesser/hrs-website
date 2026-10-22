@@ -66,10 +66,12 @@ export class SiteStack extends Stack {
     super(scope, id, props)
 
     const domainName = props.zone.zoneName
+    const wwwDomainName = `www.${domainName}`
 
-    // The site is served from the apex and nowhere else, so there is no NS
-    // delegation to wait on before ACM can validate - validation happens
-    // directly in the zone that already answers for the domain.
+    // The site is served from the apex and nowhere else (www exists only as a
+    // redirect to it), so there is no NS delegation to wait on before ACM can
+    // validate - validation happens directly in the zone that already answers
+    // for the domain.
     const hostedZone = HostedZone.fromHostedZoneAttributes(
       this,
       'HostedZone',
@@ -82,9 +84,14 @@ export class SiteStack extends Stack {
 
     const certificate = new Certificate(this, 'Certificate', {
       domainName,
+      subjectAlternativeNames: [wwwDomainName],
       validation: CertificateValidation.fromDns(hostedZone),
     })
 
+    // Requests for www are answered with a 301 to the same path and query on
+    // the apex, before anything else runs, so www never serves a duplicate
+    // copy of the site.
+    //
     // Astro builds with `build.format: 'file'`, so pages are emitted as
     // `<name>.html` and almost every URL already carries an extension. This
     // function exists for the directories that remain: it makes `/admin` and
@@ -99,6 +106,30 @@ export class SiteStack extends Stack {
 function handler(event) {
   var request = event.request
   var uri = request.uri
+
+  var host = request.headers.host ? request.headers.host.value : ''
+  if (host.indexOf('www.') === 0) {
+    var params = []
+    var qs = request.querystring
+    Object.keys(qs).forEach(function (key) {
+      var entries = qs[key].multiValue || [qs[key]]
+      entries.forEach(function (entry) {
+        params.push(entry.value === '' ? key : key + '=' + entry.value)
+      })
+    })
+    return {
+      statusCode: 301,
+      statusDescription: 'Moved Permanently',
+      headers: {
+        location: {
+          value:
+            'https://${domainName}' +
+            uri +
+            (params.length ? '?' + params.join('&') : ''),
+        },
+      },
+    }
+  }
 
   if (uri.endsWith('/')) {
     request.uri += 'index.html'
@@ -160,7 +191,7 @@ function handler(event) {
         responseHeadersPolicy,
       },
       defaultRootObject: 'index.html',
-      domainNames: [domainName],
+      domainNames: [domainName, wwwDomainName],
       certificate,
       errorResponses: [
         {
@@ -178,6 +209,12 @@ function handler(event) {
 
     new ARecord(this, 'AliasRecord', {
       zone: hostedZone,
+      target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
+    })
+
+    new ARecord(this, 'WwwAliasRecord', {
+      zone: hostedZone,
+      recordName: 'www',
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     })
 
