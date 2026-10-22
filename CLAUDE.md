@@ -83,9 +83,21 @@ Search and social metadata:
   `/concert`, which 404s. The `filter` in `astro.config.mjs` excludes it (it is
   a `noindex` redirect page anyway); a future `.html` page that does belong in
   the sitemap needs the `serialize` option, not just `filter`.
-- `src/components/JsonLd.astro` emits schema.org `NGO` on the home page only,
-  built from `site.yml` and `contacts.yml` — no hard-coded names, addresses or
-  emails.
+- The home `<title>` is `site.name | site.tagline`, composed in `index.astro`
+  from the two CMS fields; `og:site_name` and the `h1` stay `site.name` alone.
+  Keep `site.description` at 155 characters or fewer, or Google truncates it.
+- `src/components/JsonLd.astro` emits, on the home page only, an `@graph` of
+  an `NGO` (`#org`) and the `WebSite` it publishes (`#website`, which is what
+  Google's site-name feature reads), built from `site.yml` and `contacts.yml`
+  — no hard-coded names, addresses or emails. `alternateName: 'HRS'`,
+  `areaServed`, `foundingDate` and `nonprofitStatus` are hard-coded because
+  the CMS has no field for them. `logo` is `apple-touch-icon.png`, not the SVG,
+  because Google wants a raster logo.
+- Gallery thumbnails take their caption as `alt` (so they show up in image
+  search); the visible caption is `aria-hidden` so the button isn't announced
+  twice.
+- A literal `/index.html` is 301'd to `/` by the viewer-request CloudFront
+  Function, alongside the www redirect.
 - `concert.astro` deliberately does **not** use `Base`/`Seo`. It is a share
   card with its own OG tags from `events.share` plus an immediate redirect to
   `/#events`, and it duplicates the OG-image code on purpose.

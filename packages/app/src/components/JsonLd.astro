@@ -1,8 +1,11 @@
 ---
-// schema.org NGO structured data for the home page. Most values are read
-// from content (site.yml / contacts.yml) so an editor updating the CMS keeps
-// this in sync automatically; `foundingDate` and `nonprofitStatus` below are
-// hard-coded facts about the org that the CMS has no field for.
+// schema.org structured data for the home page: an `@graph` of the NGO and
+// the WebSite it publishes (the WebSite node is what Google's site-name
+// feature reads). Most values are read from content (site.yml /
+// contacts.yml) so an editor updating the CMS keeps this in sync
+// automatically; `alternateName`, `areaServed`, `foundingDate` and
+// `nonprofitStatus` below are hard-coded facts about the org that the CMS
+// has no field for.
 import { getImage } from 'astro:assets'
 import { getSingleton } from '../lib/content'
 
@@ -23,9 +26,12 @@ const ogImage = await getImage({
 })
 const imageUrl = new URL(ogImage.src, Astro.site).toString()
 
-// favicon.svg is the real logo mark (vector, always crisp); the apple-touch
-// icon is just a flattened PNG derived from it for iOS home-screen use.
-const logoUrl = new URL('/favicon.svg', Astro.site).toString()
+// The 180x180 apple-touch icon rather than favicon.svg: Google's logo
+// guidelines want a raster image it can crawl and index.
+const logoUrl = new URL('/apple-touch-icon.png', Astro.site).toString()
+
+const orgId = new URL('#org', Astro.site).toString()
+const websiteId = new URL('#website', Astro.site).toString()
 
 // contacts.members has at least one entry (content.config.ts enforces
 // `min(1)`), so this always resolves — either the President or, failing
@@ -43,10 +49,11 @@ const [addressLocality, regionZip] = site.donate.mail.city_state_zip
   .map((s) => s.trim())
 const [addressRegion, postalCode] = regionZip ? regionZip.split(/\s+/) : []
 
-const data = {
-  '@context': 'https://schema.org',
+const org = {
   '@type': 'NGO',
+  '@id': orgId,
   name: site.name,
+  alternateName: 'HRS',
   description: site.description,
   url: Astro.site,
   logo: logoUrl,
@@ -59,8 +66,23 @@ const data = {
     ...(addressRegion && { addressRegion }),
     ...(postalCode && { postalCode }),
   },
+  areaServed: { '@type': 'Place', name: 'Ganthier, Haiti' },
   foundingDate: '1997',
   nonprofitStatus: 'Nonprofit501c3',
+}
+
+const website = {
+  '@type': 'WebSite',
+  '@id': websiteId,
+  name: site.name,
+  alternateName: 'HRS',
+  url: Astro.site,
+  publisher: { '@id': orgId },
+}
+
+const data = {
+  '@context': 'https://schema.org',
+  '@graph': [org, website],
 }
 ---
 

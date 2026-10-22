@@ -20,7 +20,7 @@ const contacts = await getSingleton('contacts')
 const projects = await getCollection('projects')
 ---
 
-<Base title={site.name} description={site.description}>
+<Base title={`${site.name} | ${site.tagline}`} description={site.description}>
   <JsonLd slot="head" />
   <Nav siteName={site.name} />
 

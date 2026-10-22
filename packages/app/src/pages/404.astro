@@ -1,8 +1,11 @@
 ---
 import Base from '../layouts/Base.astro'
+import { getSingleton } from '../lib/content'
+
+const site = await getSingleton('site')
 ---
 
-<Base title="Page not found" noindex>
+<Base title={`Page not found | ${site.name}`} noindex>
   <main
     class="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center"
   >

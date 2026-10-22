@@ -90,7 +90,9 @@ export class SiteStack extends Stack {
 
     // Requests for www are answered with a 301 to the same path and query on
     // the apex, before anything else runs, so www never serves a duplicate
-    // copy of the site.
+    // copy of the site. A literal `/index.html` is the home page under a
+    // second URL, so it gets the same 301, to `/` (in one hop from www too).
+    // The rewrite below runs after this, so `/` still reaches index.html.
     //
     // Astro builds with `build.format: 'file'`, so pages are emitted as
     // `<name>.html` and almost every URL already carries an extension. This
@@ -108,7 +110,7 @@ function handler(event) {
   var uri = request.uri
 
   var host = request.headers.host ? request.headers.host.value : ''
-  if (host.indexOf('www.') === 0) {
+  if (host.indexOf('www.') === 0 || uri === '/index.html') {
     var params = []
     var qs = request.querystring
     Object.keys(qs).forEach(function (key) {
@@ -124,7 +126,7 @@ function handler(event) {
         location: {
           value:
             'https://${domainName}' +
-            uri +
+            (uri === '/index.html' ? '/' : uri) +
             (params.length ? '?' + params.join('&') : ''),
         },
       },
